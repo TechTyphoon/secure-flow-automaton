@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Circle, Clock, Calendar, Target, FileText, Shield, LockKeyhole, Zap, GitPullRequest } from 'lucide-react';
+import { CheckCircle, Circle, Clock, Calendar, Target, FileText, Shield, LockKeyhole, Zap, GitPullRequest, TestTube } from 'lucide-react';
 
 const codeBlockClass =
   "font-mono bg-gray-900 text-green-300 rounded-md p-4 text-xs overflow-x-auto border border-gray-800 my-4";
@@ -146,6 +146,111 @@ deny[msg] {
 }`
           }
         </pre>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const TestingStrategyCard = () => (
+  <Card className="border-2 border-purple-600">
+    <CardHeader>
+      <CardTitle className="flex items-center space-x-2">
+        <Shield className="h-5 w-5 text-purple-600" />
+        <span>Testing Strategy Overview</span>
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <ul className="list-disc pl-6 text-sm mb-2">
+        <li><b>Unit & Integration Testing:</b> Validate functional correctness after security controls are integrated.</li>
+        <li><b>Security Testing within CI/CD:</b> Verify SAST, SCA, and container scanners by intentionally introducing known vulnerabilities.</li>
+        <li><b>Automated Gating:</b> Confirm policy gates are enforced and builds fail as expected when violations occur.</li>
+        <li><b>Remediation Testing:</b> Ensure automated PRs or fixes are triggered on detected issues and succeed in resolving them.</li>
+        <li><b>Secrets Management Testing:</b> Test detection and blocking of hardcoded secrets, and verify secure runtime access.</li>
+      </ul>
+      <p className="text-xs text-muted-foreground">Each stage is accompanied by targeted test cases and clear reporting of all relevant findings.</p>
+    </CardContent>
+  </Card>
+);
+
+const SecurityTestCasesCard = () => (
+  <Card className="border-2 border-green-500">
+    <CardHeader>
+      <CardTitle className="flex items-center space-x-2">
+        <TestTube className="h-5 w-5 text-green-500" />
+        <span>Security Test Cases</span>
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <ol className="list-decimal pl-6 space-y-2 text-sm mb-2">
+        <li>
+          <b>SAST:</b> Commit code with a known SQL injection; verify pipeline blocks/flags as expected.
+        </li>
+        <li>
+          <b>SCA:</b> Add a dependency with a critical CVE; confirm flag and auto-remediation are triggered.
+        </li>
+        <li>
+          <b>Container:</b> Build image with outdated/vulnerable base; ensure scanner blocks deployment.
+        </li>
+        <li>
+          <b>Secrets:</b> Attempt to hardcode a secret; expect detection and pipeline blockage.
+        </li>
+        <li>
+          <b>Remediation Success:</b> Verify automated dependency upgrade PR is created and resolves the vulnerability.
+        </li>
+      </ol>
+      <p className="text-xs text-muted-foreground">Each case includes tracking of findings, logs, and remediation outcomes in the test report.</p>
+    </CardContent>
+  </Card>
+);
+
+const TestReportExampleCard = () => (
+  <Card className="border-2 border-cyan-500">
+    <CardHeader>
+      <CardTitle className="flex items-center space-x-2">
+        <FileText className="h-5 w-5 text-cyan-500" />
+        <span>Sample Test Report Format</span>
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <pre className="font-mono bg-gray-900 text-cyan-200 p-3 rounded text-xs overflow-x-auto border border-gray-800">
+{`# Test Report Example
+
+## Test Run: 2024-06-15
+
+| Scenario    | Tool      | Result        | Finding                                      | Remediation                        | Status    |
+|-------------|-----------|---------------|----------------------------------------------|------------------------------------|-----------|
+| SAST        | Semgrep   | FAIL          | SQL Injection detected in LoginController.js | Issue fixed, PR #45 merged         | PASSED    |
+| SCA         | Snyk      | FAIL/TRIGGER  | Critical vuln in lodash@4.17.15              | Auto-PR #46, upgraded to 4.17.21   | PASSED    |
+| Container   | Trivy     | FAIL BLOCK    | Vulnerable Ubuntu 20.04 base                 | Dockerfile updated to 22.04        | PASSED    |
+| Secrets     | Semgrep   | FAIL BLOCK    | Hardcoded AWS key in config.js               | Secret removed, moved to env vars  | PASSED    |
+| Remediation | GitHub    | SUCCESS       | PR created and merged                        | Dependency upgraded                | PASSED    |
+`}
+      </pre>
+      <p className="text-xs mt-2 text-muted-foreground">
+        Formal reports are versioned and findings cross-referenced with remediation PRs and pipeline logs.
+      </p>
+    </CardContent>
+  </Card>
+);
+
+const RemediationPOCCard = () => (
+  <Card className="border-2 border-pink-500">
+    <CardHeader>
+      <CardTitle className="flex items-center space-x-2">
+        <GitPullRequest className="h-5 w-5 text-pink-500" />
+        <span>Proof-of-Concept: Automated Remediation</span>
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <ul className="list-disc pl-6 text-sm mb-2">
+        <li>Dependency with critical CVE deliberately introduced.</li>
+        <li>SCA (Snyk) scan failed the build; triggered auto-remediation workflow.</li>
+        <li>Automated PR <span className="text-muted-foreground">(<b>#46</b>)</span> created and reviewed.</li>
+        <li>Merge of the PR re-ran SCA, which then passed.</li>
+        <li>All results documented in the test report.</li>
+      </ul>
+      <div className="bg-gray-900 text-green-200 font-mono rounded mt-2 p-2 text-xs">
+        <span>✔️ Auto-remediation PoC successful: Vulnerability fixed & verified pipeline recovery.</span>
       </div>
     </CardContent>
   </Card>
@@ -409,6 +514,7 @@ const ProjectTimeline = () => {
       </Card>
       {/* -- PHASE 3 and OUTPUTS -- */}
       <div className="space-y-8">
+        {/* --- Phase 3: SECURITY --- */}
         <SecureCodingStandardsCard />
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2 mt-4 mb-2">
@@ -574,6 +680,11 @@ jobs:
         </div>
         <SecretsManagementCard />
         <VulnReportInfoCard />
+        {/* --- Phase 4: TESTING --- */}
+        <TestingStrategyCard />
+        <SecurityTestCasesCard />
+        <TestReportExampleCard />
+        <RemediationPOCCard />
       </div>{/* Closes .space-y-8 */}
     </div>
   );
