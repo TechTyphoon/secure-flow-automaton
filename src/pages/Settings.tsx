@@ -1,31 +1,49 @@
 
 import React from "react";
 import { useAuth } from "@/components/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Settings = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  // Pick a unique accent color so the user sees this has changed
   return (
-    <div className="max-w-2xl mx-auto mt-12 bg-green-100/90 rounded-xl shadow px-8 py-10 border border-green-400">
-      <h2 className="mb-4 text-2xl font-extrabold text-green-900 tracking-tight">Settings</h2>
-      {user ? (
-        <div className="space-y-4">
-          <div>
-            <span className="text-green-700 font-semibold">Your Email:</span>
-            <div className="ml-2">{user.email}</div>
+    <div className="max-w-xl mx-auto mt-14 px-4">
+      <div className="relative bg-gradient-to-br from-blue-200 via-blue-100 to-sky-100 rounded-2xl shadow-lg border border-blue-300 p-8 pb-10">
+        <Button
+          variant="outline"
+          size="sm"
+          className="absolute left-5 top-5 flex items-center gap-1"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Button>
+        <h2 className="mb-6 text-3xl font-bold text-blue-900 text-center">Settings</h2>
+        {user ? (
+          <div className="space-y-6">
+            <div>
+              <span className="block text-blue-600 font-semibold">Email</span>
+              <div className="bg-white/90 border border-blue-100 rounded px-3 py-2 mt-1 text-blue-900">
+                {user.email}
+              </div>
+            </div>
+            <div>
+              <span className="block text-blue-600 font-semibold">User ID</span>
+              <div className="bg-white/90 border border-blue-100 rounded px-3 py-2 mt-1 text-xs text-blue-900">
+                {user.id}
+              </div>
+            </div>
+            <div className="pt-4 text-blue-700 text-center text-sm italic">
+              More preferences and account features will appear here soon!
+            </div>
           </div>
-          <div>
-            <span className="text-green-700 font-semibold">User ID:</span>
-            <div className="ml-2 text-xs">{user.id}</div>
-          </div>
-          <div className="mt-6 italic text-green-700">
-            Settings page enhanced! Here you can display user preferences or account actions in the future.
-          </div>
-        </div>
-      ) : (
-        <div className="text-muted-foreground">Please login to see settings.</div>
-      )}
+        ) : (
+          <div className="text-center text-muted-foreground">Please login to see settings.</div>
+        )}
+      </div>
     </div>
   );
 };
