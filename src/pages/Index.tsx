@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import SecurityMetrics from '@/components/SecurityMetrics';
@@ -10,9 +9,12 @@ import UserPersonas from '@/components/UserPersonas';
 import ProjectTimeline from '@/components/ProjectTimeline';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, Users, Calendar, BarChart3 } from 'lucide-react';
+import { Link } from "react-router-dom";
+import { useAuth } from "@/components/AuthContext";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const { user } = useAuth();
 
   return (
     <>
@@ -26,6 +28,11 @@ const Index = () => {
             <p className="text-muted-foreground">
               Real-time security monitoring and automated vulnerability remediation
             </p>
+            {!user && (
+              <div className="mt-3">
+                <Link to="/auth" className="text-blue-600 underline text-sm">Login / Register</Link>
+              </div>
+            )}
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -76,4 +83,3 @@ const Index = () => {
 };
 
 export default Index;
-
