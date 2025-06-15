@@ -14,6 +14,10 @@ import SecurityTestCasesCard from './project-timeline/SecurityTestCasesCard';
 import TestReportExampleCard from './project-timeline/TestReportExampleCard';
 import RemediationPOCCard from './project-timeline/RemediationPOCCard';
 import PhaseFiveDeploymentCard from './project-timeline/PhaseFiveDeploymentCard';
+import FeedbackLoopCard from './project-timeline/FeedbackLoopCard';
+import ContinuousImprovementCard from './project-timeline/ContinuousImprovementCard';
+import VulnerabilityManagementCard from './project-timeline/VulnerabilityManagementCard';
+import DocumentationCard from './project-timeline/DocumentationCard';
 
 const codeBlockClass =
   "font-mono bg-gray-900 text-green-300 rounded-md p-4 text-xs overflow-x-auto border border-gray-800 my-4";
@@ -226,6 +230,16 @@ jobs:
       <TestReportExampleCard />
       <RemediationPOCCard />
       <PhaseFiveDeploymentCard />
+
+      {/* Phase 6 - Maintenance & Iteration */}
+      <h2 className="text-2xl font-bold mt-8 mb-2 flex items-center gap-2">
+        <Circle className="h-6 w-6 text-emerald-600" />
+        Phase 6: Maintenance & Iteration
+      </h2>
+      <FeedbackLoopCard />
+      <ContinuousImprovementCard />
+      <VulnerabilityManagementCard />
+      <DocumentationCard />
     </div>
   );
 };
