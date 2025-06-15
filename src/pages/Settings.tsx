@@ -9,6 +9,15 @@ const Settings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Enhanced back handler: go back if possible, else go home (/)
+  const handleBack = () => {
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
+
   return (
     <div className="max-w-xl mx-auto mt-14 px-4">
       <div className="relative bg-gradient-to-br from-blue-200 via-blue-100 to-sky-100 rounded-2xl shadow-lg border border-blue-300 p-8 pb-10">
@@ -16,12 +25,14 @@ const Settings = () => {
           variant="outline"
           size="sm"
           className="absolute left-5 top-5 flex items-center gap-1"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
         >
           <ArrowLeft className="w-4 h-4" />
           Back
         </Button>
-        <h2 className="mb-6 text-3xl font-bold text-blue-900 text-center">Settings</h2>
+        <h2 className="mb-6 text-3xl font-bold text-blue-900 text-center">
+          Settings
+        </h2>
         {user ? (
           <div className="space-y-6">
             <div>
@@ -41,7 +52,9 @@ const Settings = () => {
             </div>
           </div>
         ) : (
-          <div className="text-center text-muted-foreground">Please login to see settings.</div>
+          <div className="text-center text-muted-foreground">
+            Please login to see settings.
+          </div>
         )}
       </div>
     </div>
@@ -49,3 +62,4 @@ const Settings = () => {
 };
 
 export default Settings;
+
