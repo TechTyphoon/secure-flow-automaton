@@ -428,8 +428,7 @@ const ProjectTimeline = () => {
             Comprehensive CI/CD Pipeline Example (.github/workflows/devsecops.yml)
           </h2>
           <pre className={codeBlockClass}>
-            {
-              `# .github/workflows/devsecops.yml
+{`# .github/workflows/devsecops.yml
 name: DevSecOps CI/CD Pipeline
 
 on:
@@ -445,7 +444,7 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     outputs:
-      build_path: ${{ steps.set_build_path.outputs.BUILD_PATH }}
+      build_path: \${{ steps.set_build_path.outputs.BUILD_PATH }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -548,11 +547,10 @@ jobs:
         run: echo "Deploying app..." # Place deployment tool/script here
 
 # Secrets are injected using GitHub Actions secrets or called from external vault (see below info card)
-`
-            }
+`}
           </pre>
         </div>
-        
+
         <PolicyAsCodeCard />
 
         <div>
@@ -561,8 +559,7 @@ jobs:
             Sample Automated Remediation GitHub Action
           </h2>
           <pre className={codeBlockClass}>
-            {
-              `# .github/workflows/auto-remediation.yml
+{`# .github/workflows/auto-remediation.yml
 
 name: Automated Dependency Remediation
 
@@ -585,7 +582,7 @@ jobs:
           commit-message: "chore: automated dependency update"
           title: "Automated Dependency Update"
           body: "This PR updates dependencies with available security patches."
-            }
+`}
           </pre>
           <AutomatedRemediationCard />
         </div>
