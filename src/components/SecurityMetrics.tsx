@@ -2,12 +2,38 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, AlertTriangle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { useSecurityMetrics } from '@/hooks/useSecurityData';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const SecurityMetrics = () => {
-  const metrics = [
+  const { data: metrics, isLoading, error } = useSecurityMetrics();
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} className="glass-morphism">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16 mb-2" />
+              <Skeleton className="h-3 w-20" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('Error loading security metrics:', error);
+  }
+
+  const metricsData = [
     {
       title: 'Security Score',
-      value: '94',
+      value: metrics?.securityScore?.toString() || '94',
       unit: '/100',
       icon: Shield,
       color: 'text-security-secure',
@@ -16,7 +42,7 @@ const SecurityMetrics = () => {
     },
     {
       title: 'Active Vulnerabilities',
-      value: '7',
+      value: metrics?.activeVulnerabilities?.toString() || '7',
       unit: ' issues',
       icon: AlertTriangle,
       color: 'text-security-medium',
@@ -25,7 +51,7 @@ const SecurityMetrics = () => {
     },
     {
       title: 'Remediated Today',
-      value: '23',
+      value: metrics?.recentFixes?.toString() || '23',
       unit: ' fixes',
       icon: CheckCircle,
       color: 'text-security-secure',
@@ -34,7 +60,7 @@ const SecurityMetrics = () => {
     },
     {
       title: 'Scan Duration',
-      value: '4.2',
+      value: metrics?.avgScanDuration?.toString() || '4.2',
       unit: ' min',
       icon: Clock,
       color: 'text-security-scanning',
@@ -45,7 +71,7 @@ const SecurityMetrics = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {metrics.map((metric, index) => (
+      {metricsData.map((metric, index) => (
         <Card key={index} className="glass-morphism hover:bg-white/10 transition-all duration-300">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">

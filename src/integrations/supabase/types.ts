@@ -57,6 +57,161 @@ export type Database = {
         }
         Relationships: []
       }
+      pipeline_metrics: {
+        Row: {
+          branch: string
+          build_number: number | null
+          completed_at: string | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          metrics: Json | null
+          pipeline_id: string
+          project_name: string
+          security_gate_passed: boolean | null
+          started_at: string
+          status: string
+          triggered_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          branch?: string
+          build_number?: number | null
+          completed_at?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          metrics?: Json | null
+          pipeline_id: string
+          project_name: string
+          security_gate_passed?: boolean | null
+          started_at?: string
+          status: string
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          branch?: string
+          build_number?: number | null
+          completed_at?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          metrics?: Json | null
+          pipeline_id?: string
+          project_name?: string
+          security_gate_passed?: boolean | null
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      remediation_activities: {
+        Row: {
+          action_type: string
+          completed_at: string | null
+          created_at: string
+          fix_description: string | null
+          id: string
+          pr_url: string | null
+          started_at: string
+          status: string
+          updated_at: string
+          vulnerability_id: string | null
+        }
+        Insert: {
+          action_type: string
+          completed_at?: string | null
+          created_at?: string
+          fix_description?: string | null
+          id?: string
+          pr_url?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+          vulnerability_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          completed_at?: string | null
+          created_at?: string
+          fix_description?: string | null
+          id?: string
+          pr_url?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+          vulnerability_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remediation_activities_vulnerability_id_fkey"
+            columns: ["vulnerability_id"]
+            isOneToOne: false
+            referencedRelation: "vulnerabilities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      security_scans: {
+        Row: {
+          branch: string
+          commit_hash: string | null
+          completed_at: string | null
+          created_at: string
+          critical_count: number | null
+          high_count: number | null
+          id: string
+          low_count: number | null
+          medium_count: number | null
+          project_name: string
+          scan_results: Json | null
+          scan_type: string
+          started_at: string
+          status: string
+          total_vulnerabilities: number | null
+          updated_at: string
+        }
+        Insert: {
+          branch?: string
+          commit_hash?: string | null
+          completed_at?: string | null
+          created_at?: string
+          critical_count?: number | null
+          high_count?: number | null
+          id?: string
+          low_count?: number | null
+          medium_count?: number | null
+          project_name: string
+          scan_results?: Json | null
+          scan_type: string
+          started_at?: string
+          status?: string
+          total_vulnerabilities?: number | null
+          updated_at?: string
+        }
+        Update: {
+          branch?: string
+          commit_hash?: string | null
+          completed_at?: string | null
+          created_at?: string
+          critical_count?: number | null
+          high_count?: number | null
+          id?: string
+          low_count?: number | null
+          medium_count?: number | null
+          project_name?: string
+          scan_results?: Json | null
+          scan_type?: string
+          started_at?: string
+          status?: string
+          total_vulnerabilities?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           event_id: string
@@ -113,6 +268,77 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vulnerabilities: {
+        Row: {
+          auto_fixable: boolean | null
+          component: string | null
+          confidence_score: number | null
+          created_at: string
+          cve_id: string | null
+          description: string | null
+          file_path: string | null
+          first_detected: string
+          fixed_at: string | null
+          id: string
+          last_seen: string
+          line_number: number | null
+          remediation_advice: string | null
+          scan_id: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          auto_fixable?: boolean | null
+          component?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          cve_id?: string | null
+          description?: string | null
+          file_path?: string | null
+          first_detected?: string
+          fixed_at?: string | null
+          id?: string
+          last_seen?: string
+          line_number?: number | null
+          remediation_advice?: string | null
+          scan_id?: string | null
+          severity: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          auto_fixable?: boolean | null
+          component?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          cve_id?: string | null
+          description?: string | null
+          file_path?: string | null
+          first_detected?: string
+          fixed_at?: string | null
+          id?: string
+          last_seen?: string
+          line_number?: number | null
+          remediation_advice?: string | null
+          scan_id?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vulnerabilities_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "security_scans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
