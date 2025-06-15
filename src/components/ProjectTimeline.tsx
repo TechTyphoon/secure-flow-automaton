@@ -312,9 +312,7 @@ const ProjectTimeline = () => {
         {phases.map((phase, index) => (
           <Card 
             key={index} 
-            className={`cursor-pointer transition-all duration-200 ${
-              activeWeek === index + 1 ? 'ring-2 ring-primary shadow-lg' : ''
-            }`}
+            className={`cursor-pointer transition-all duration-200 ${activeWeek === index + 1 ? 'ring-2 ring-primary shadow-lg' : ''}`}
             onClick={() => setActiveWeek(index + 1)}
           >
             <CardHeader>
@@ -324,17 +322,12 @@ const ProjectTimeline = () => {
                     Week {phase.weeks}
                   </Badge>
                   <CardTitle className="text-lg">{phase.title}</CardTitle>
-                  <Badge className={getStatusColor(phase.status)}>
-                    {phase.status.replace('-', ' ')}
-                  </Badge>
+                  <Badge className={getStatusColor(phase.status)}>{phase.status.replace('-', ' ')}</Badge>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {phase.progress}% Complete
-                </div>
+                <div className="text-sm text-muted-foreground">{phase.progress}% Complete</div>
               </div>
               <Progress value={phase.progress} className="w-full" />
             </CardHeader>
-            
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
@@ -351,7 +344,6 @@ const ProjectTimeline = () => {
                     ))}
                   </ul>
                 </div>
-                
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center space-x-2">
                     <CheckCircle className="h-4 w-4" />
@@ -372,7 +364,6 @@ const ProjectTimeline = () => {
                   </div>
                 </div>
               </div>
-              
               <div>
                 <h4 className="font-semibold mb-2 flex items-center space-x-2">
                   <Calendar className="h-4 w-4" />
@@ -390,7 +381,6 @@ const ProjectTimeline = () => {
           </Card>
         ))}
       </div>
-
       {/* -- OVERALL STATUS -- */}
       <Card>
         <CardHeader>
@@ -417,11 +407,9 @@ const ProjectTimeline = () => {
           </div>
         </CardContent>
       </Card>
-
       {/* -- PHASE 3 and OUTPUTS -- */}
       <div className="space-y-8">
         <SecureCodingStandardsCard />
-        
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2 mt-4 mb-2">
             <Calendar className="h-5 w-5 text-primary" />
@@ -550,9 +538,7 @@ jobs:
 `}
           </pre>
         </div>
-
         <PolicyAsCodeCard />
-
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2 mt-8 mb-1">
             <GitPullRequest className="h-5 w-5 text-yellow-500" />
@@ -586,11 +572,9 @@ jobs:
           </pre>
           <AutomatedRemediationCard />
         </div>
-
         <SecretsManagementCard />
-
         <VulnReportInfoCard />
-      </div>
+      </div>{/* Closes .space-y-8 */}
     </div>
   );
 };
