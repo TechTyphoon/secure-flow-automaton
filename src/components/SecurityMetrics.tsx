@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, AlertTriangle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 import { useSecurityMetrics } from '@/hooks/useSecurityData';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 const SecurityMetrics = () => {
   const { data: metrics, isLoading, error } = useSecurityMetrics();
+  const { toast } = useToast();
 
   if (isLoading) {
     return (
@@ -29,6 +31,22 @@ const SecurityMetrics = () => {
   if (error) {
     console.error('Error loading security metrics:', error);
   }
+
+  const handleMetricClick = (metricType: string, value: string) => {
+    const messages = {
+      'Security Score': `Current security score is ${value}/100. Click to view detailed breakdown.`,
+      'Active Vulnerabilities': `${value} vulnerabilities need attention. Click to prioritize remediation.`,
+      'Remediated Today': `${value} vulnerabilities fixed today. Great progress!`,
+      'Scan Duration': `Average scan time is ${value} minutes. System performance is optimal.`
+    };
+
+    toast({
+      title: metricType,
+      description: messages[metricType as keyof typeof messages] || `${metricType}: ${value}`,
+    });
+
+    console.log(`Metric clicked: ${metricType} - ${value}`);
+  };
 
   const metricsData = [
     {
@@ -72,7 +90,11 @@ const SecurityMetrics = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {metricsData.map((metric, index) => (
-        <Card key={index} className="glass-morphism hover:bg-white/10 transition-all duration-300">
+        <Card 
+          key={index} 
+          className="glass-morphism hover:bg-white/10 transition-all duration-300 cursor-pointer"
+          onClick={() => handleMetricClick(metric.title, metric.value + metric.unit)}
+        >
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">
