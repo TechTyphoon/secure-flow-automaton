@@ -18,6 +18,8 @@ import FeedbackLoopCard from './project-timeline/FeedbackLoopCard';
 import ContinuousImprovementCard from './project-timeline/ContinuousImprovementCard';
 import VulnerabilityManagementCard from './project-timeline/VulnerabilityManagementCard';
 import DocumentationCard from './project-timeline/DocumentationCard';
+import SuccessMetricsCard from './project-timeline/SuccessMetricsCard';
+import LongTermSupportCard from './project-timeline/LongTermSupportCard';
 
 const codeBlockClass =
   "font-mono bg-gray-900 text-green-300 rounded-md p-4 text-xs overflow-x-auto border border-gray-800 my-4";
@@ -31,6 +33,9 @@ const ProjectTimeline = () => {
       </div>
 
       <TimelinePhases />
+
+      {/* Success Metrics Dashboard */}
+      <SuccessMetricsCard />
 
       {/* -- OVERALL STATUS -- */}
       <Card>
@@ -240,6 +245,7 @@ jobs:
       <ContinuousImprovementCard />
       <VulnerabilityManagementCard />
       <DocumentationCard />
+      <LongTermSupportCard />
     </div>
   );
 };
