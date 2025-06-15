@@ -1,10 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Bell, Settings, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import NotificationsModal from './NotificationsModal';
+import ProfileDropdown from './ProfileDropdown';
 
 const Header = () => {
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="flex h-16 items-center justify-between px-6">
@@ -18,29 +23,33 @@ const Header = () => {
           </Link>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 relative">
           <div className="hidden md:flex items-center space-x-2 text-sm">
             <div className="h-2 w-2 rounded-full bg-security-secure animate-pulse-security"></div>
             <span className="text-muted-foreground">Pipeline Status:</span>
             <span className="text-security-secure font-medium">Secure</span>
           </div>
           
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon" className="relative" onClick={() => setNotifOpen(true)}>
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 h-3 w-3 bg-security-critical rounded-full text-xs flex items-center justify-center text-white">
               3
             </span>
           </Button>
           
-          <Button variant="ghost" size="icon">
-            <Settings className="h-5 w-5" />
-          </Button>
-          
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={() => setProfileOpen((v) => !v)}>
             <User className="h-5 w-5" />
           </Button>
+          {/* For demo, Settings icon links to settings page */}
+          <Link to="/settings">
+            <Button variant="ghost" size="icon">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </Link>
+          <ProfileDropdown open={profileOpen} onClose={() => setProfileOpen(false)} />
         </div>
       </div>
+      <NotificationsModal open={notifOpen} onClose={() => setNotifOpen(false)} />
     </header>
   );
 };
