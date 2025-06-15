@@ -125,13 +125,26 @@ export const useSecurityMetrics = () => {
       const penalty = criticalCount * 20 + highCount * 10;
       const securityScore = Math.max(0, maxScore - penalty);
 
-      // Calculate average scan duration in minutes
-      const avgDuration = scans?.length > 0 
-        ? scans.reduce((acc, scan) => {
-            const duration = new Date(scan.completed_at!).getTime() - new Date(scan.started_at).getTime();
-            return acc + duration;
-          }, 0) / scans.length / (1000 * 60)
-        : 4.2;
+      // Calculate average scan duration in minutes with proper validation
+      let avgDuration = 4.2; // Default fallback value
+      
+      if (scans?.length > 0) {
+        const validDurations = scans
+          .map(scan => {
+            const startTime = new Date(scan.started_at).getTime();
+            const endTime = new Date(scan.completed_at!).getTime();
+            const duration = endTime - startTime;
+            
+            // Only include positive durations (valid scans)
+            return duration > 0 ? duration : null;
+          })
+          .filter(duration => duration !== null) as number[];
+        
+        if (validDurations.length > 0) {
+          const totalDuration = validDurations.reduce((acc, duration) => acc + duration, 0);
+          avgDuration = totalDuration / validDurations.length / (1000 * 60); // Convert to minutes
+        }
+      }
 
       const metrics = {
         securityScore,
