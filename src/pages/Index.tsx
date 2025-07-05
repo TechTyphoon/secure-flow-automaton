@@ -7,13 +7,16 @@ import ComplianceOverview from '@/components/ComplianceOverview';
 import ToolSelection from '@/components/ToolSelection';
 import UserPersonas from '@/components/UserPersonas';
 import ProjectTimeline from '@/components/ProjectTimeline';
+import HowItWorksModal from '@/components/HowItWorksModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Users, Calendar, BarChart3 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Shield, Users, Calendar, BarChart3, HelpCircle } from 'lucide-react';
 import { Link } from "react-router-dom";
 import { useAuth } from "@/components/AuthContext";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [howItWorksOpen, setHowItWorksOpen] = useState(false);
   const { user } = useAuth();
 
   return (
@@ -22,17 +25,29 @@ const Index = () => {
       <main className="p-6 space-y-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              DevSecOps Pipeline Dashboard
-            </h1>
-            <p className="text-muted-foreground">
-              Real-time security monitoring and automated vulnerability remediation
-            </p>
-            {!user && (
-              <div className="mt-3">
-                <Link to="/auth" className="text-blue-600 underline text-sm">Login / Register</Link>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">
+                  DevSecOps Pipeline Dashboard
+                </h1>
+                <p className="text-muted-foreground">
+                  Real-time security monitoring and automated vulnerability remediation
+                </p>
+                {!user && (
+                  <div className="mt-3">
+                    <Link to="/auth" className="text-blue-600 underline text-sm">Login / Register</Link>
+                  </div>
+                )}
               </div>
-            )}
+              <Button 
+                onClick={() => setHowItWorksOpen(true)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <HelpCircle className="h-4 w-4" />
+                How It Works
+              </Button>
+            </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -78,6 +93,10 @@ const Index = () => {
           </Tabs>
         </div>
       </main>
+      <HowItWorksModal 
+        open={howItWorksOpen} 
+        onClose={() => setHowItWorksOpen(false)} 
+      />
     </>
   );
 };

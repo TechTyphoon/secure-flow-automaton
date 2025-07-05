@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import NotificationsModal from "@/components/NotificationsModal";
 import ProfileDropdown from "@/components/ProfileDropdown";
 import { useAuth } from "@/components/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
 
 const Header = () => {
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch unread notification count
   useEffect(() => {
@@ -25,13 +27,13 @@ const Header = () => {
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center space-x-4">
-          <a href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+          <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <Shield className="h-8 w-8 text-primary" />
             <div>
               <h1 className="text-xl font-bold text-foreground">SecureFlow</h1>
               <p className="text-xs text-muted-foreground">DevSecOps Pipeline</p>
             </div>
-          </a>
+          </Link>
         </div>
         <div className="flex items-center space-x-4 relative">
           <div className="hidden md:flex items-center space-x-2 text-sm">
@@ -50,11 +52,9 @@ const Header = () => {
           <Button variant="ghost" size="icon" onClick={() => setProfileOpen((v) => !v)}>
             <User className="h-5 w-5" />
           </Button>
-          <a href="/settings">
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
-            </Button>
-          </a>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
+            <Settings className="h-5 w-5" />
+          </Button>
           <ProfileDropdown open={profileOpen} onClose={() => setProfileOpen(false)} />
         </div>
       </div>
