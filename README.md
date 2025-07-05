@@ -1,8 +1,15 @@
+
 # SecureFlow - DevSecOps Pipeline Dashboard
+
+![SecureFlow Demo Screenshot](./public/placeholder.svg)
+
+> **Note:** Demo video and more screenshots coming soon!
+
 
 ## 🛡️ Overview
 
 SecureFlow is a comprehensive DevSecOps pipeline management platform that integrates security into every stage of your development lifecycle. Built with modern web technologies, it provides real-time security monitoring, automated vulnerability remediation, and comprehensive reporting to ensure your applications remain secure from code to production.
+
 
 ## 🌟 Key Features
 
@@ -35,6 +42,7 @@ SecureFlow is a comprehensive DevSecOps pipeline management platform that integr
 - **Milestone Tracking**: Progress monitoring with validation checkpoints
 - **Resource Planning**: Team allocation and skill development guidance
 - **Success Metrics**: KPI definition and measurement frameworks
+
 
 ## 🏗️ Architecture
 
@@ -168,7 +176,86 @@ CREATE TABLE pipeline_metrics (
 );
 ```
 
-## 🚀 Getting Started
+
+## 🧪 Testing
+
+We use **Jest** and **React Testing Library** for unit and integration tests. All critical components and business logic are covered by tests.
+
+### Running Tests
+```bash
+npm run test
+```
+
+### Example Test (React Component)
+```typescript
+import { render, screen } from '@testing-library/react';
+import SecurityMetrics from './src/components/SecurityMetrics';
+
+test('renders security metrics dashboard', () => {
+  render(<SecurityMetrics />);
+  expect(screen.getByText(/Vulnerability counts/i)).toBeInTheDocument();
+});
+```
+
+Test coverage reports are generated with:
+```bash
+npm run test:coverage
+```
+
+---
+
+## � API Documentation
+
+All backend endpoints and Edge Functions are documented using **Swagger** (OpenAPI). You can view the API docs at `/api-docs` after running the backend, or see the [API Docs Portal](https://docs.lovable.dev/api).
+
+---
+
+## 🖼️ Screenshots & Demo
+
+| Dashboard | Vulnerability Details | Compliance Overview |
+|-----------|----------------------|---------------------|
+| ![Dashboard](./public/placeholder.svg) | ![Vuln Details](./public/placeholder.svg) | ![Compliance](./public/placeholder.svg) |
+
+> **Live Demo:** Coming soon!
+
+---
+
+## ⚙️ CI/CD Pipeline
+
+We use **GitHub Actions** for continuous integration and deployment. All pull requests are automatically linted, tested, and built before merging.
+
+Example workflow: `.github/workflows/ci.yml`
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test -- --coverage
+      - run: npm run build
+```
+
+---
+
+## ♿ Accessibility
+
+We follow [WCAG 2.1](https://www.w3.org/WAI/standards-guidelines/wcag/) guidelines for accessibility:
+- Semantic HTML and ARIA roles
+- Keyboard navigation support
+- Sufficient color contrast
+- Screen reader compatibility
+
+Accessibility is tested using [axe](https://www.deque.com/axe/) and manual audits.
+
+---
 
 ### Prerequisites
 - Node.js 18+ and npm
@@ -372,26 +459,79 @@ src/
 
 ## 🚢 Deployment
 
-### Lovable Platform
-1. Click the "Publish" button in the Lovable editor
-2. Your app will be automatically deployed
-3. Access via your custom domain or Lovable subdomain
 
-### Custom Deployment
-1. Build the application: `npm run build`
-2. Deploy the `dist` folder to your hosting provider
-3. Configure environment variables for production
-4. Set up Supabase project for production use
+## 🚀 Production Deployment
 
-### Environment Configuration
+You can deploy SecureFlow to any modern static hosting provider (Vercel, Netlify, AWS S3 + CloudFront, or your own server). Below are the recommended steps for a real-time, production-ready deployment:
+
+### 1. Build the Application
 ```bash
-# Production environment setup
-- Configure Supabase project settings
-- Set up custom domain (requires paid plan)
-- Enable authentication providers
-- Configure RLS policies
-- Set up edge function secrets
+npm run build
 ```
+This creates an optimized production build in the `dist` folder.
+
+### 2. Configure Environment Variables
+Create a `.env.production` file at the project root with your production Supabase credentials:
+```env
+VITE_SUPABASE_URL=your-production-supabase-url
+VITE_SUPABASE_ANON_KEY=your-production-supabase-anon-key
+# Add any other secrets or config as needed
+```
+
+### 3. Set Up Supabase for Production
+- Create a Supabase project at https://app.supabase.com/
+- Enable Row Level Security (RLS) and configure policies for all tables
+- Set up authentication providers (email, OAuth, etc.)
+- Deploy your Edge Functions from `supabase/functions/`
+- Add secrets for Edge Functions as needed
+- Configure storage buckets for reports/artifacts
+
+### 4. Deploy to Hosting Provider
+You can use any static hosting provider. Here are examples:
+
+#### Deploy to Vercel
+1. Push your code to GitHub.
+2. Go to https://vercel.com/import and import your repo.
+3. Set the environment variables in the Vercel dashboard.
+4. Deploy!
+
+
+#### Deploy to Netlify (Recommended)
+1. Push your code to GitHub.
+2. Go to https://app.netlify.com/ and create a new site from Git.
+3. In Site Settings > Build & Deploy > Environment, add:
+   - `VITE_SUPABASE_URL` (from your Supabase project)
+   - `VITE_SUPABASE_ANON_KEY` (from your Supabase project)
+   - Any other required environment variables
+4. Set the build command to `npm run build` and the publish directory to `dist`.
+5. Click Deploy Site!
+
+##### Netlify + Supabase Production Checklist
+- [ ] Supabase project is in production mode (not local/dev)
+- [ ] RLS (Row Level Security) is enabled and policies are set
+- [ ] Auth providers (email, OAuth, etc.) are configured
+- [ ] Edge Functions are deployed and tested
+- [ ] Storage buckets are set up for reports/artifacts
+- [ ] Netlify environment variables are set correctly
+- [ ] HTTPS and custom domain configured (optional)
+- [ ] Test all critical workflows in production
+
+> For more details, see the [Supabase docs](https://supabase.com/docs/guides/hosting/netlify).
+
+#### Deploy to AWS S3 + CloudFront
+1. Build the app (`npm run build`).
+2. Upload the `dist` folder to your S3 bucket.
+3. Set up CloudFront for CDN and HTTPS.
+4. Configure environment variables using a tool like [envsubst](https://github.com/a8m/envsubst) or at build time.
+
+### 5. Post-Deployment Checklist
+- [ ] Test authentication and all critical workflows in production
+- [ ] Enable HTTPS and custom domain
+- [ ] Monitor Supabase logs and usage
+- [ ] Set up error monitoring (e.g., Sentry)
+- [ ] Regularly update dependencies and security patches
+
+---
 
 ## 🔍 Troubleshooting
 
@@ -448,7 +588,10 @@ SELECT auth.uid(), auth.role();
 - [Documentation](https://docs.lovable.dev/)
 - [Video Tutorials](https://www.youtube.com/watch?v=9KHLTZaJcR8&list=PLbVHz4urQBZkJiAWdG8HWoJTdgEysigIO)
 
+
 ## 🤝 Contributing
+
+We welcome contributions! Please use our [issue templates](.github/ISSUE_TEMPLATE.md) and [pull request template](.github/PULL_REQUEST_TEMPLATE.md) for submitting bugs and features.
 
 ### Development Setup
 1. Fork the repository
@@ -465,9 +608,12 @@ SELECT auth.uid(), auth.role();
 - Comprehensive component documentation
 - Test coverage for critical functionality
 
+
 ## 📄 License
 
-This project is built with Lovable and follows standard web application licensing terms.
+This project is licensed under the **MIT License**. See [LICENSE](./LICENSE) for details.
+
+---
 
 ---
 

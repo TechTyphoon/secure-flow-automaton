@@ -1,0 +1,40 @@
+{
+  "project_name": "demo-app",
+  "branch": "main",
+  "scan_type": "sast",
+  "status": "completed",
+  "started_at": "2025-07-05T10:00:00Z",
+  "completed_at": "2025-07-05T10:01:00Z",
+  "vulnerabilities": [
+    {
+      "title": "SQL Injection in login form",
+      "description": "Unsanitized user input in SQL query.",
+      "severity": "critical",
+      "cve_id": "CVE-2025-0001",
+      "component": "auth-service",
+      "file_path": "src/auth/login.js",
+      "line_number": 42,
+      "status": "open",
+      "auto_fixable": false,
+      "confidence_score": 95,
+      "remediation_advice": "Use parameterized queries.",
+      "first_detected": "2025-07-05T10:00:00Z",
+      "last_seen": "2025-07-05T10:00:00Z"
+    },
+    {
+      "title": "Outdated dependency: lodash",
+      "description": "Lodash version is vulnerable to prototype pollution.",
+      "severity": "high",
+      "cve_id": "CVE-2024-1234",
+      "component": "lodash",
+      "file_path": "package.json",
+      "line_number": 15,
+      "status": "open",
+      "auto_fixable": true,
+      "confidence_score": 80,
+      "remediation_advice": "Upgrade lodash to latest version.",
+      "first_detected": "2025-07-05T10:00:00Z",
+      "last_seen": "2025-07-05T10:00:00Z"
+    }
+  ]
+}
