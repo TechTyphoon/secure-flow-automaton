@@ -38,7 +38,7 @@ jobs:
         run: |
           npm install @supabase/supabase-js
           
-          cat > save-to-supabase.js << 'EOF'
+          cat > save-to-supabase.cjs << 'EOF'
           const { createClient } = require('@supabase/supabase-js');
           const fs = require('fs');
           
@@ -110,7 +110,7 @@ jobs:
           saveToSupabase();
           EOF
           
-          node save-to-supabase.js
+          node save-to-supabase.cjs
 
       - name: Upload scan results as artifact
         uses: actions/upload-artifact@v4
