@@ -1,5 +1,5 @@
 // scripts/pushSecurityScan.js
-// Usage: node scripts/pushSecurityScan.js <scan-results.json>
+// Usage: node scripts/pushSecurityScan.js <scan-results.json> <user_id>
 // This script uploads a security scan and its vulnerabilities to Supabase.
 
 
@@ -21,10 +21,12 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 
+
 async function main() {
   const inputFile = process.argv[2];
-  if (!inputFile) {
-    console.error('Usage: node scripts/pushSecurityScan.js <scan-results.json>');
+  const userId = process.argv[3];
+  if (!inputFile || !userId) {
+    console.error('Usage: node scripts/pushSecurityScan.js <scan-results.json> <user_id>');
     process.exit(1);
   }
 
@@ -47,6 +49,7 @@ async function main() {
         medium_count: scanData.vulnerabilities.filter(v => v.severity === 'medium').length,
         low_count: scanData.vulnerabilities.filter(v => v.severity === 'low').length,
         scan_results: scanData,
+        user_id: userId,
       },
     ])
     .select()
@@ -73,6 +76,7 @@ async function main() {
     remediation_advice: v.remediation_advice,
     first_detected: v.first_detected || new Date().toISOString(),
     last_seen: v.last_seen || new Date().toISOString(),
+    user_id: userId,
   }));
 
   if (vulnerabilities.length > 0) {

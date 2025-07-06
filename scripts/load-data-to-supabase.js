@@ -22,7 +22,7 @@ function countBySeverity(vulnerabilities, severity) {
   return vulnerabilities.filter(v => v.severity === severity).length;
 }
 
-async function uploadScan(scanData) {
+async function uploadScan(scanData, userId) {
   try {
     // Insert into security_scans
     const { data: scan, error: scanError } = await supabase
@@ -41,6 +41,7 @@ async function uploadScan(scanData) {
           medium_count: countBySeverity(scanData.vulnerabilities, 'medium'),
           low_count: countBySeverity(scanData.vulnerabilities, 'low'),
           scan_results: scanData,
+        user_id: userId,
         },
       ])
       .select()
@@ -68,6 +69,7 @@ async function uploadScan(scanData) {
       remediation_advice: v.remediation_advice,
       first_detected: v.first_detected || new Date().toISOString(),
       last_seen: v.last_seen || new Date().toISOString(),
+      user_id: userId,
     }));
 
     if (vulnerabilities.length > 0) {
@@ -91,12 +93,13 @@ async function uploadScan(scanData) {
 // If run directly, load JSON file and upload
 if (process.argv[1] && process.argv[1].endsWith('load-data-to-supabase.js')) {
   const inputFile = process.argv[2];
-  if (!inputFile) {
-    console.error('Usage: node scripts/load-data-to-supabase.js <scan-report.json>');
+  const userId = process.argv[3];
+  if (!inputFile || !userId) {
+    console.error('Usage: node scripts/load-data-to-supabase.js <scan-report.json> <user_id>');
     process.exit(1);
   }
   const scanData = JSON.parse(fs.readFileSync(path.resolve(inputFile), 'utf-8'));
-  uploadScan(scanData);
+  uploadScan(scanData, userId);
 }
 
 // Export for programmatic use
