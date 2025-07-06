@@ -1,0 +1,45 @@
+# This is the name of our workflow. It will show up in the Actions tab.
+name: Security Scan
+
+# This section defines WHEN the workflow will run.
+on:
+  # This makes the workflow run on every "push" event.
+  push:
+    # We are only interested in pushes to the "main" branch.
+    branches: [ main ]
+
+# This section defines the actual JOBS that will run.
+jobs:
+  # We are defining a single job called "dependency-scan".
+  dependency-scan:
+    # This specifies that the job will run on a fresh, virtual computer
+    # provided by GitHub, using the latest version of Ubuntu Linux.
+    runs-on: ubuntu-latest
+
+    # This section lists the individual STEPS in our job.
+    # They run in order from top to bottom.
+    steps:
+      # Step 1: Check out your code
+      # This action checks out your repository's code onto the virtual computer
+      # so that Trivy can access your files (like package.json).
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Run the Trivy scanner
+      # This uses a pre-built "action" for Trivy that makes scanning very easy.
+      - name: Run Trivy scan on filesystem
+        uses: aquasecurity/trivy-action@master
+        with:
+          # 'fs' means "filesystem". We are telling Trivy to scan the files in our project.
+          scan-type: 'fs'
+          
+          # This tells Trivy to only report High and Critical severity vulnerabilities.
+          # This helps us focus on the most important issues first.
+          severity: 'CRITICAL,HIGH'
+          
+          # This tells Trivy to ignore vulnerabilities that don't have a fix available yet.
+          # This reduces noise and makes the report more actionable.
+          ignore-unfixed: true
+          
+          # This tells Trivy to output the results in a nice, clean table in the log.
+          format: 'table'
