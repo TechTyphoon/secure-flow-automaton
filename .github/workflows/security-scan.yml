@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # This is the name of our workflow. It will show up in the Actions tab.
 name: Security Scan
 
@@ -43,3 +44,142 @@ jobs:
           
           # This tells Trivy to output the results in a nice, clean table in the log.
           format: 'table'
+=======
+name: Security Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy scan on filesystem
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          ignore-unfixed: true
+          format: 'json'
+          output: 'results.json'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Save to Supabase
+        run: |
+          # Install Supabase client
+          npm install @supabase/supabase-js
+          
+          # Create and run the script
+          cat > save-to-supabase.js << 'EOF'
+          const { createClient } = require('@supabase/supabase-js');
+          const fs = require('fs');
+          
+          async function saveToSupabase() {
+            try {
+              // Initialize Supabase client
+              const supabaseUrl = process.env.SUPABASE_URL;
+              const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+              
+              if (!supabaseUrl || !supabaseKey) {
+                console.log('Missing Supabase credentials. Skipping database save.');
+                return;
+              }
+              
+              const supabase = createClient(supabaseUrl, supabaseKey);
+              
+              // Read and parse the results file
+              let results;
+              try {
+                const resultsFile = fs.readFileSync('results.json', 'utf8');
+                results = JSON.parse(resultsFile);
+              } catch (error) {
+                console.log('No scan results found or invalid JSON format. Skipping database save.');
+                return;
+              }
+              
+              // Extract vulnerabilities from Trivy results
+              const vulnerabilities = [];
+              const currentTime = new Date().toISOString();
+              
+              if (results.Results && Array.isArray(results.Results)) {
+                results.Results.forEach(result => {
+                  if (result.Vulnerabilities && Array.isArray(result.Vulnerabilities)) {
+                    result.Vulnerabilities.forEach(vuln => {
+                      vulnerabilities.push({
+                        vulnerability_id: vuln.VulnerabilityID || 'N/A',
+                        package_name: vuln.PkgName || 'N/A',
+                        installed_version: vuln.InstalledVersion || 'N/A',
+                        fixed_version: vuln.FixedVersion || 'N/A',
+                        severity: vuln.Severity || 'UNKNOWN',
+                        title: vuln.Title || vuln.Description || 'N/A',
+                        status: 'new',
+                        scanned_at: currentTime
+                      });
+                    });
+                  }
+                });
+              }
+              
+              if (vulnerabilities.length === 0) {
+                console.log('No vulnerabilities found. Database not updated.');
+                return;
+              }
+              
+              // Insert vulnerabilities into Supabase
+              const { data, error } = await supabase
+                .from('vulnerabilities')
+                .insert(vulnerabilities);
+              
+              if (error) {
+                console.error('Error saving to Supabase:', error);
+                process.exit(1);
+              }
+              
+              console.log(`Successfully saved ${vulnerabilities.length} vulnerabilities to Supabase.`);
+              
+              // Log summary by severity
+              const severityCounts = {};
+              vulnerabilities.forEach(vuln => {
+                severityCounts[vuln.severity] = (severityCounts[vuln.severity] || 0) + 1;
+              });
+              
+              console.log('Vulnerability summary by severity:');
+              Object.entries(severityCounts).forEach(([severity, count]) => {
+                console.log(`  ${severity}: ${count}`);
+              });
+              
+            } catch (error) {
+              console.error('Unexpected error:', error);
+              process.exit(1);
+            }
+          }
+          
+          saveToSupabase();
+          EOF
+          
+          node save-to-supabase.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+      - name: Upload scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-scan-results
+          path: results.json
+>>>>>>> cfe221b (Migrate to production: real data integration, remove demo code)

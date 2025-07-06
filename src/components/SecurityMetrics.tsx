@@ -51,7 +51,7 @@ const SecurityMetrics = () => {
   const metricsData = [
     {
       title: 'Security Score',
-      value: metrics?.securityScore?.toString() || '94',
+      value: metrics?.securityScore?.toString() || '0',
       unit: '/100',
       icon: Shield,
       color: 'text-security-secure',
@@ -60,7 +60,7 @@ const SecurityMetrics = () => {
     },
     {
       title: 'Active Vulnerabilities',
-      value: metrics?.activeVulnerabilities?.toString() || '7',
+      value: metrics?.activeVulnerabilities?.toString() || '0',
       unit: ' issues',
       icon: AlertTriangle,
       color: 'text-security-medium',
@@ -69,7 +69,7 @@ const SecurityMetrics = () => {
     },
     {
       title: 'Remediated Today',
-      value: metrics?.recentFixes?.toString() || '23',
+      value: metrics?.recentFixes?.toString() || '0',
       unit: ' fixes',
       icon: CheckCircle,
       color: 'text-security-secure',
@@ -78,7 +78,7 @@ const SecurityMetrics = () => {
     },
     {
       title: 'Scan Duration',
-      value: metrics?.avgScanDuration?.toString() || '4.2',
+      value: metrics?.avgScanDuration?.toString() || '0',
       unit: ' min',
       icon: Clock,
       color: 'text-security-scanning',
