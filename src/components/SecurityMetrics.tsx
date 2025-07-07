@@ -2,13 +2,38 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, AlertTriangle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
-import { useSecurityMetrics } from '@/hooks/useSecurityData';
+import { useSecurityMetrics, useVulnerabilitiesDemo } from '@/hooks/useSecurityData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/AuthContext';
 
 const SecurityMetrics = () => {
+  const { user } = useAuth();
   const { data: metrics, isLoading, error } = useSecurityMetrics();
+  const { data: demoVulnerabilities } = useVulnerabilitiesDemo();
   const { toast } = useToast();
+
+  // Calculate demo metrics if no user is logged in
+  const demoMetrics = React.useMemo(() => {
+    if (!user && demoVulnerabilities) {
+      const activeVulns = demoVulnerabilities.filter(v => v.status === 'new').length;
+      const criticalCount = demoVulnerabilities.filter(v => v.severity === 'CRITICAL').length;
+      const highCount = demoVulnerabilities.filter(v => v.severity === 'HIGH').length;
+      const mediumCount = demoVulnerabilities.filter(v => v.severity === 'MEDIUM').length;
+      
+      const securityScore = Math.max(0, 100 - (criticalCount * 20 + highCount * 10 + mediumCount * 5));
+      
+      return {
+        securityScore,
+        activeVulnerabilities: activeVulns,
+        recentFixes: 0,
+        avgScanDuration: 2.5,
+      };
+    }
+    return null;
+  }, [user, demoVulnerabilities]);
+
+  const actualMetrics = user ? metrics : demoMetrics;
 
   if (isLoading) {
     return (
@@ -51,7 +76,7 @@ const SecurityMetrics = () => {
   const metricsData = [
     {
       title: 'Security Score',
-      value: metrics?.securityScore?.toString() || '0',
+      value: actualMetrics?.securityScore?.toString() || '0',
       unit: '/100',
       icon: Shield,
       color: 'text-security-secure',
@@ -60,7 +85,7 @@ const SecurityMetrics = () => {
     },
     {
       title: 'Active Vulnerabilities',
-      value: metrics?.activeVulnerabilities?.toString() || '0',
+      value: actualMetrics?.activeVulnerabilities?.toString() || '0',
       unit: ' issues',
       icon: AlertTriangle,
       color: 'text-security-medium',
@@ -69,7 +94,7 @@ const SecurityMetrics = () => {
     },
     {
       title: 'Remediated Today',
-      value: metrics?.recentFixes?.toString() || '0',
+      value: actualMetrics?.recentFixes?.toString() || '0',
       unit: ' fixes',
       icon: CheckCircle,
       color: 'text-security-secure',
@@ -78,7 +103,7 @@ const SecurityMetrics = () => {
     },
     {
       title: 'Scan Duration',
-      value: metrics?.avgScanDuration?.toString() || '0',
+      value: actualMetrics?.avgScanDuration?.toString() || '0',
       unit: ' min',
       icon: Clock,
       color: 'text-security-scanning',

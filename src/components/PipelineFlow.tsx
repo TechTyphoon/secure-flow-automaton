@@ -12,52 +12,59 @@ import {
   AlertTriangle,
   Clock
 } from 'lucide-react';
+import { usePipelineFlow, usePipelineFlowDemo } from '@/hooks/useSecurityData';
+import { useAuth } from '@/components/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const PipelineFlow = () => {
-  const stages = [
-    {
-      name: 'Source Code',
-      icon: GitBranch,
-      status: 'completed',
-      duration: '2s',
-      checks: ['Code Quality', 'License Scan']
-    },
-    {
-      name: 'Build',
-      icon: Code,
-      status: 'completed',
-      duration: '45s',
-      checks: ['Dependency Check', 'SAST']
-    },
-    {
-      name: 'Test',
-      icon: TestTube,
-      status: 'completed',
-      duration: '1m 23s',
-      checks: ['Unit Tests', 'Integration Tests']
-    },
-    {
-      name: 'Security Scan',
-      icon: Shield,
-      status: 'scanning',
-      duration: '2m 15s',
-      checks: ['DAST', 'Container Scan', 'Secrets Scan']
-    },
-    {
-      name: 'Package',
-      icon: Package,
-      status: 'pending',
-      duration: '-',
-      checks: ['Image Build', 'Vulnerability Scan']
-    },
-    {
-      name: 'Deploy',
-      icon: Rocket,
-      status: 'pending',
-      duration: '-',
-      checks: ['Runtime Protection', 'Policy Check']
+  const { user } = useAuth();
+  
+  // Use demo mode when no user is logged in, user-specific data when logged in
+  const { data: pipelineData, isLoading } = user 
+    ? usePipelineFlow() 
+    : usePipelineFlowDemo();
+
+  if (isLoading) {
+    return (
+      <Card className="glass-morphism">
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="p-4 rounded-lg border">
+                <Skeleton className="h-8 w-8 mb-2" />
+                <Skeleton className="h-4 w-20 mb-1" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const stages = pipelineData?.stages || [];
+
+  const getStageIcon = (stageName: string) => {
+    switch (stageName) {
+      case 'Source Code':
+        return Code;
+      case 'Build':
+        return GitBranch;
+      case 'Test':
+        return TestTube;
+      case 'Security Scan':
+        return Shield;
+      case 'Package':
+        return Package;
+      case 'Deploy':
+        return Rocket;
+      default:
+        return Code;
     }
-  ];
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -90,8 +97,8 @@ const PipelineFlow = () => {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <GitBranch className="h-5 w-5 text-primary" />
-          <span>Pipeline Flow - main branch</span>
-          <span className="text-sm text-muted-foreground">(Build #1247)</span>
+          <span>Pipeline Flow - {pipelineData?.branch || 'main'} branch</span>
+          <span className="text-sm text-muted-foreground">(Build #{pipelineData?.buildNumber || 'N/A'})</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -100,7 +107,9 @@ const PipelineFlow = () => {
             <div key={index} className="relative">
               <div className={`p-4 rounded-lg border-2 transition-all duration-300 ${getStatusColor(stage.status)}`}>
                 <div className="flex items-center justify-between mb-3">
-                  <stage.icon className={`h-6 w-6 ${stage.status === 'completed' ? 'text-security-secure' : stage.status === 'scanning' ? 'text-security-scanning' : 'text-muted-foreground'}`} />
+                  {React.createElement(getStageIcon(stage.name), {
+                    className: `h-6 w-6 ${stage.status === 'completed' ? 'text-security-secure' : stage.status === 'scanning' ? 'text-security-scanning' : 'text-muted-foreground'}`
+                  })}
                   {getStatusIcon(stage.status)}
                 </div>
                 

@@ -17,6 +17,59 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Record Pipeline Start
+        id: record_start
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          npm install @supabase/supabase-js
+          
+          cat > record-pipeline-start.cjs << 'EOF'
+          const { createClient } = require('@supabase/supabase-js');
+          
+          async function recordPipelineStart() {
+            try {
+              const supabaseUrl = process.env.SUPABASE_URL;
+              const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+              
+              if (!supabaseUrl || !supabaseKey) {
+                console.log('Skipping pipeline tracking: Supabase credentials not found.');
+                return;
+              }
+              
+              const supabase = createClient(supabaseUrl, supabaseKey);
+              
+              const { data, error } = await supabase
+                .from('pipeline_runs')
+                .insert({
+                  run_id: process.env.GITHUB_RUN_ID,
+                  branch_name: process.env.GITHUB_REF_NAME,
+                  status: 'In Progress',
+                  started_at: new Date().toISOString()
+                })
+                .select('id')
+                .single();
+              
+              if (error) {
+                console.error('Error recording pipeline start:', error);
+                process.exit(1);
+              }
+              
+              console.log(`Pipeline run recorded with ID: ${data.id}`);
+              console.log(`::set-output name=new_run_record_id::${data.id}`);
+              
+            } catch (err) {
+              console.error('An unexpected error occurred:', err);
+              process.exit(1);
+            }
+          }
+          
+          recordPipelineStart();
+          EOF
+          
+          GITHUB_RUN_ID=${{ github.run_id }} GITHUB_REF_NAME=${{ github.ref_name }} node record-pipeline-start.cjs
+
       - name: Run Trivy scan on filesystem
         uses: aquasecurity/trivy-action@master
         with:
@@ -118,3 +171,60 @@ jobs:
         with:
           name: trivy-scan-results
           path: results.json
+
+      - name: Record Pipeline End
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          npm install @supabase/supabase-js
+          
+          cat > record-pipeline-end.cjs << 'EOF'
+          const { createClient } = require('@supabase/supabase-js');
+          
+          async function recordPipelineEnd() {
+            try {
+              const supabaseUrl = process.env.SUPABASE_URL;
+              const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+              const recordId = process.env.RECORD_ID;
+              const jobStatus = process.env.JOB_STATUS;
+              
+              if (!supabaseUrl || !supabaseKey) {
+                console.log('Skipping pipeline end tracking: Supabase credentials not found.');
+                return;
+              }
+              
+              if (!recordId) {
+                console.log('No record ID found. Pipeline start may have failed.');
+                return;
+              }
+              
+              const supabase = createClient(supabaseUrl, supabaseKey);
+              
+              const { data, error } = await supabase
+                .from('pipeline_runs')
+                .update({
+                  status: jobStatus,
+                  completed_at: new Date().toISOString(),
+                  stages: { "scan_status": jobStatus }
+                })
+                .eq('id', recordId);
+              
+              if (error) {
+                console.error('Error recording pipeline end:', error);
+                process.exit(1);
+              }
+              
+              console.log(`Pipeline run ${recordId} updated with status: ${jobStatus}`);
+              
+            } catch (err) {
+              console.error('An unexpected error occurred:', err);
+              process.exit(1);
+            }
+          }
+          
+          recordPipelineEnd();
+          EOF
+          
+          RECORD_ID=${{ steps.record_start.outputs.new_run_record_id }} JOB_STATUS=${{ job.status }} node record-pipeline-end.cjs
