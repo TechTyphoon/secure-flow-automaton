@@ -16,6 +16,9 @@ vi.mock('@/hooks/use-toast', () => ({
   })),
 }));
 
+// Import the mocked hooks
+import { useSecurityMetrics } from '@/hooks/useRealSecurityData';
+
 const mockUser = {
   id: '1',
   email: 'test@example.com',
@@ -47,8 +50,7 @@ describe('SecurityMetrics', () => {
   });
 
   it('renders loading state', () => {
-    const { useSecurityMetrics } = require('@/hooks/useRealSecurityData');
-    useSecurityMetrics.mockReturnValue({
+    vi.mocked(useSecurityMetrics).mockReturnValue({
       data: null,
       isLoading: true,
       error: null,
