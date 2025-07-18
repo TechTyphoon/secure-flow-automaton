@@ -87,11 +87,11 @@ export class RealSecurityService {
   private githubToken: string;
 
   constructor() {
-    this.githubToken = process.env.GITHUB_TOKEN || '';
-    this.sonarCloudToken = process.env.SONARCLOUD_TOKEN || '';
+    this.githubToken = import.meta.env.VITE_GITHUB_TOKEN || '';
+    this.sonarCloudToken = import.meta.env.VITE_SONARCLOUD_TOKEN || '';
     
     if (!this.githubToken) {
-      throw new Error('GITHUB_TOKEN environment variable is required');
+      console.warn('VITE_GITHUB_TOKEN environment variable is not set - using demo mode');
     }
     
     this.octokit = new Octokit({

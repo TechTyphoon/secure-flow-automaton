@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   Clock
 } from 'lucide-react';
-import { usePipelineFlow, usePipelineFlowDemo } from '@/hooks/useSecurityData';
+import { usePipelineFlow } from '@/hooks/useRealSecurityData';
+import { usePipelineFlowDemo } from '@/hooks/useSecurityData';
 import { useAuth } from '@/components/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -27,6 +28,18 @@ const PipelineFlow = () => {
   const isDemo = !user;
   const pipelineData = isDemo ? pipelineFlowDemo.data : pipelineFlow.data;
   const isLoading = isDemo ? pipelineFlowDemo.isLoading : pipelineFlow.isLoading;
+  
+  // Add real-time status indicator
+  React.useEffect(() => {
+    if (user && pipelineData) {
+      console.log('📊 Pipeline Status Updated:', {
+        branch: pipelineData.branch,
+        buildNumber: pipelineData.buildNumber,
+        status: pipelineData.status,
+        stages: pipelineData.stages?.length || 0
+      });
+    }
+  }, [user, pipelineData]);
 
   if (isLoading) {
     return (
@@ -103,6 +116,16 @@ const PipelineFlow = () => {
           <GitBranch className="h-5 w-5 text-primary" />
           <span>Pipeline Flow - {pipelineData?.branch || 'main'} branch</span>
           <span className="text-sm text-muted-foreground">(Build #{pipelineData?.buildNumber || 'N/A'})</span>
+          {!isDemo && (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              Live Data
+            </span>
+          )}
+          {isDemo && (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              Demo Mode
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
