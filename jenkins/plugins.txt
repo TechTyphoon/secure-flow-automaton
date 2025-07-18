@@ -1,0 +1,212 @@
+# Required Jenkins Plugins for SecureFlow Automaton
+
+# Core Pipeline Plugins
+workflow-aggregator:2.6
+workflow-cps:2.90
+workflow-job:2.41
+workflow-support:3.8
+workflow-scm-step:2.13
+workflow-step-api:2.24
+workflow-api:2.46
+workflow-basic-steps:2.24
+workflow-durable-task-step:2.39
+workflow-multibranch:2.26
+
+# Docker Integration
+docker-workflow:1.28
+docker-plugin:1.2.6
+docker-commons:1.17
+docker-build-step:2.7
+
+# GitHub Integration
+github:1.34.1
+github-branch-source:2.11.2
+github-api:1.123
+github-pullrequest:0.2.8
+github-oauth:0.33
+
+# Security Plugins
+build-timeout:1.24
+timestamper:1.13
+ws-cleanup:0.39
+build-name-setter:2.2.0
+build-user-vars-plugin:1.7
+mask-passwords:3.0
+
+# Code Quality
+sonar:2.13.1
+checkstyle:5.0.0
+warnings-ng:9.7.0
+cobertura:1.16
+jacoco:3.3.0
+htmlpublisher:1.25
+
+# Testing
+junit:1.48
+test-results-analyzer:0.3.5
+performance:3.20
+xunit:3.0.18
+
+# Notifications
+slack:2.47
+email-ext:2.83
+mailer:1.34
+build-monitor-plugin:1.12+build.201809061734
+
+# Deployment
+ssh-slaves:1.32
+ssh-agent:1.23
+ssh-credentials:1.19
+deploy:1.16
+kubernetes:1.29.2
+kubernetes-credentials:0.9.0
+
+# Utilities
+build-pipeline-plugin:1.5.8
+delivery-pipeline-plugin:1.5.0
+parameterized-trigger:2.39
+conditional-buildstep:1.4.1
+run-condition:1.5
+rebuild:1.32
+copyartifact:1.45.1
+build-keeper-plugin:1.3
+generic-webhook-trigger:1.72
+
+# Configuration as Code
+configuration-as-code:1.51
+configuration-as-code-support:1.19
+
+# Job DSL
+job-dsl:1.77
+
+# Credentials
+credentials:2.6.1
+credentials-binding:1.24
+plain-credentials:1.7
+ssh-credentials:1.19
+
+# SCM
+git:4.8.2
+git-client:3.7.0
+git-server:1.9
+github-branch-source:2.11.2
+mercurial:2.14
+
+# Build Tools
+nodejs:1.4.0
+ant:1.13
+gradle:1.36
+maven-plugin:3.8
+
+# Monitoring
+monitoring:1.86.0
+metrics:4.0.2.7
+prometheus:2.0.10
+
+# UI Enhancement
+blue-ocean:1.24.6
+dashboard-view:2.17
+view-job-filters:2.3
+nested-view:1.19
+sectioned-view:1.26
+
+# Security
+role-strategy:3.2
+matrix-auth:2.6.7
+ldap:2.7
+active-directory:2.19
+saml:2.0.7
+
+# Compliance
+audit-trail:3.2
+jobConfigHistory:2.26
+
+# Performance
+throttle-concurrents:2.0.3
+build-blocker-plugin:1.7.3
+lockable-resources:2.10
+
+# Reporting
+allure-jenkins-plugin:2.29.0
+cucumber-reports:5.7.0
+cucumber-testresult-plugin:0.10.3
+testng-results:1.4
+
+# Additional Utilities
+ansicolor:0.7.3
+build-name-setter:2.2.0
+build-user-vars-plugin:1.7
+embeddable-build-status:2.0.3
+environment-script:1.2.5
+groovy:2.4
+pipeline-stage-view:2.19
+pipeline-utility-steps:2.6.1
+publish-over-ssh:1.22
+text-finder:1.16
+description-setter:1.10
+workspace-cleanup:0.39
+
+# Container Security
+aqua-security-scanner:3.0.22
+twistlock-plugin:0.0.11
+
+# Code Analysis
+violations:0.7.11
+dry:2.50
+pmd:4.0.0
+tasks:4.53
+duplicate-code-scanner:1.3.0
+
+# Deployment Automation
+pipeline-aws:1.41
+pipeline-githubnotify-step:1.0.5
+pipeline-maven:3.9.3
+pipeline-npm:0.9.1
+
+# Backup and Restore
+backup:1.6.1
+thinBackup:1.10
+
+# Additional Security
+script-security:1.76
+command-launcher:1.5
+jdk-tool:1.4
+ant:1.13
+resource-disposer:0.14
+
+# Branch Management
+basic-branch-build-strategies:1.3.2
+branch-api:2.6.4
+
+# Multi-branch Pipeline
+workflow-multibranch:2.26
+pipeline-stage-tags-metadata:1.7.2
+
+# GitHub Pull Request Builder
+ghprb:1.42.2
+
+# Pipeline Shared Libraries
+workflow-cps-global-lib:2.21
+pipeline-github-lib:1.0
+
+# Build Triggers
+gitlab-plugin:1.5.20
+bitbucket:1.1.27
+generic-webhook-trigger:1.72
+
+# Quality Gates
+quality-gates:2.5
+
+# Container Orchestration
+kubernetes:1.29.2
+openshift-client:1.0.34
+helm:1.1.2
+
+# Compliance and Audit
+audit-trail:3.2
+build-failure-analyzer:1.25.1
+jobConfigHistory:2.26
+
+# Performance Monitoring
+javamelody:1.81.0
+monitoring:1.86.0

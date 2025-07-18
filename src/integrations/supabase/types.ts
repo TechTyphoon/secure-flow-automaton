@@ -7,160 +7,128 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      events: {
-        Row: {
-          capacity: number | null
-          category_id: string | null
-          created_at: string | null
-          description: string | null
-          end_date: string
-          id: string
-          location: Json | null
-          organizer_id: string
-          start_date: string
-          status: string | null
-          tags: string[] | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          capacity?: number | null
-          category_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          end_date: string
-          id?: string
-          location?: Json | null
-          organizer_id: string
-          start_date: string
-          status?: string | null
-          tags?: string[] | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          capacity?: number | null
-          category_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          end_date?: string
-          id?: string
-          location?: Json | null
-          organizer_id?: string
-          start_date?: string
-          status?: string | null
-          tags?: string[] | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       pipeline_metrics: {
         Row: {
-          branch: string
+          branch: string | null
           build_number: number | null
           completed_at: string | null
-          created_at: string
+          created_at: string | null
           duration_seconds: number | null
           id: string
           metrics: Json | null
           pipeline_id: string
           project_name: string
           security_gate_passed: boolean | null
-          started_at: string
+          started_at: string | null
           status: string
           triggered_by: string | null
-          updated_at: string
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
-          branch?: string
+          branch?: string | null
           build_number?: number | null
           completed_at?: string | null
-          created_at?: string
+          created_at?: string | null
           duration_seconds?: number | null
           id?: string
           metrics?: Json | null
           pipeline_id: string
           project_name: string
           security_gate_passed?: boolean | null
-          started_at?: string
+          started_at?: string | null
           status: string
           triggered_by?: string | null
-          updated_at?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
-          branch?: string
+          branch?: string | null
           build_number?: number | null
           completed_at?: string | null
-          created_at?: string
+          created_at?: string | null
           duration_seconds?: number | null
           id?: string
           metrics?: Json | null
           pipeline_id?: string
           project_name?: string
           security_gate_passed?: boolean | null
-          started_at?: string
+          started_at?: string | null
           status?: string
           triggered_by?: string | null
-          updated_at?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
-      remediation_activities: {
+      pipeline_runs: {
         Row: {
-          action_type: string
+          branch_name: string | null
           completed_at: string | null
-          created_at: string
-          fix_description: string | null
+          created_at: string | null
           id: string
-          pr_url: string | null
-          started_at: string
+          run_id: number
+          started_at: string | null
           status: string
-          updated_at: string
-          vulnerability_id: string | null
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
-          action_type: string
+          branch_name?: string | null
           completed_at?: string | null
-          created_at?: string
-          fix_description?: string | null
+          created_at?: string | null
           id?: string
-          pr_url?: string | null
-          started_at?: string
-          status?: string
-          updated_at?: string
-          vulnerability_id?: string | null
+          run_id: number
+          started_at?: string | null
+          status: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
-          action_type?: string
+          branch_name?: string | null
           completed_at?: string | null
-          created_at?: string
-          fix_description?: string | null
+          created_at?: string | null
           id?: string
-          pr_url?: string | null
-          started_at?: string
+          run_id?: number
+          started_at?: string | null
           status?: string
-          updated_at?: string
-          vulnerability_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "remediation_activities_vulnerability_id_fkey"
-            columns: ["vulnerability_id"]
-            isOneToOne: false
-            referencedRelation: "vulnerabilities"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       security_scans: {
         Row: {
-          branch: string
-          commit_hash: string | null
+          branch: string | null
           completed_at: string | null
-          created_at: string
+          created_at: string | null
           critical_count: number | null
           high_count: number | null
           id: string
@@ -169,16 +137,16 @@ export type Database = {
           project_name: string
           scan_results: Json | null
           scan_type: string
-          started_at: string
-          status: string
+          started_at: string | null
+          status: string | null
           total_vulnerabilities: number | null
-          updated_at: string
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
-          branch?: string
-          commit_hash?: string | null
+          branch?: string | null
           completed_at?: string | null
-          created_at?: string
+          created_at?: string | null
           critical_count?: number | null
           high_count?: number | null
           id?: string
@@ -187,16 +155,16 @@ export type Database = {
           project_name: string
           scan_results?: Json | null
           scan_type: string
-          started_at?: string
-          status?: string
+          started_at?: string | null
+          status?: string | null
           total_vulnerabilities?: number | null
-          updated_at?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
-          branch?: string
-          commit_hash?: string | null
+          branch?: string | null
           completed_at?: string | null
-          created_at?: string
+          created_at?: string | null
           critical_count?: number | null
           high_count?: number | null
           id?: string
@@ -205,130 +173,92 @@ export type Database = {
           project_name?: string
           scan_results?: Json | null
           scan_type?: string
-          started_at?: string
-          status?: string
+          started_at?: string | null
+          status?: string | null
           total_vulnerabilities?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      tickets: {
-        Row: {
-          event_id: string
-          event_title: string | null
-          id: string
-          pdf_url: string | null
-          price: number
-          purchased_at: string
-          qr_code: string | null
-          quantity: number
-          ticket_code: string
-          user_id: string
-        }
-        Insert: {
-          event_id: string
-          event_title?: string | null
-          id?: string
-          pdf_url?: string | null
-          price: number
-          purchased_at?: string
-          qr_code?: string | null
-          quantity?: number
-          ticket_code: string
-          user_id: string
-        }
-        Update: {
-          event_id?: string
-          event_title?: string | null
-          id?: string
-          pdf_url?: string | null
-          price?: number
-          purchased_at?: string
-          qr_code?: string | null
-          quantity?: number
-          ticket_code?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
       vulnerabilities: {
         Row: {
+          affected_versions: string | null
           auto_fixable: boolean | null
+          column_number: number | null
           component: string | null
           confidence_score: number | null
-          created_at: string
+          created_at: string | null
           cve_id: string | null
+          cwe_id: string | null
           description: string | null
           file_path: string | null
-          first_detected: string
+          first_detected: string | null
           fixed_at: string | null
           id: string
-          last_seen: string
           line_number: number | null
-          remediation_advice: string | null
+          package_name: string | null
+          rule_id: string | null
           scan_id: string | null
+          scanned_at: string | null
           severity: string
-          status: string
+          status: string | null
           title: string
-          updated_at: string
+          tool: string | null
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
+          affected_versions?: string | null
           auto_fixable?: boolean | null
+          column_number?: number | null
           component?: string | null
           confidence_score?: number | null
-          created_at?: string
+          created_at?: string | null
           cve_id?: string | null
+          cwe_id?: string | null
           description?: string | null
           file_path?: string | null
-          first_detected?: string
+          first_detected?: string | null
           fixed_at?: string | null
           id?: string
-          last_seen?: string
           line_number?: number | null
-          remediation_advice?: string | null
+          package_name?: string | null
+          rule_id?: string | null
           scan_id?: string | null
+          scanned_at?: string | null
           severity: string
-          status?: string
+          status?: string | null
           title: string
-          updated_at?: string
+          tool?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
+          affected_versions?: string | null
           auto_fixable?: boolean | null
+          column_number?: number | null
           component?: string | null
           confidence_score?: number | null
-          created_at?: string
+          created_at?: string | null
           cve_id?: string | null
+          cwe_id?: string | null
           description?: string | null
           file_path?: string | null
-          first_detected?: string
+          first_detected?: string | null
           fixed_at?: string | null
           id?: string
-          last_seen?: string
           line_number?: number | null
-          remediation_advice?: string | null
+          package_name?: string | null
+          rule_id?: string | null
           scan_id?: string | null
+          scanned_at?: string | null
           severity?: string
-          status?: string
+          status?: string | null
           title?: string
-          updated_at?: string
+          tool?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -345,16 +275,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -362,21 +286,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -394,14 +322,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -417,14 +347,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -440,14 +372,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -455,22 +389,26 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
-    Enums: {
-      app_role: ["admin", "moderator", "user"],
-    },
+    Enums: {},
   },
 } as const
+

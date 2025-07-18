@@ -1,0 +1,191 @@
+version: '3.8'
+
+services:
+  # Main application
+  secure-flow-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - secure-flow-network
+    restart: unless-stopped
+    depends_on:
+      - supabase-db
+      - supabase-auth
+      - supabase-rest
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Supabase Database
+  supabase-db:
+    image: supabase/postgres:15.1.0.117
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your-super-secret-and-long-postgres-password
+      POSTGRES_HOST: supabase-db
+      POSTGRES_PORT: 5432
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - secure-flow-network
+    restart: unless-stopped
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Supabase Auth
+  supabase-auth:
+    image: supabase/gotrue:v2.99.0
+    ports:
+      - "9999:9999"
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:your-super-secret-and-long-postgres-password@supabase-db:5432/postgres?search_path=auth
+      GOTRUE_SITE_URL: http://localhost:8080
+      GOTRUE_URI_ALLOW_LIST: "http://localhost:8080"
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@example.com
+      GOTRUE_SMTP_HOST: supabase-inbucket
+      GOTRUE_SMTP_PORT: 2500
+      GOTRUE_SMTP_USER: ${SMTP_USER:-your-email@gmail.com}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-your-app-password}
+    depends_on:
+      - supabase-db
+    networks:
+      - secure-flow-network
+    restart: unless-stopped
+
+  # Supabase REST API
+  supabase-rest:
+    image: postgrest/postgrest:v11.2.0
+    ports:
+      - "3000:3000"
+    environment:
+      PGRST_DB_URI: postgres://postgres:your-super-secret-and-long-postgres-password@supabase-db:5432/postgres
+      PGRST_DB_SCHEMAS: public,graphql_public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_APP_SETTINGS_JWT_EXP: 3600
+    depends_on:
+      - supabase-db
+    networks:
+      - secure-flow-network
+    restart: unless-stopped
+
+  # Supabase Realtime
+  supabase-realtime:
+    image: supabase/realtime:v2.25.35
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      DB_HOST: supabase-db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: your-super-secret-and-long-postgres-password
+      DB_NAME: postgres
+      DB_SSL: "false"
+      API_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      FLY_ALLOC_ID: fly123
+      FLY_APP_NAME: realtime
+      SECRET_KEY_BASE: UpNVntn3cDxHJpq99YMc1T1AQgQpc8kfYTuRgBiYa15BLrx8etQoXz3gZv1/u2oq
+      ERL_AFLAGS: -proto_dist inet_tcp
+      ENABLE_TAILSCALE: "false"
+      DNS_NODES: "''"
+    depends_on:
+      - supabase-db
+    networks:
+      - secure-flow-network
+    restart: unless-stopped
+
+  # Supabase Storage
+  supabase-storage:
+    image: supabase/storage-api:v0.40.4
+    ports:
+      - "5000:5000"
+    environment:
+      ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+      POSTGREST_URL: http://supabase-rest:3000
+      PGRST_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      DATABASE_URL: postgres://postgres:your-super-secret-and-long-postgres-password@supabase-db:5432/postgres
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+      ENABLE_IMAGE_TRANSFORMATION: "true"
+      IMGPROXY_URL: http://supabase-imgproxy:5001
+    volumes:
+      - supabase-storage-data:/var/lib/storage
+    depends_on:
+      - supabase-db
+      - supabase-rest
+    networks:
+      - secure-flow-network
+    restart: unless-stopped
+
+  # Image proxy for storage
+  supabase-imgproxy:
+    image: darthsim/imgproxy:v3.18.2
+    ports:
+      - "5001:5001"
+    environment:
+      IMGPROXY_BIND: ":5001"
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /var/lib/storage
+      IMGPROXY_USE_ETAG: "true"
+      IMGPROXY_ENABLE_WEBP_DETECTION: "true"
+    volumes:
+      - supabase-storage-data:/var/lib/storage:ro
+    networks:
+      - secure-flow-network
+    restart: unless-stopped
+
+  # Mail testing (Inbucket)
+  supabase-inbucket:
+    image: inbucket/inbucket:3.0.3
+    ports:
+      - "2500:2500"  # SMTP
+      - "9000:9000"  # Web UI
+    environment:
+      INBUCKET_WEB_ADDR: 0.0.0.0:9000
+      INBUCKET_POP3_ADDR: 0.0.0.0:1100
+      INBUCKET_SMTP_ADDR: 0.0.0.0:2500
+    networks:
+      - secure-flow-network
+    restart: unless-stopped
+
+networks:
+  secure-flow-network:
+    driver: bridge
+
+volumes:
+  supabase-db-data:
+  supabase-storage-data:

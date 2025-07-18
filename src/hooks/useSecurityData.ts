@@ -9,8 +9,19 @@ export const useSecurityScans = () => {
     queryFn: async () => {
       if (!user) return [];
       console.log('Fetching security scans for user:', user.id);
-      // Return empty array since security_scans table doesn't exist
-      return [];
+      
+      const { data, error } = await supabase
+        .from('security_scans')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching security scans:', error);
+        throw error;
+      }
+      
+      return data;
     },
     enabled: !!user,
     refetchInterval: 30000,
@@ -24,7 +35,7 @@ export const useVulnerabilities = () => {
     queryFn: async () => {
       if (!user) return [];
       console.log('Fetching vulnerabilities for user:', user.id);
-      // @ts-ignore
+      // @ts-expect-error - Supabase types not fully defined
       const { data, error } = await supabase
         .from('vulnerabilities')
         .select('*')
@@ -41,13 +52,27 @@ export const useVulnerabilities = () => {
 };
 
 export const usePipelineMetrics = () => {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ['pipeline-metrics'],
+    queryKey: ['pipeline-metrics', user?.id],
     queryFn: async () => {
-      console.log('Fetching pipeline metrics...');
-      // Return empty array since pipeline_metrics table might not exist
-      return [];
+      if (!user) return [];
+      console.log('Fetching pipeline metrics for user:', user.id);
+      
+      const { data, error } = await supabase
+        .from('pipeline_metrics')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching pipeline metrics:', error);
+        throw error;
+      }
+      
+      return data;
     },
+    enabled: !!user,
     refetchInterval: 30000,
   });
 };
@@ -64,7 +89,7 @@ export const useSecurityMetrics = () => {
         avgScanDuration: 0,
       };
       console.log('Calculating security metrics for user:', user.id);
-      // @ts-ignore
+      // @ts-expect-error - Supabase types not fully defined
       const { data: vulnCounts, error: vulnError } = await supabase
         .from('vulnerabilities')
         .select('severity, status')
@@ -358,7 +383,7 @@ export const useVulnerabilitiesDemo = () => {
     queryKey: ['vulnerabilities-demo'],
     queryFn: async () => {
       console.log('🔍 Fetching vulnerabilities in demo mode (no user filter)');
-      // @ts-ignore
+      // @ts-expect-error - Supabase types not fully defined
       const { data, error } = await supabase
         .from('vulnerabilities')
         .select('*')

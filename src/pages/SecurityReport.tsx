@@ -4,7 +4,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const SecurityReport: React.FC = () => {
   // Simulate fetching report data (dummy, replace with API if backend is set up)
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<{
+    summary: { totalVulns: number; critical: number; high: number; medium: number; lastScan: string };
+    vulnerabilities: Array<{
+      id: string;
+      cve: string;
+      title: string;
+      severity: string;
+      file: string;
+      line: number;
+      component: string;
+      remediation: string;
+      status: string;
+      confidence: number;
+      detected: string;
+    }>;
+    remediation: Array<{
+      id: string;
+      vulnId: string;
+      status: string;
+      date: string;
+    }>;
+  } | null>(null);
   useEffect(() => {
     setTimeout(() => {
       setData({
@@ -64,7 +85,17 @@ const SecurityReport: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {data.vulnerabilities.map((vuln: any) => (
+              {data.vulnerabilities.map((vuln: {
+                id: string;
+                cve: string;
+                title: string;
+                severity: string;
+                status: string;
+                file: string;
+                line: number;
+                component: string;
+                remediation: string;
+              }) => (
                 <tr key={vuln.id}>
                   <td className="font-mono">{vuln.cve}</td>
                   <td>{vuln.title}</td>
@@ -85,7 +116,12 @@ const SecurityReport: React.FC = () => {
         </CardHeader>
         <CardContent>
           <ul className="text-xs space-y-2">
-            {data.remediation.map((rem: any) => (
+            {data.remediation.map((rem: {
+              id: string;
+              vulnId: string;
+              status: string;
+              date: string;
+            }) => (
               <li key={rem.id}>
                 Vulnerability <b>{rem.vulnId}</b> was <span className={rem.status === "fixed" ? "text-security-secure" : "text-destructive"}>{rem.status}</span> at {new Date(rem.date).toLocaleString()}
               </li>

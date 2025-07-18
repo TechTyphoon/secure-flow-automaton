@@ -1,0 +1,369 @@
+# Jenkins as Code (JCasC) Configuration for SecureFlow Automaton
+
+jenkins:
+  systemMessage: "SecureFlow Automaton Jenkins - Automated DevSecOps Pipeline"
+  
+  # Global security settings
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+          properties:
+            - "hudson.model.MyViewsProperty"
+            - "hudson.search.UserSearchProperty"
+            - "hudson.security.HudsonPrivateSecurityRealm$Details"
+            - "hudson.tasks.Mailer$UserProperty"
+            - "jenkins.security.ApiTokenProperty"
+            - "jenkins.security.LastGrantedAuthoritiesProperty"
+            - "org.jenkinsci.plugins.displayurlapi.user.PreferredProviderUserProperty"
+  
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+          - name: "admin"
+            description: "Full access"
+            permissions:
+              - "Overall/Administer"
+            assignments:
+              - "admin"
+          - name: "developer"
+            description: "Development team access"
+            permissions:
+              - "Overall/Read"
+              - "Job/Build"
+              - "Job/Cancel"
+              - "Job/Read"
+              - "Job/Workspace"
+              - "Run/Replay"
+              - "Run/Update"
+              - "View/Read"
+            assignments:
+              - "authenticated"
+  
+  # Global tool configuration
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: "NODE_VERSION"
+            value: "18"
+          - key: "DOCKER_REGISTRY"
+            value: "docker.io"
+          - key: "COVERAGE_THRESHOLD"
+            value: "80"
+          - key: "VULNERABILITY_THRESHOLD"
+            value: "high"
+  
+  # Build settings
+  numExecutors: 2
+  scmCheckoutRetryCount: 3
+  mode: NORMAL
+  
+  # Quiet period and SCM polling
+  quietPeriod: 5
+  scmCheckoutRetryCount: 3
+  
+  # Markup formatter
+  markupFormatter:
+    rawHtml:
+      disableSyntaxHighlighting: false
+
+# Security configuration
+security:
+  apiToken:
+    creationOfLegacyTokenEnabled: false
+    tokenGenerationOnCreationEnabled: false
+    usageStatisticsEnabled: true
+  
+  gitHooks:
+    allowedOnAgents: false
+    allowedOnController: false
+  
+  gitHostKeyVerificationConfiguration:
+    sshHostKeyVerificationStrategy: "knownHostsFileVerificationStrategy"
+  
+  globalJobDslSecurityConfiguration:
+    useScriptSecurity: true
+  
+  sSHD:
+    port: -1
+
+# Credentials configuration
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - string:
+              scope: GLOBAL
+              id: "github-token"
+              secret: "${GITHUB_TOKEN}"
+              description: "GitHub Personal Access Token"
+          
+          - usernamePassword:
+              scope: GLOBAL
+              id: "docker-hub-credentials"
+              username: "${DOCKER_HUB_USERNAME}"
+              password: "${DOCKER_HUB_PASSWORD}"
+              description: "Docker Hub Credentials"
+          
+          - string:
+              scope: GLOBAL
+              id: "sonarcloud-token"
+              secret: "${SONARCLOUD_TOKEN}"
+              description: "SonarCloud Authentication Token"
+          
+          - string:
+              scope: GLOBAL
+              id: "snyk-token"
+              secret: "${SNYK_TOKEN}"
+              description: "Snyk Authentication Token"
+          
+          - string:
+              scope: GLOBAL
+              id: "slack-webhook"
+              secret: "${SLACK_WEBHOOK_URL}"
+              description: "Slack Webhook URL"
+          
+          - sshUserPrivateKey:
+              scope: GLOBAL
+              id: "staging-server"
+              username: "deploy"
+              privateKeySource:
+                directEntry:
+                  privateKey: "${STAGING_SERVER_PRIVATE_KEY}"
+              description: "Staging Server SSH Key"
+          
+          - sshUserPrivateKey:
+              scope: GLOBAL
+              id: "production-server"
+              username: "deploy"
+              privateKeySource:
+                directEntry:
+                  privateKey: "${PRODUCTION_SERVER_PRIVATE_KEY}"
+              description: "Production Server SSH Key"
+
+# Tool configuration
+tool:
+  git:
+    installations:
+      - home: "git"
+        name: "Default"
+  
+  nodejs:
+    installations:
+      - name: "Node 18"
+        properties:
+          - installSource:
+              installers:
+                - nodeJSInstaller:
+                    id: "18.20.4"
+                    npmPackagesRefreshHours: 72
+  
+  dockerTool:
+    installations:
+      - name: "Docker"
+        properties:
+          - installSource:
+              installers:
+                - dockerInstallerLatest: {}
+
+# Mailer configuration
+unclassified:
+  location:
+    adminAddress: "admin@secureflow.com"
+    url: "${JENKINS_URL}"
+  
+  mailer:
+    defaultSuffix: "@secureflow.com"
+    replyToAddress: "noreply@secureflow.com"
+    smtpHost: "${SMTP_HOST}"
+    smtpPort: "${SMTP_PORT}"
+    useSsl: true
+    username: "${SMTP_USERNAME}"
+    password: "${SMTP_PASSWORD}"
+  
+  # Slack configuration
+  slackNotifier:
+    teamDomain: "${SLACK_TEAM_DOMAIN}"
+    token: "${SLACK_BOT_TOKEN}"
+    botUser: true
+    baseUrl: "https://slack.com/api/"
+  
+  # GitHub configuration
+  githubpluginconfig:
+    configs:
+      - name: "GitHub"
+        apiUrl: "https://api.github.com"
+        credentialsId: "github-token"
+        manageHooks: true
+  
+  # SonarQube configuration
+  sonarGlobalConfiguration:
+    installations:
+      - name: "SonarCloud"
+        serverUrl: "https://sonarcloud.io"
+        credentialsId: "sonarcloud-token"
+  
+  # Build timestamp
+  buildTimestamp:
+    pattern: "yyyy-MM-dd HH:mm:ss"
+    timezone: "UTC"
+  
+  # Timestamper
+  timestamper:
+    allPipelines: true
+    elapsedTimeFormat: "'<b>'HH:mm:ss.S'</b> '"
+    systemTimeFormat: "'<b>'HH:mm:ss'</b> '"
+  
+  # Ansi Color
+  ansiColorBuildWrapper:
+    colorMaps:
+      - name: "xterm"
+        defaultForeground: 0
+        defaultBackground: 15
+  
+  # Global Pipeline Libraries
+  globalLibraries:
+    libraries:
+      - name: "secureflow-shared-library"
+        defaultVersion: "main"
+        retriever:
+          modernSCM:
+            scm:
+              git:
+                remote: "https://github.com/TechTyphoon/jenkins-shared-library.git"
+                credentialsId: "github-token"
+        implicit: true
+        allowOverride: true
+  
+  # Pipeline Stage View
+  pipelineStageView:
+    includeRegex: ".*"
+  
+  # Build Discarder
+  buildDiscarders:
+    configuredBuildDiscarders:
+      - "logRotator":
+          artifactDaysToKeepStr: "30"
+          artifactNumToKeepStr: "10"
+          daysToKeepStr: "90"
+          numToKeepStr: "50"
+  
+  # Pollscm
+  pollSCM:
+    pollingThreadCount: 10
+  
+  # Fingerprinter
+  fingerprints:
+    fingerprintCleanupDisabled: false
+    defaultFingerprintCleanupDisabled: false
+  
+  # Workspace Cleanup
+  workspaceCleanup:
+    deleteDirs: true
+    cleanupMatrixParent: true
+    disableDeferredWipeout: false
+    wipeOutWhenDeactivated: true
+
+# Job configuration
+jobs:
+  - script: >
+      multibranchPipelineJob('SecureFlow-Automaton') {
+        description('SecureFlow Automaton - DevSecOps Pipeline')
+        branchSources {
+          github {
+            scanCredentialsId('github-token')
+            repoOwner('TechTyphoon')
+            repository('secure-flow-automaton')
+            buildOriginBranch(true)
+            buildOriginBranchWithPR(false)
+            buildOriginPRMerge(true)
+            buildOriginPRHead(false)
+            buildForkPRMerge(true)
+            buildForkPRHead(false)
+          }
+        }
+        factory {
+          workflowBranchProjectFactory {
+            scriptPath('Jenkinsfile')
+          }
+        }
+        orphanedItemStrategy {
+          discardOldItems {
+            numToKeep(10)
+          }
+        }
+        triggers {
+          periodicFolderTrigger {
+            interval('1h')
+          }
+        }
+        configure { node ->
+          node / sources / data / 'jenkins.branch.BranchSource' / source / traits << 'org.jenkinsci.plugins.github_branch_source.ForkPullRequestDiscoveryTrait' {
+            strategyId(1)
+            trust(class: 'org.jenkinsci.plugins.github_branch_source.ForkPullRequestDiscoveryTrait$TrustPermission')
+          }
+        }
+      }
+  
+  - script: >
+      pipelineJob('SecureFlow-Nightly-Security-Scan') {
+        description('Nightly security scan for SecureFlow Automaton')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/TechTyphoon/secure-flow-automaton.git')
+                  credentials('github-token')
+                }
+                branches('*/main')
+                scriptPath('jenkins/pipelines/nightly-security-scan.groovy')
+              }
+            }
+          }
+        }
+        triggers {
+          cron('H 2 * * *')
+        }
+        properties {
+          buildDiscarder {
+            logRotator {
+              numToKeep(30)
+              artifactNumToKeep(10)
+            }
+          }
+        }
+      }
+  
+  - script: >
+      pipelineJob('SecureFlow-Dependency-Update') {
+        description('Weekly dependency update check for SecureFlow Automaton')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/TechTyphoon/secure-flow-automaton.git')
+                  credentials('github-token')
+                }
+                branches('*/main')
+                scriptPath('jenkins/pipelines/dependency-update.groovy')
+              }
+            }
+          }
+        }
+        triggers {
+          cron('H 6 * * 1')
+        }
+        properties {
+          buildDiscarder {
+            logRotator {
+              numToKeep(20)
+              artifactNumToKeep(5)
+            }
+          }
+        }
+      }

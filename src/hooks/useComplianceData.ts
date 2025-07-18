@@ -10,7 +10,7 @@ export const useComplianceData = () => {
       if (!user) return [];
       console.log('Fetching compliance data for user:', user.id);
       
-      // @ts-ignore
+      // @ts-expect-error - Supabase types not fully defined
       const { data: vulnerabilities, error } = await supabase
         .from('vulnerabilities')
         .select('severity, status')

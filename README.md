@@ -1,37 +1,98 @@
 
-# SecureFlow - DevSecOps Pipeline Dashboard
+# 🛡️ SecureFlow Automaton
 
-![SecureFlow Demo Screenshot](./public/placeholder.svg)
+<div align="center">
+  <img src="./public/logo.svg" alt="SecureFlow Automaton Logo" width="200" height="200">
+  
+  **Enterprise-grade DevSecOps Pipeline Automation Platform**
+  
+  [![Build Status](https://github.com/TechTyphoon/secure-flow-automaton/workflows/Security%20Pipeline/badge.svg)](https://github.com/TechTyphoon/secure-flow-automaton/actions)
+  [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=TechTyphoon_secure-flow-automaton&metric=security_rating)](https://sonarcloud.io/dashboard?id=TechTyphoon_secure-flow-automaton)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://hub.docker.com/r/techtyphoon/secureflow-automaton)
+  [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+  [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
+</div>
 
-> **Note:** Demo video and more screenshots coming soon!
+## 🚀 Quick Start
 
+### 🐳 Docker (Recommended)
 
-## 🛡️ Overview
+```bash
+# Clone the repository
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
 
-SecureFlow is a comprehensive DevSecOps pipeline management platform that integrates security into every stage of your development lifecycle. Built with modern web technologies, it provides real-time security monitoring, automated vulnerability remediation, and comprehensive reporting to ensure your applications remain secure from code to production.
+# Quick start with Docker
+docker-compose -f docker-compose.prod.yml up --build
 
+# Or use npm scripts
+npm run docker:prod
+```
 
-## 🌟 Key Features
+**Visit [http://localhost:8080](http://localhost:8080)** to access the application.
 
-### 📊 Security Dashboard
-- **Real-time Monitoring**: Live vulnerability tracking and security score calculations
-- **Comprehensive Metrics**: Security posture visualization with interactive charts
-- **Performance Analytics**: Pipeline execution metrics and security gate status
-- **Compliance Tracking**: Automated compliance status monitoring and reporting
+### 🔧 Jenkins CI/CD Setup
 
-### 🔍 Vulnerability Management
-- **Automated Detection**: AI-powered vulnerability identification across code, dependencies, and infrastructure
-- **Smart Remediation**: Automated fixing of common security issues with manual review options
-- **Risk Assessment**: Severity-based prioritization with CVSS scoring
-- **Detailed Analysis**: In-depth vulnerability reports with remediation guidance
+```bash
+# Setup Jenkins with complete CI/CD pipeline
+cd jenkins
+./setup.sh
 
-### 🔧 DevSecOps Research Hub
-- **Tool Selection**: Comprehensive guide for choosing the right security tools
-- **SAST/DAST Integration**: Static and Dynamic Application Security Testing recommendations
-- **Container Security**: Docker and Kubernetes security best practices
-- **Infrastructure as Code**: Terraform, CloudFormation, and ARM template security scanning
+# Or use npm scripts
+npm run jenkins:start
 
-### 👥 User Personas & Workflows
+# Access Jenkins at http://localhost:8080
+# Get initial admin password:
+docker exec secureflow-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+```align="center">
+  <img src="./public/placeholder.svg" alt="SecureFlow Automaton Logo" width="200" height="200">
+  
+  **Enterprise-grade DevSecOps Pipeline Automation Platform**
+  
+  [![Build Status](https://github.com/TechTyphoon/secure-flow-automaton/workflows/Security%20Pipeline/badge.svg)](https://github.com/TechTyphoon/secure-flow-automaton/actions)
+  [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=TechTyphoon_secure-flow-automaton&metric=security_rating)](https://sonarcloud.io/dashboard?id=TechTyphoon_secure-flow-automaton)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://hub.docker.com/r/techtyphoon/secureflow-automaton)
+  [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+  [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
+</div>
+
+## � Quick Start
+
+### 🐳 Docker (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
+
+# Quick start with Docker
+docker-compose -f docker-compose.prod.yml up --build
+
+# Or use npm scripts
+npm run docker:prod
+```
+
+**Visit [http://localhost:8080](http://localhost:8080)** to access the application.
+
+### 💻 Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your configuration
+
+# Start development server
+npm run dev
+
+# Open http://localhost:8080
+```
 - **Developer Experience**: Security-first development workflows and IDE integration
 - **Security Engineer**: Advanced threat analysis and incident response workflows  
 - **DevOps Integration**: CI/CD pipeline security automation and monitoring
@@ -204,9 +265,9 @@ npm run test:coverage
 
 ---
 
-## � API Documentation
+## 📚 API Documentation
 
-All backend endpoints and Edge Functions are documented using **Swagger** (OpenAPI). You can view the API docs at `/api-docs` after running the backend, or see the [API Docs Portal](https://docs.lovable.dev/api).
+All backend endpoints and Edge Functions are documented using **Swagger** (OpenAPI). You can view the API docs at `/api-docs` after running the backend, or see the [API Documentation](https://secureflow.com/api-docs).
 
 ---
 
@@ -264,10 +325,26 @@ Accessibility is tested using [axe](https://www.deque.com/axe/) and manual audit
 
 ### Installation
 
+#### 🐳 Recommended: Docker Installation (Easiest)
+
+```bash
+# Clone the repository
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
+
+# Run with Docker (automatically handles all dependencies)
+chmod +x docker-run.sh
+./docker-run.sh start-prod
+```
+
+**That's it!** Visit http://localhost:8080 to access the application.
+
+#### 🛠️ Manual Installation
+
 1. **Clone the repository**
 ```bash
-git clone <YOUR_GIT_URL>
-cd <YOUR_PROJECT_NAME>
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
 ```
 
 2. **Install dependencies**
@@ -287,7 +364,7 @@ npm run dev
 ```
 
 5. **Open your browser**
-Navigate to `http://localhost:5173` to view the application
+Navigate to `http://localhost:8080` to view the application
 
 ### Available Scripts
 
@@ -301,6 +378,12 @@ npm run build:dev    # Development build for testing
 
 # Code Quality
 npm run lint         # Run ESLint for code quality checks
+
+# Docker Commands
+npm run docker:dev   # Start development environment with Docker
+npm run docker:prod  # Start production environment with Docker
+npm run docker:stop  # Stop all Docker services
+```
 
 # Preview
 npm run preview      # Preview production build locally
@@ -583,10 +666,10 @@ SELECT auth.uid(), auth.role();
 - [CI/CD Security](https://www.cisa.gov/sites/default/files/publications/ESF_SECURING_THE_SOFTWARE_SUPPLY_CHAIN_DEVELOPERS.PDF)
 
 ### Community & Support
-- [GitHub Issues](https://github.com/your-repo/issues)
-- [Discord Community](https://discord.com/channels/1119885301872070706/1280461670979993613)
-- [Documentation](https://docs.lovable.dev/)
-- [Video Tutorials](https://www.youtube.com/watch?v=9KHLTZaJcR8&list=PLbVHz4urQBZkJiAWdG8HWoJTdgEysigIO)
+- [GitHub Issues](https://github.com/TechTyphoon/secure-flow-automaton/issues)
+- [Project Documentation](https://github.com/TechTyphoon/secure-flow-automaton/wiki)
+- [Security Guidelines](https://github.com/TechTyphoon/secure-flow-automaton/blob/main/SECURITY.md)
+- [Contributing Guide](https://github.com/TechTyphoon/secure-flow-automaton/blob/main/CONTRIBUTING.md)
 
 
 ## 🤝 Contributing
@@ -641,6 +724,15 @@ This project is licensed under the **MIT License**. See [LICENSE](./LICENSE) for
 - 🔄 Custom dashboard builder
 - 🔄 API documentation portal
 
-For questions, support, or contributions, please visit our [GitHub repository](https://github.com/your-repo) or join our [Discord community](https://discord.com/channels/1119885301872070706/1280461670979993613).
+For questions, support, or contributions, please visit our [GitHub repository](https://github.com/TechTyphoon/secure-flow-automaton) or create an issue for support.
 
-**Built with ❤️ using Lovable**
+**Built with ❤️ by TechTyphoon**
+
+---
+
+## 🏆 Credits
+
+**Developer**: TechTyphoon  
+**Project**: SecureFlow Automaton  
+**License**: MIT  
+**Repository**: https://github.com/TechTyphoon/secure-flow-automaton

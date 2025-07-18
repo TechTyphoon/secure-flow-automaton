@@ -134,7 +134,7 @@ serve(async (req) => {
   }
 });
 
-async function performAutomatedFix(vulnerability: any) {
+async function performAutomatedFix(vulnerability: { vulnerability_type: string; severity: string; cve_id: string; [key: string]: unknown }) {
   // Simulate different types of fixes based on vulnerability type
   const fixStrategies = {
     'dependency': async () => {

@@ -19,10 +19,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 const PipelineFlow = () => {
   const { user } = useAuth();
   
-  // Use demo mode when no user is logged in, user-specific data when logged in
-  const { data: pipelineData, isLoading } = user 
-    ? usePipelineFlow() 
-    : usePipelineFlowDemo();
+  // Call both hooks unconditionally to avoid React Hooks rules violation
+  const pipelineFlow = usePipelineFlow();
+  const pipelineFlowDemo = usePipelineFlowDemo();
+  
+  // Select data based on user authentication
+  const isDemo = !user;
+  const pipelineData = isDemo ? pipelineFlowDemo.data : pipelineFlow.data;
+  const isLoading = isDemo ? pipelineFlowDemo.isLoading : pipelineFlow.isLoading;
 
   if (isLoading) {
     return (

@@ -75,7 +75,7 @@ serve(async (req) => {
   }
 });
 
-async function simulatePipelineExecution(supabaseClient: any, pipelineId: string, projectName: string, branch: string, scanTypes: string[]) {
+async function simulatePipelineExecution(supabaseClient: unknown, pipelineId: string, projectName: string, branch: string, scanTypes: string[]) {
   // Simulate pipeline stages
   const stages = [
     { name: 'checkout', duration: 30000 },

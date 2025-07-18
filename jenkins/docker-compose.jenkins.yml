@@ -1,0 +1,186 @@
+version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: secureflow-jenkins
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins.yaml:/var/jenkins_home/casc_configs/jenkins.yaml:ro
+      - ./plugins.txt:/usr/share/jenkins/ref/plugins.txt:ro
+      - ./.env.jenkins:/var/jenkins_home/.env:ro
+    environment:
+      - JENKINS_OPTS=--httpPort=8080
+      - JAVA_OPTS=-Dhudson.footerURL=https://secureflow.com -Xmx2g -Xms1g
+      - CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/jenkins.yaml
+    networks:
+      - jenkins-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  jenkins-agent:
+    image: jenkins/inbound-agent:latest
+    container_name: secureflow-jenkins-agent
+    restart: unless-stopped
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_AGENT_NAME=docker-agent
+    depends_on:
+      - jenkins
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - agent_workspace:/home/jenkins/agent
+    networks:
+      - jenkins-network
+
+  # Sonarqube for code quality (optional)
+  sonarqube:
+    image: sonarqube:community
+    container_name: secureflow-sonarqube
+    restart: unless-stopped
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+      - SONAR_JDBC_URL=jdbc:postgresql://postgres:5432/sonarqube
+      - SONAR_JDBC_USERNAME=sonarqube
+      - SONAR_JDBC_PASSWORD=sonarqube_password
+    ports:
+      - "9000:9000"
+    depends_on:
+      - postgres
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - jenkins-network
+
+  # PostgreSQL for SonarQube
+  postgres:
+    image: postgres:13
+    container_name: secureflow-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=sonarqube
+      - POSTGRES_USER=sonarqube
+      - POSTGRES_PASSWORD=sonarqube_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jenkins-network
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: secureflow-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - jenkins-network
+    command: redis-server --appendonly yes
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: secureflow-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx_ssl:/etc/nginx/ssl
+    depends_on:
+      - jenkins
+      - sonarqube
+    networks:
+      - jenkins-network
+
+  # Portainer for Docker management (optional)
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: secureflow-portainer
+    restart: unless-stopped
+    ports:
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - jenkins-network
+
+  # Grafana for monitoring (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: secureflow-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - jenkins-network
+
+  # Prometheus for metrics collection (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: secureflow-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - jenkins-network
+
+volumes:
+  jenkins_home:
+    driver: local
+  agent_workspace:
+    driver: local
+  sonarqube_data:
+    driver: local
+  sonarqube_extensions:
+    driver: local
+  sonarqube_logs:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nginx_ssl:
+    driver: local
+  portainer_data:
+    driver: local
+  grafana_data:
+    driver: local
+  prometheus_data:
+    driver: local
+
+networks:
+  jenkins-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
