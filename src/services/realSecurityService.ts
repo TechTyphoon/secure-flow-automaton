@@ -64,7 +64,7 @@ interface SonarCloudIssue {
     startOffset: number;
     endOffset: number;
   };
-  flows: any[];
+  flows: Record<string, unknown>[];
   status: string;
   message: string;
   effort: string;
@@ -74,8 +74,8 @@ interface SonarCloudIssue {
   tags: string[];
   transitions: string[];
   actions: string[];
-  comments: any[];
-  attr: any;
+  comments: Record<string, unknown>[];
+  attr: Record<string, unknown>;
   creationDate: string;
   updateDate: string;
   type: string;
@@ -197,7 +197,7 @@ export class RealSecurityService {
     }
   }
 
-  private async getCodeQLAlerts(owner: string, repo: string): Promise<any[]> {
+  private async getCodeQLAlerts(owner: string, repo: string): Promise<Record<string, unknown>[]> {
     try {
       const response = await this.octokit.rest.codeScanning.listAlertsForRepo({
         owner,
@@ -205,14 +205,14 @@ export class RealSecurityService {
         state: 'open',
         per_page: 100
       });
-      return response.data;
+      return response.data as Record<string, unknown>[];
     } catch (error) {
       console.warn(`⚠️  Could not fetch CodeQL alerts: ${error.message}`);
       return [];
     }
   }
 
-  private async getSecretScanningAlerts(owner: string, repo: string): Promise<any[]> {
+  private async getSecretScanningAlerts(owner: string, repo: string): Promise<Record<string, unknown>[]> {
     try {
       const response = await this.octokit.rest.secretScanning.listAlertsForRepo({
         owner,
@@ -220,7 +220,7 @@ export class RealSecurityService {
         state: 'open',
         per_page: 100
       });
-      return response.data;
+      return response.data as Record<string, unknown>[];
     } catch (error) {
       console.warn(`⚠️  Could not fetch secret scanning alerts: ${error.message}`);
       return [];
@@ -283,11 +283,11 @@ export class RealSecurityService {
     }));
   }
 
-  private processCodeQLAlerts(alerts: any[], scanId: string): VulnerabilityInsert[] {
+  private processCodeQLAlerts(alerts: Record<string, unknown>[], scanId: string): VulnerabilityInsert[] {
     return alerts.map(alert => ({
-      id: `codeql-${alert.number}`,
-      title: `Code Quality Issue: ${alert.rule.description}`,
-      description: alert.most_recent_instance.message.text,
+      id: `codeql-${(alert as { number: number }).number}`,
+      title: `Code Quality Issue: ${(alert as { rule: { description: string } }).rule.description}`,
+      description: (alert as { most_recent_instance: { message: { text: string } } }).most_recent_instance.message.text,
       severity: this.mapGitHubSeverity(alert.rule.severity),
       file_path: alert.most_recent_instance.location.path,
       line_number: alert.most_recent_instance.location.start_line,
