@@ -42,8 +42,8 @@ The SecureFlow Automaton has been successfully transformed from a mock applicati
 - **File**: `.env.local`
 - **Contents**:
   ```
-  GITHUB_TOKEN=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
-  SONARCLOUD_TOKEN=0f2314e4ce42999106b6a61d1cf0cfa74f5213be
+  GITHUB_TOKEN=your_github_token_here
+  SONARCLOUD_TOKEN=your_sonarcloud_token_here
   SUPABASE_URL=your_supabase_url
   SUPABASE_ANON_KEY=your_supabase_anon_key
   ```
@@ -111,7 +111,7 @@ The SecureFlow Automaton has been successfully transformed from a mock applicati
 ## 🔄 Integration Points
 
 ### 1. GitHub Integration
-- **Token**: `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`
+- **Token**: `your_github_token_here`
 - **Features**:
   - Automated PR security checks
   - Repository scanning
