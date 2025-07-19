@@ -4,6 +4,7 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: process.env.NODE_ENV === 'production' ? '/secure-flow-automaton/' : '/',
   server: {
     host: "::",
     port: 8080,
