@@ -2,8 +2,6 @@ name: Production Security Pipeline
 
 on:
   workflow_dispatch:  # Manual trigger only
-  schedule:
-    - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM
 
 env:
   NODE_VERSION: '18'
