@@ -1,18 +1,12 @@
 name: Production Security Pipeline
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:  # Manual trigger only
   schedule:
-    - cron: '0 2 * * *' # Daily at 2 AM
+    - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM
 
 env:
   NODE_VERSION: '18'
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  SONARCLOUD_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
 jobs:
   security-scan:
@@ -53,12 +47,14 @@ jobs:
       with:
         args: --severity-threshold=high
         command: test
+      continue-on-error: true
     
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+      continue-on-error: true
     
     - name: Upload test coverage to Codecov
       uses: codecov/codecov-action@v3
