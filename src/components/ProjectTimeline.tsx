@@ -3,8 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Circle, Clock, Calendar, Target, FileText, Shield, LockKeyhole, Zap, GitPullRequest, TestTube } from 'lucide-react';
-import { useRealProjectStatus, useDemoProjectStatus } from '@/hooks/useRealProjectStatus';
-import { useAuth } from '@/components/AuthContext';
 import TimelinePhases from './project-timeline/TimelinePhases';
 import SecureCodingStandardsCard from './project-timeline/SecureCodingStandardsCard';
 import AutomatedRemediationCard from './project-timeline/AutomatedRemediationCard';
@@ -27,15 +25,6 @@ const codeBlockClass =
   "font-mono bg-gray-900 text-green-300 rounded-md p-4 text-xs overflow-x-auto border border-gray-800 my-4";
 
 const ProjectTimeline = () => {
-  const { user } = useAuth();
-  
-  // Use real data for authenticated users, demo data for others
-  const realProjectStatus = useRealProjectStatus();
-  const demoProjectStatus = useDemoProjectStatus();
-  
-  const projectStatus = user ? realProjectStatus : demoProjectStatus;
-  const statusData = projectStatus.data;
-  
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-2">
@@ -51,52 +40,27 @@ const ProjectTimeline = () => {
       {/* -- OVERALL STATUS -- */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Overall Project Status</span>
-            {user && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Live GitHub Data
-              </span>
-            )}
-            {!user && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                Demo Mode
-              </span>
-            )}
-          </CardTitle>
+          <CardTitle>Overall Project Status</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
-                {statusData?.overallProgress || 15}%
-              </div>
+              <div className="text-2xl font-bold text-green-600">15%</div>
               <div className="text-sm text-muted-foreground">Overall Progress</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
-                {statusData?.activePhases || 2}
-              </div>
+              <div className="text-2xl font-bold text-blue-600">2</div>
               <div className="text-sm text-muted-foreground">Active Phases</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">
-                {statusData?.totalDeliverables || 18}
-              </div>
+              <div className="text-2xl font-bold text-orange-600">18</div>
               <div className="text-sm text-muted-foreground">Total Deliverables</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
-                {statusData?.weeksDuration || 10}
-              </div>
+              <div className="text-2xl font-bold text-purple-600">10</div>
               <div className="text-sm text-muted-foreground">Weeks Duration</div>
             </div>
           </div>
-          {statusData?.lastUpdated && (
-            <div className="mt-4 text-xs text-muted-foreground text-center">
-              Last updated: {new Date(statusData.lastUpdated).toLocaleString()}
-            </div>
-          )}
         </CardContent>
       </Card>
 

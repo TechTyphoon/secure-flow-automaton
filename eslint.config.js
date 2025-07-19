@@ -24,24 +24,6 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-require-imports": "warn",
-    },
-  },
-  // More permissive rules for service files that handle external APIs
-  {
-    files: ["src/services/**/*.ts"],
-    rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-require-imports": "off",
-    },
-  },
-  // More permissive rules for test files
-  {
-    files: ["**/__tests__/**/*.{ts,tsx}", "**/*.test.{ts,tsx}"],
-    rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-require-imports": "off",
     },
   }
 );

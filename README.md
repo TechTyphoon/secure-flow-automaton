@@ -1,6 +1,36 @@
-# 🛡️ SecureFlow Automaton
 
-<div align="center">
+# 🛡️ SecureFlow## 🚀 Quick Start
+
+### 🐳 Docker (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
+
+# Quick start with Docker
+docker-compose -f docker-compose.prod.yml up --build
+
+# Or use npm scripts
+npm run docker:prod
+```
+
+**Visit [http://localhost:8080](http://localhost:8080)** to access the application.
+
+### 🔧 Jenkins CI/CD Setup
+
+```bash
+# Setup Jenkins with complete CI/CD pipeline
+cd jenkins
+./setup.sh
+
+# Or use npm scripts
+npm run jenkins:start
+
+# Access Jenkins at http://localhost:8080
+# Get initial admin password:
+docker exec secureflow-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+```align="center">
   <img src="./public/placeholder.svg" alt="SecureFlow Automaton Logo" width="200" height="200">
   
   **Enterprise-grade DevSecOps Pipeline Automation Platform**
@@ -8,24 +38,33 @@
   [![Build Status](https://github.com/TechTyphoon/secure-flow-automaton/workflows/Security%20Pipeline/badge.svg)](https://github.com/TechTyphoon/secure-flow-automaton/actions)
   [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=TechTyphoon_secure-flow-automaton&metric=security_rating)](https://sonarcloud.io/dashboard?id=TechTyphoon_secure-flow-automaton)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://hub.docker.com/r/techtyphoon/secureflow-automaton)
   [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
   [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
-  [![Vite](https://img.shields.io/badge/Vite-5+-purple.svg)](https://vitejs.dev/)
-  [![Supabase](https://img.shields.io/badge/Supabase-Ready-green.svg)](https://supabase.com/)
 </div>
 
----
+## � Quick Start
 
-## 🚀 Quick Start
-
-### 💻 Local Development
+### 🐳 Docker (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/TechTyphoon/secure-flow-automaton.git
 cd secure-flow-automaton
 
+# Quick start with Docker
+docker-compose -f docker-compose.prod.yml up --build
+
+# Or use npm scripts
+npm run docker:prod
+```
+
+**Visit [http://localhost:8080](http://localhost:8080)** to access the application.
+
+### 💻 Local Development
+
+```bash
 # Install dependencies
 npm install
 
@@ -38,53 +77,17 @@ npm run dev
 
 # Open http://localhost:8080
 ```
+- **Developer Experience**: Security-first development workflows and IDE integration
+- **Security Engineer**: Advanced threat analysis and incident response workflows  
+- **DevOps Integration**: CI/CD pipeline security automation and monitoring
+- **Management Reporting**: Executive dashboards and compliance reporting
 
-### 🐳 Docker Deployment
+### 📅 Implementation Timeline
+- **Structured Roadmap**: Week-by-week implementation plan for DevSecOps adoption
+- **Milestone Tracking**: Progress monitoring with validation checkpoints
+- **Resource Planning**: Team allocation and skill development guidance
+- **Success Metrics**: KPI definition and measurement frameworks
 
-```bash
-# Build and run with Docker
-docker-compose up --build
-
-# Or use production setup
-docker-compose -f docker-compose.prod.yml up --build
-```
-
-### 🔧 Jenkins CI/CD Setup
-
-```bash
-# Setup Jenkins with complete CI/CD pipeline
-cd jenkins
-./setup.sh
-
-# Access Jenkins at http://localhost:8080
-# Get initial admin password:
-docker exec secureflow-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
-```
-
----
-
-## 📋 Overview
-
-SecureFlow Automaton is a comprehensive DevSecOps platform designed to streamline security integration throughout the software development lifecycle. It provides real-time security monitoring, automated vulnerability management, and compliance tracking for modern development teams.
-
-### ✨ Key Features
-
-- **🔍 Real-time Security Monitoring**: Live vulnerability scanning and threat detection
-- **🤖 Automated Remediation**: AI-powered vulnerability fixing and security patching
-- **📊 Compliance Management**: SOC 2, ISO 27001, PCI DSS, and GDPR compliance tracking
-- **🚀 Pipeline Integration**: GitHub Actions and Jenkins CI/CD integration
-- **📈 Security Analytics**: Advanced reporting and trend analysis
-- **🔐 Enterprise Authentication**: Secure user management with role-based access control
-- **🎯 Project Timeline**: Structured DevSecOps implementation roadmap
-
-### 🎯 Target Personas
-
-- **🧑‍💻 Developers**: Security-first development workflows and IDE integration
-- **🔒 Security Engineers**: Advanced threat analysis and incident response workflows  
-- **⚙️ DevOps Teams**: CI/CD pipeline security automation and monitoring
-- **📊 Management**: Executive dashboards and compliance reporting
-
----
 
 ## 🏗️ Architecture
 
@@ -111,35 +114,45 @@ SecureFlow Automaton is a comprehensive DevSecOps platform designed to streamlin
 - **Data Security**: Encrypted data transmission and storage
 - **Session Management**: Secure session handling with automatic refresh
 
----
-
 ## 📱 Application Structure
 
 ### Core Components
 
-#### 1. Security Metrics Dashboard
-- Real-time vulnerability counts by severity
-- Security score calculations and trends
+#### 1. Security Metrics (`SecurityMetrics.tsx`)
+```typescript
+// Real-time security dashboard with key metrics
+- Vulnerability counts by severity
+- Security score calculations
 - Compliance status indicators
 - Pipeline health monitoring
+```
 
-#### 2. Pipeline Flow Visualization
-- Visual representation of DevSecOps pipeline stages
-- Code analysis and scanning stages
+#### 2. Pipeline Flow (`PipelineFlow.tsx`)
+```typescript
+// Visual representation of DevSecOps pipeline stages
+- Code analysis and scanning
 - Security gate controls
-- Deployment automation status
+- Deployment automation
+- Monitoring and alerting
+```
 
-#### 3. Vulnerability Management
-- Comprehensive vulnerability listing and filtering
+#### 3. Vulnerability Dashboard (`VulnerabilityDashboard.tsx`)
+```typescript
+// Comprehensive vulnerability management
+- Vulnerability listing and filtering
 - Automated remediation triggers
 - Manual review workflows
-- Progress tracking and reporting
+- Progress tracking
+```
 
-#### 4. Compliance Overview
-- Regulatory compliance tracking (SOC 2, ISO 27001, PCI DSS, GDPR)
+#### 4. Compliance Overview (`ComplianceOverview.tsx`)
+```typescript
+// Regulatory compliance tracking
+- OWASP compliance status
 - Industry standards monitoring
 - Audit trail maintenance
-- Automated report generation
+- Report generation
+```
 
 ### Database Schema
 
@@ -159,22 +172,158 @@ CREATE TABLE security_scans (
     medium_count INTEGER DEFAULT 0,
     low_count INTEGER DEFAULT 0,
     scan_results JSONB,
-    user_id UUID REFERENCES auth.users(id),
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
+#### Vulnerabilities Table
+```sql
+CREATE TABLE vulnerabilities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    scan_id UUID REFERENCES security_scans(id),
+    title TEXT NOT NULL,
+    description TEXT,
+    severity TEXT NOT NULL,
+    cve_id TEXT,
+    component TEXT,
+    file_path TEXT,
+    line_number INTEGER,
+    status TEXT DEFAULT 'open',
+    auto_fixable BOOLEAN DEFAULT false,
+    confidence_score INTEGER DEFAULT 0,
+    remediation_advice TEXT,
+    first_detected TIMESTAMPTZ DEFAULT now(),
+    last_seen TIMESTAMPTZ DEFAULT now(),
+    fixed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+#### Pipeline Metrics Table
+```sql
+CREATE TABLE pipeline_metrics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    pipeline_id TEXT NOT NULL,
+    project_name TEXT NOT NULL,
+    branch TEXT DEFAULT 'main',
+    status TEXT NOT NULL,
+    started_at TIMESTAMPTZ DEFAULT now(),
+    completed_at TIMESTAMPTZ,
+    duration_seconds INTEGER,
+    security_gate_passed BOOLEAN DEFAULT false,
+    build_number INTEGER,
+    triggered_by TEXT,
+    metrics JSONB,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+
+## 🧪 Testing
+
+We use **Jest** and **React Testing Library** for unit and integration tests. All critical components and business logic are covered by tests.
+
+### Running Tests
+```bash
+npm run test
+```
+
+### Example Test (React Component)
+```typescript
+import { render, screen } from '@testing-library/react';
+import SecurityMetrics from './src/components/SecurityMetrics';
+
+test('renders security metrics dashboard', () => {
+  render(<SecurityMetrics />);
+  expect(screen.getByText(/Vulnerability counts/i)).toBeInTheDocument();
+});
+```
+
+Test coverage reports are generated with:
+```bash
+npm run test:coverage
+```
+
 ---
 
-## 🛠️ Development
+## � API Documentation
+
+All backend endpoints and Edge Functions are documented using **Swagger** (OpenAPI). You can view the API docs at `/api-docs` after running the backend, or see the [API Docs Portal](https://docs.lovable.dev/api).
+
+---
+
+## 🖼️ Screenshots & Demo
+
+| Dashboard | Vulnerability Details | Compliance Overview |
+|-----------|----------------------|---------------------|
+| ![Dashboard](./public/placeholder.svg) | ![Vuln Details](./public/placeholder.svg) | ![Compliance](./public/placeholder.svg) |
+
+> **Live Demo:** Coming soon!
+
+---
+
+## ⚙️ CI/CD Pipeline
+
+We use **GitHub Actions** for continuous integration and deployment. All pull requests are automatically linted, tested, and built before merging.
+
+Example workflow: `.github/workflows/ci.yml`
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test -- --coverage
+      - run: npm run build
+```
+
+---
+
+## ♿ Accessibility
+
+We follow [WCAG 2.1](https://www.w3.org/WAI/standards-guidelines/wcag/) guidelines for accessibility:
+- Semantic HTML and ARIA roles
+- Keyboard navigation support
+- Sufficient color contrast
+- Screen reader compatibility
+
+Accessibility is tested using [axe](https://www.deque.com/axe/) and manual audits.
+
+---
 
 ### Prerequisites
-- Node.js 18+ and npm 9+
-- Docker and Docker Compose
-- Git
+- Node.js 18+ and npm
+- Git for version control
+- Modern web browser
 
-### Environment Setup
+### Installation
+
+#### 🐳 Recommended: Docker Installation (Easiest)
+
+```bash
+# Clone the repository
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
+
+# Run with Docker (automatically handles all dependencies)
+chmod +x docker-run.sh
+./docker-run.sh start-prod
+```
+
+**That's it!** Visit http://localhost:8080 to access the application.
+
+#### 🛠️ Manual Installation
 
 1. **Clone the repository**
 ```bash
@@ -187,251 +336,378 @@ cd secure-flow-automaton
 npm install
 ```
 
-3. **Environment Configuration**
+3. **Environment Setup**
 ```bash
-cp .env.example .env.local
+# The Supabase configuration is already included
+# No environment variables needed for local development
 ```
 
-Required environment variables:
-```env
-# Supabase Configuration
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# GitHub Integration
-VITE_GITHUB_TOKEN=your_github_token
-VITE_GITHUB_OWNER=your_github_username
-VITE_GITHUB_REPO=your_repository_name
-
-# Application Settings
-VITE_APP_ENV=development
-VITE_APP_VERSION=1.0.0
+4. **Start development server**
+```bash
+npm run dev
 ```
+
+5. **Open your browser**
+Navigate to `http://localhost:8080` to view the application
 
 ### Available Scripts
 
 ```bash
 # Development
-npm run dev                    # Start development server
-npm run build                  # Build for production
-npm run preview               # Preview production build
+npm run dev          # Start development server with hot reload
+
+# Building
+npm run build        # Production build with optimizations
+npm run build:dev    # Development build for testing
 
 # Code Quality
-npm run lint                  # Run ESLint
-npm run lint:fix             # Fix ESLint issues
-npm run type-check           # TypeScript type checking
+npm run lint         # Run ESLint for code quality checks
 
-# Testing
-npm run test                 # Run tests
-npm run test:watch           # Run tests in watch mode
-npm run test:coverage        # Run tests with coverage
-
-# Security
-npm run security:scan        # Run security audit
-npm run security:pipeline    # Run complete security pipeline
-
-# Database
-npm run db:generate          # Generate Supabase types
-npm run db:reset             # Reset local database
-npm run db:migrate           # Run database migrations
+# Docker Commands
+npm run docker:dev   # Start development environment with Docker
+npm run docker:prod  # Start production environment with Docker
+npm run docker:stop  # Stop all Docker services
 ```
 
----
-
-## 🔧 Configuration
-
-### Jenkins Pipeline Configuration
-
-The project includes a comprehensive Jenkins pipeline with:
-
-- **150+ Security Plugins**: Complete security toolchain integration
-- **Multi-environment Support**: Development, staging, and production pipelines
-- **Automated Testing**: Unit, integration, and security tests
-- **Security Scanning**: SAST, DAST, and dependency scanning
-- **Compliance Reporting**: Automated compliance report generation
-
-### Docker Configuration
-
-**Development Environment**
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  app:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - NODE_ENV=development
+# Preview
+npm run preview      # Preview production build locally
 ```
 
-**Production Environment**
-```yaml
-# docker-compose.prod.yml
-version: '3.8'
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile.prod
-    ports:
-      - "8080:8080"
-    environment:
-      - NODE_ENV=production
+## 🔐 Authentication & Authorization
+
+### User Authentication
+The application uses Supabase Auth for secure user management:
+
+```typescript
+// Login
+const { data, error } = await supabase.auth.signInWithPassword({
+  email: 'user@example.com',
+  password: 'password'
+});
+
+// Signup
+const { data, error } = await supabase.auth.signUp({
+  email: 'user@example.com',
+  password: 'password',
+  options: {
+    emailRedirectTo: `${window.location.origin}/`
+  }
+});
+
+// Logout
+await supabase.auth.signOut();
 ```
 
----
+### Role-Based Access Control
+- **Admin**: Full system access and user management
+- **Security Engineer**: Advanced security features and reporting
+- **Developer**: Code analysis and vulnerability remediation
+- **Viewer**: Read-only access to dashboards and reports
 
-## 🚀 Deployment
+## 🌐 API Integration
 
-### GitHub Actions CI/CD
+### Supabase Edge Functions
 
-The project includes automated CI/CD workflows:
-
-```yaml
-# .github/workflows/ci.yml
-name: CI/CD Pipeline
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - name: Install dependencies
-        run: npm ci
-      - name: Run tests
-        run: npm test
-      - name: Security audit
-        run: npm run security:scan
+#### 1. Vulnerability Details (`vulnerability-details`)
+```typescript
+// Get detailed vulnerability information
+const response = await supabase.functions.invoke('vulnerability-details', {
+  body: { vulnerabilityId: 'uuid' }
+});
 ```
 
-### Production Deployment
+#### 2. Automated Remediation (`automated-remediation`)
+```typescript
+// Trigger automated vulnerability fixing
+const response = await supabase.functions.invoke('automated-remediation', {
+  body: { 
+    vulnerabilityId: 'uuid',
+    action: 'auto-fix'
+  }
+});
+```
 
-1. **Build the application**
+#### 3. Pipeline Trigger (`pipeline-trigger`)
+```typescript
+// Trigger security pipeline execution
+const response = await supabase.functions.invoke('pipeline-trigger', {
+  body: { 
+    projectName: 'my-app',
+    branch: 'main'
+  }
+});
+```
+
+#### 4. Notifications (`notifications`)
+```typescript
+// Send security alerts and notifications
+const response = await supabase.functions.invoke('notifications', {
+  body: { 
+    type: 'security-alert',
+    severity: 'high',
+    message: 'Critical vulnerability detected'
+  }
+});
+```
+
+## 📊 Monitoring & Analytics
+
+### Security Metrics
+- **Vulnerability Trends**: Track vulnerability discovery and remediation over time
+- **Security Score**: Composite security health indicator
+- **Compliance Status**: Regulatory requirement adherence tracking
+- **Pipeline Performance**: Execution time and success rate monitoring
+
+### Real-time Updates
+- **Live Dashboard**: WebSocket connections for real-time data updates
+- **Push Notifications**: Instant alerts for critical security events
+- **Progress Tracking**: Live pipeline execution status
+- **Collaborative Updates**: Multi-user real-time collaboration
+
+## 🛠️ Customization & Extension
+
+### Adding New Security Tools
+1. Create tool configuration in `src/components/ToolSelection.tsx`
+2. Add integration logic in Supabase Edge Functions
+3. Update database schema for tool-specific data
+4. Add UI components for tool management
+
+### Custom Dashboards
+1. Create new component in `src/components/`
+2. Add routing in `src/App.tsx`
+3. Implement data fetching with React Query
+4. Style with Tailwind CSS and design system
+
+### Integration Examples
+```typescript
+// Custom security tool integration
+interface SecurityTool {
+  name: string;
+  type: 'SAST' | 'DAST' | 'SCA' | 'IAST';
+  configuration: Record<string, any>;
+  enabled: boolean;
+}
+
+// Pipeline extension
+interface PipelineStage {
+  name: string;
+  order: number;
+  tools: SecurityTool[];
+  gates: SecurityGate[];
+}
+```
+
+## 🔧 Development Guidelines
+
+### Code Structure
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   └── project-timeline/ # Timeline-specific components
+├── pages/              # Route components
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions
+├── integrations/       # Third-party integrations
+└── types/              # TypeScript type definitions
+```
+
+### Styling Guidelines
+- Use Tailwind CSS with semantic design tokens
+- Follow the established design system in `src/index.css`
+- Create reusable component variants
+- Maintain responsive design principles
+
+### State Management
+- React Query for server state
+- React Context for global UI state
+- Local state with useState for component-specific data
+- Supabase real-time subscriptions for live updates
+
+## 🚢 Deployment
+
+
+## 🚀 Production Deployment
+
+You can deploy SecureFlow to any modern static hosting provider (Vercel, Netlify, AWS S3 + CloudFront, or your own server). Below are the recommended steps for a real-time, production-ready deployment:
+
+### 1. Build the Application
 ```bash
 npm run build
 ```
+This creates an optimized production build in the `dist` folder.
 
-2. **Deploy with Docker**
-```bash
-docker build -t secureflow-automaton .
-docker run -p 8080:8080 secureflow-automaton
+### 2. Configure Environment Variables
+Create a `.env.production` file at the project root with your production Supabase credentials:
+```env
+VITE_SUPABASE_URL=your-production-supabase-url
+VITE_SUPABASE_ANON_KEY=your-production-supabase-anon-key
+# Add any other secrets or config as needed
 ```
 
-3. **Deploy to cloud platforms**
-- **Vercel**: `vercel --prod`
-- **Netlify**: `netlify deploy --prod`
-- **AWS**: Use provided CloudFormation templates
-- **Azure**: Use provided ARM templates
+### 3. Set Up Supabase for Production
+- Create a Supabase project at https://app.supabase.com/
+- Enable Row Level Security (RLS) and configure policies for all tables
+- Set up authentication providers (email, OAuth, etc.)
+- Deploy your Edge Functions from `supabase/functions/`
+- Add secrets for Edge Functions as needed
+- Configure storage buckets for reports/artifacts
+
+### 4. Deploy to Hosting Provider
+You can use any static hosting provider. Here are examples:
+
+#### Deploy to Vercel
+1. Push your code to GitHub.
+2. Go to https://vercel.com/import and import your repo.
+3. Set the environment variables in the Vercel dashboard.
+4. Deploy!
+
+
+#### Deploy to Netlify (Recommended)
+1. Push your code to GitHub.
+2. Go to https://app.netlify.com/ and create a new site from Git.
+3. In Site Settings > Build & Deploy > Environment, add:
+   - `VITE_SUPABASE_URL` (from your Supabase project)
+   - `VITE_SUPABASE_ANON_KEY` (from your Supabase project)
+   - Any other required environment variables
+4. Set the build command to `npm run build` and the publish directory to `dist`.
+5. Click Deploy Site!
+
+##### Netlify + Supabase Production Checklist
+- [ ] Supabase project is in production mode (not local/dev)
+- [ ] RLS (Row Level Security) is enabled and policies are set
+- [ ] Auth providers (email, OAuth, etc.) are configured
+- [ ] Edge Functions are deployed and tested
+- [ ] Storage buckets are set up for reports/artifacts
+- [ ] Netlify environment variables are set correctly
+- [ ] HTTPS and custom domain configured (optional)
+- [ ] Test all critical workflows in production
+
+> For more details, see the [Supabase docs](https://supabase.com/docs/guides/hosting/netlify).
+
+#### Deploy to AWS S3 + CloudFront
+1. Build the app (`npm run build`).
+2. Upload the `dist` folder to your S3 bucket.
+3. Set up CloudFront for CDN and HTTPS.
+4. Configure environment variables using a tool like [envsubst](https://github.com/a8m/envsubst) or at build time.
+
+### 5. Post-Deployment Checklist
+- [ ] Test authentication and all critical workflows in production
+- [ ] Enable HTTPS and custom domain
+- [ ] Monitor Supabase logs and usage
+- [ ] Set up error monitoring (e.g., Sentry)
+- [ ] Regularly update dependencies and security patches
 
 ---
 
-## 📊 Security & Compliance
+## 🔍 Troubleshooting
 
-### Security Features
+### Common Issues
 
-- **🔐 Authentication**: Multi-factor authentication support
-- **🛡️ Authorization**: Role-based access control (RBAC)
-- **🔍 Vulnerability Scanning**: Real-time SAST and DAST scanning
-- **📝 Audit Logging**: Comprehensive security event logging
-- **🔄 Automated Remediation**: AI-powered vulnerability fixing
+#### Authentication Problems
+```typescript
+// Check session state
+const { data: { session } } = await supabase.auth.getSession();
+console.log('Current session:', session);
 
-### Compliance Standards
-
-- **SOC 2 Type II**: System and organization controls
-- **ISO 27001**: Information security management
-- **PCI DSS**: Payment card industry data security
-- **GDPR**: General data protection regulation
-
-### Security Scanning
-
-```bash
-# Run security audit
-npm run security:scan
-
-# Run dependency check
-npm run security:dependency-check
-
-# Run container security scan
-npm run security:container-scan
+// Verify auth configuration
+console.log('Supabase URL:', supabase.supabaseUrl);
 ```
 
----
+#### Database Connection Issues
+```sql
+-- Check RLS policies
+SELECT * FROM pg_policies WHERE tablename = 'vulnerabilities';
+
+-- Verify user permissions
+SELECT auth.uid(), auth.role();
+```
+
+#### UI Rendering Problems
+- Clear browser cache and reload
+- Check console for JavaScript errors
+- Verify component imports and exports
+- Check Tailwind CSS configuration
+
+### Performance Optimization
+- Use React.memo for expensive components
+- Implement proper key props for lists
+- Optimize image loading with proper sizing
+- Use React Query for efficient data caching
+
+## 📚 Additional Resources
+
+### Documentation
+- [Supabase Documentation](https://supabase.com/docs)
+- [React Router Documentation](https://reactrouter.com/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [shadcn/ui Components](https://ui.shadcn.com/)
+
+### Security Best Practices
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [DevSecOps Guidelines](https://www.devsecops.org/)
+- [Container Security](https://kubernetes.io/docs/concepts/security/)
+- [CI/CD Security](https://www.cisa.gov/sites/default/files/publications/ESF_SECURING_THE_SOFTWARE_SUPPLY_CHAIN_DEVELOPERS.PDF)
+
+### Community & Support
+- [GitHub Issues](https://github.com/your-repo/issues)
+- [Discord Community](https://discord.com/channels/1119885301872070706/1280461670979993613)
+- [Documentation](https://docs.lovable.dev/)
+- [Video Tutorials](https://www.youtube.com/watch?v=9KHLTZaJcR8&list=PLbVHz4urQBZkJiAWdG8HWoJTdgEysigIO)
+
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+We welcome contributions! Please use our [issue templates](.github/ISSUE_TEMPLATE.md) and [pull request template](.github/PULL_REQUEST_TEMPLATE.md) for submitting bugs and features.
 
-### Development Workflow
+### Development Setup
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes following the code style guidelines
+4. Test your changes thoroughly
+5. Commit with descriptive messages
+6. Push to your fork and create a Pull Request
 
-1. **Fork the repository**
-2. **Create a feature branch**
-```bash
-git checkout -b feature/amazing-feature
-```
+### Code Standards
+- TypeScript for type safety
+- ESLint for code quality
+- Consistent naming conventions
+- Comprehensive component documentation
+- Test coverage for critical functionality
 
-3. **Make your changes**
-4. **Run tests and linting**
-```bash
-npm test
-npm run lint
-```
-
-5. **Commit your changes**
-```bash
-git commit -m 'Add some amazing feature'
-```
-
-6. **Push to the branch**
-```bash
-git push origin feature/amazing-feature
-```
-
-7. **Open a Pull Request**
-
-### Code Style
-
-- Use TypeScript for all new code
-- Follow the existing code style
-- Add tests for new features
-- Update documentation as needed
-
----
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License**. See [LICENSE](./LICENSE) for details.
 
 ---
 
-## 🙏 Acknowledgments
-
-- **React Team** for the amazing React framework
-- **Supabase** for the excellent backend-as-a-service platform
-- **Vite** for the fast build tool
-- **shadcn/ui** for the beautiful UI components
-- **Tailwind CSS** for the utility-first CSS framework
-
 ---
 
-## 📞 Support
+## 🎯 Project Status
 
-For support, please contact:
-- **Email**: support@techtyphoon.dev
-- **GitHub Issues**: [Create an issue](https://github.com/TechTyphoon/secure-flow-automaton/issues)
-- **Documentation**: [Wiki](https://github.com/TechTyphoon/secure-flow-automaton/wiki)
+**Current Version**: 1.0.0  
+**Status**: Active Development  
+**Last Updated**: 2025-01-07
 
----
+**Recent Updates**:
+- ✅ Complete authentication system implementation
+- ✅ Real-time vulnerability dashboard
+- ✅ Automated remediation workflows  
+- ✅ Comprehensive project timeline
+- ✅ Role-based access control
+- ✅ Responsive design system
+- ✅ Supabase integration
+- ✅ Edge Functions for business logic
 
-<div align="center">
-  <strong>Built with ❤️ by TechTyphoon</strong>
-</div>
+**Upcoming Features**:
+- 🔄 Advanced reporting and analytics
+- 🔄 Integration with popular security tools
+- 🔄 Mobile application
+- 🔄 Advanced user management
+- 🔄 Custom dashboard builder
+- 🔄 API documentation portal
+
+For questions, support, or contributions, please visit our [GitHub repository](https://github.com/your-repo) or join our [Discord community](https://discord.com/channels/1119885301872070706/1280461670979993613).
+
+**Built with ❤️ using Lovable**

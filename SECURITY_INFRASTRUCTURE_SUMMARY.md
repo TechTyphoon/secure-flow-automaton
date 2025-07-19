@@ -42,10 +42,10 @@ The SecureFlow Automaton has been successfully transformed from a mock applicati
 - **File**: `.env.local`
 - **Contents**:
   ```
-  GITHUB_TOKEN=your_github_token_here_placeholder
-  SONARCLOUD_TOKEN=your_sonarcloud_token_here_placeholder
-  SUPABASE_URL=your_supabase_url_placeholder
-  SUPABASE_ANON_KEY=your_supabase_anon_key_placeholder
+  GITHUB_TOKEN=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
+  SONARCLOUD_TOKEN=0f2314e4ce42999106b6a61d1cf0cfa74f5213be
+  SUPABASE_URL=your_supabase_url
+  SUPABASE_ANON_KEY=your_supabase_anon_key
   ```
 
 ### 2. Security Linting Configuration
@@ -111,7 +111,7 @@ The SecureFlow Automaton has been successfully transformed from a mock applicati
 ## 🔄 Integration Points
 
 ### 1. GitHub Integration
-- **Token**: `your_github_token_here_placeholder`
+- **Token**: `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`
 - **Features**:
   - Automated PR security checks
   - Repository scanning
@@ -119,7 +119,7 @@ The SecureFlow Automaton has been successfully transformed from a mock applicati
   - Branch protection rules
 
 ### 2. SonarCloud Integration
-- **Token**: `your_sonarcloud_token_here_placeholder`
+- **Token**: `0f2314e4ce42999106b6a61d1cf0cfa74f5213be`
 - **Features**:
   - Static code analysis
   - Security hotspot detection

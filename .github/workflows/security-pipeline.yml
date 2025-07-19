@@ -1,15 +1,23 @@
-name: Security Pipeline
+name: Security Scan Pipeline
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * *' # Daily at 2 AM
 
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    name: Security Analysis
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -22,7 +30,8 @@ jobs:
 
     - name: Run ESLint Security
       run: |
-        npx eslint . --format json --output-file eslint-results.json || echo "ESLint completed with warnings"
+        npm install --save-dev eslint-plugin-security
+        npx eslint . --ext .ts,.tsx --config .eslintrc.security.js --format json --output-file eslint-results.json || true
 
     - name: Run SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
@@ -38,11 +47,10 @@ jobs:
           -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx
           -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
           -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
-      continue-on-error: true
 
     - name: Dependency Security Scan
       run: |
-        npm audit --audit-level=moderate --json > npm-audit-results.json || echo "Audit completed with findings"
+        npm audit --audit-level=moderate --json > npm-audit-results.json || true
         
     - name: Upload Security Scan Results
       if: always()
@@ -52,14 +60,16 @@ jobs:
         path: |
           eslint-results.json
           npm-audit-results.json
-        retention-days: 30
+          sonar-project.properties
 
-    - name: Security Scan Summary
+    - name: Post Security Results to API
       if: always()
       run: |
-        echo "✅ Security scan completed"
-        echo "📊 Results uploaded as artifacts"
-        echo "🔧 Configure SONARCLOUD_TOKEN secret for enhanced analysis"
+        node scripts/post-security-results.js
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
   build-and-test:
     runs-on: ubuntu-latest
@@ -78,9 +88,9 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Run tests
+    - name: Run tests with coverage
       run: |
-        npm run test || echo "Tests completed with some failures"
+        npm run test:coverage || true
 
     - name: Build application
       run: npm run build
@@ -90,9 +100,3 @@ jobs:
       with:
         name: build-artifacts
         path: dist/
-        retention-days: 30
-
-    - name: Build Summary
-      run: |
-        echo "✅ Build completed successfully"
-        echo "📦 Artifacts uploaded and ready for deployment"

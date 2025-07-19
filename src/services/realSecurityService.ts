@@ -64,7 +64,7 @@ interface SonarCloudIssue {
     startOffset: number;
     endOffset: number;
   };
-  flows: Record<string, unknown>[];
+  flows: any[];
   status: string;
   message: string;
   effort: string;
@@ -74,8 +74,8 @@ interface SonarCloudIssue {
   tags: string[];
   transitions: string[];
   actions: string[];
-  comments: Record<string, unknown>[];
-  attr: Record<string, unknown>;
+  comments: any[];
+  attr: any;
   creationDate: string;
   updateDate: string;
   type: string;
@@ -87,11 +87,11 @@ export class RealSecurityService {
   private githubToken: string;
 
   constructor() {
-    this.githubToken = import.meta.env.VITE_GITHUB_TOKEN || '';
-    this.sonarCloudToken = import.meta.env.VITE_SONARCLOUD_TOKEN || '';
+    this.githubToken = process.env.GITHUB_TOKEN || '';
+    this.sonarCloudToken = process.env.SONARCLOUD_TOKEN || '';
     
     if (!this.githubToken) {
-      console.warn('VITE_GITHUB_TOKEN environment variable is not set - using demo mode');
+      throw new Error('GITHUB_TOKEN environment variable is required');
     }
     
     this.octokit = new Octokit({
@@ -197,7 +197,7 @@ export class RealSecurityService {
     }
   }
 
-  private async getCodeQLAlerts(owner: string, repo: string): Promise<Record<string, unknown>[]> {
+  private async getCodeQLAlerts(owner: string, repo: string): Promise<any[]> {
     try {
       const response = await this.octokit.rest.codeScanning.listAlertsForRepo({
         owner,
@@ -205,14 +205,14 @@ export class RealSecurityService {
         state: 'open',
         per_page: 100
       });
-      return response.data as Record<string, unknown>[];
+      return response.data;
     } catch (error) {
       console.warn(`⚠️  Could not fetch CodeQL alerts: ${error.message}`);
       return [];
     }
   }
 
-  private async getSecretScanningAlerts(owner: string, repo: string): Promise<Record<string, unknown>[]> {
+  private async getSecretScanningAlerts(owner: string, repo: string): Promise<any[]> {
     try {
       const response = await this.octokit.rest.secretScanning.listAlertsForRepo({
         owner,
@@ -220,7 +220,7 @@ export class RealSecurityService {
         state: 'open',
         per_page: 100
       });
-      return response.data as Record<string, unknown>[];
+      return response.data;
     } catch (error) {
       console.warn(`⚠️  Could not fetch secret scanning alerts: ${error.message}`);
       return [];
@@ -283,11 +283,11 @@ export class RealSecurityService {
     }));
   }
 
-  private processCodeQLAlerts(alerts: Record<string, unknown>[], scanId: string): VulnerabilityInsert[] {
+  private processCodeQLAlerts(alerts: any[], scanId: string): VulnerabilityInsert[] {
     return alerts.map(alert => ({
-      id: `codeql-${(alert as { number: number }).number}`,
-      title: `Code Quality Issue: ${(alert as { rule: { description: string } }).rule.description}`,
-      description: (alert as { most_recent_instance: { message: { text: string } } }).most_recent_instance.message.text,
+      id: `codeql-${alert.number}`,
+      title: `Code Quality Issue: ${alert.rule.description}`,
+      description: alert.most_recent_instance.message.text,
       severity: this.mapGitHubSeverity(alert.rule.severity),
       file_path: alert.most_recent_instance.location.path,
       line_number: alert.most_recent_instance.location.start_line,
