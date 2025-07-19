@@ -63,7 +63,9 @@
     "docker:stop": "docker-compose down && docker-compose -f docker-compose.dev.yml down && docker-compose -f docker-compose.prod.yml down",
     "docker:clean": "docker system prune -f && docker volume prune -f",
     "start": "npm run dev",
-    "start:prod": "npm run build:prod && npm run preview"
+    "start:prod": "npm run build:prod && npm run preview",
+    "railway:start": "serve dist -s -l ${PORT:-3000}",
+    "deploy:railway": "railway up"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -121,6 +123,7 @@
     "react-resizable-panels": "^2.1.3",
     "react-router-dom": "^6.26.2",
     "recharts": "^2.12.7",
+    "serve": "^14.2.3",
     "sharp": "^0.32.6",
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
