@@ -1,0 +1,319 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@babel/runtime": {
+      "name": "@babel/runtime",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1104000,
+          "name": "@babel/runtime",
+          "dependency": "@babel/runtime",
+          "title": "Babel has inefficient RegExp complexity in generated code with .replace when transpiling named capturing groups",
+          "url": "https://github.com/advisories/GHSA-968p-4wvh-cqc8",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-1333"
+          ],
+          "cvss": {
+            "score": 6.2,
+            "vectorString": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": "<7.26.10"
+        }
+      ],
+      "effects": [],
+      "range": "<7.26.10",
+      "nodes": [
+        "node_modules/@babel/runtime"
+      ],
+      "fixAvailable": true
+    },
+    "@eslint/plugin-kit": {
+      "name": "@eslint/plugin-kit",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1106487,
+          "name": "@eslint/plugin-kit",
+          "dependency": "@eslint/plugin-kit",
+          "title": "@eslint/plugin-kit is vulnerable to Regular Expression Denial of Service attacks through ConfigCommentParser",
+          "url": "https://github.com/advisories/GHSA-xffm-g5w8-qvg7",
+          "severity": "high",
+          "cwe": [
+            "CWE-1333"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": "<0.3.3"
+        }
+      ],
+      "effects": [
+        "eslint"
+      ],
+      "range": "<0.3.3",
+      "nodes": [
+        "node_modules/@eslint/plugin-kit"
+      ],
+      "fixAvailable": true
+    },
+    "brace-expansion": {
+      "name": "brace-expansion",
+      "severity": "low",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1105443,
+          "name": "brace-expansion",
+          "dependency": "brace-expansion",
+          "title": "brace-expansion Regular Expression Denial of Service vulnerability",
+          "url": "https://github.com/advisories/GHSA-v6h2-p8h4-qcjw",
+          "severity": "low",
+          "cwe": [
+            "CWE-400"
+          ],
+          "cvss": {
+            "score": 3.1,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L"
+          },
+          "range": ">=1.0.0 <=1.1.11"
+        },
+        {
+          "source": 1105444,
+          "name": "brace-expansion",
+          "dependency": "brace-expansion",
+          "title": "brace-expansion Regular Expression Denial of Service vulnerability",
+          "url": "https://github.com/advisories/GHSA-v6h2-p8h4-qcjw",
+          "severity": "low",
+          "cwe": [
+            "CWE-400"
+          ],
+          "cvss": {
+            "score": 3.1,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L"
+          },
+          "range": ">=2.0.0 <=2.0.1"
+        }
+      ],
+      "effects": [],
+      "range": "1.0.0 - 1.1.11 || 2.0.0 - 2.0.1",
+      "nodes": [
+        "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion",
+        "node_modules/brace-expansion",
+        "node_modules/glob/node_modules/brace-expansion"
+      ],
+      "fixAvailable": true
+    },
+    "esbuild": {
+      "name": "esbuild",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1102341,
+          "name": "esbuild",
+          "dependency": "esbuild",
+          "title": "esbuild enables any website to send any requests to the development server and read the response",
+          "url": "https://github.com/advisories/GHSA-67mh-4wv8-2f99",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-346"
+          ],
+          "cvss": {
+            "score": 5.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+          },
+          "range": "<=0.24.2"
+        }
+      ],
+      "effects": [
+        "vite"
+      ],
+      "range": "<=0.24.2",
+      "nodes": [
+        "node_modules/esbuild"
+      ],
+      "fixAvailable": true
+    },
+    "eslint": {
+      "name": "eslint",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        "@eslint/plugin-kit"
+      ],
+      "effects": [],
+      "range": "9.10.0 - 9.26.0",
+      "nodes": [
+        "node_modules/eslint"
+      ],
+      "fixAvailable": true
+    },
+    "nanoid": {
+      "name": "nanoid",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1101163,
+          "name": "nanoid",
+          "dependency": "nanoid",
+          "title": "Predictable results in nanoid generation when given non-integer values",
+          "url": "https://github.com/advisories/GHSA-mwcw-c2x4-8c55",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-835"
+          ],
+          "cvss": {
+            "score": 4.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+          },
+          "range": "<3.3.8"
+        }
+      ],
+      "effects": [],
+      "range": "<3.3.8",
+      "nodes": [
+        "node_modules/nanoid"
+      ],
+      "fixAvailable": true
+    },
+    "vite": {
+      "name": "vite",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        {
+          "source": 1102437,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "Websites were able to send any requests to the development server and read the response in vite",
+          "url": "https://github.com/advisories/GHSA-vg6x-rcgg-rjx6",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-346",
+            "CWE-350",
+            "CWE-1385"
+          ],
+          "cvss": {
+            "score": 6.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+          },
+          "range": ">=5.0.0 <=5.4.11"
+        },
+        {
+          "source": 1103517,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "Vite bypasses server.fs.deny when using ?raw??",
+          "url": "https://github.com/advisories/GHSA-x574-m823-4x7w",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-200",
+            "CWE-284"
+          ],
+          "cvss": {
+            "score": 5.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+          },
+          "range": ">=5.0.0 <5.4.15"
+        },
+        {
+          "source": 1103628,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "Vite has a `server.fs.deny` bypassed for `inline` and `raw` with `?import` query",
+          "url": "https://github.com/advisories/GHSA-4r4m-qw57-chr8",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-200",
+            "CWE-284"
+          ],
+          "cvss": {
+            "score": 5.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+          },
+          "range": ">=5.0.0 <5.4.16"
+        },
+        {
+          "source": 1103884,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "Vite has an `server.fs.deny` bypass with an invalid `request-target`",
+          "url": "https://github.com/advisories/GHSA-356w-63v5-8wf4",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-200"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": ">=5.0.0 <5.4.18"
+        },
+        {
+          "source": 1104173,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "Vite's server.fs.deny bypassed with /. for files under project root",
+          "url": "https://github.com/advisories/GHSA-859w-5945-r5v3",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-22"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": ">=5.0.0 <=5.4.18"
+        },
+        {
+          "source": 1104202,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "Vite allows server.fs.deny to be bypassed with .svg or relative paths",
+          "url": "https://github.com/advisories/GHSA-xcj6-pq6g-qj4x",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-200",
+            "CWE-284"
+          ],
+          "cvss": {
+            "score": 5.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+          },
+          "range": ">=5.0.0 <5.4.17"
+        },
+        "esbuild"
+      ],
+      "effects": [],
+      "range": "0.11.0 - 6.1.6",
+      "nodes": [
+        "node_modules/vite"
+      ],
+      "fixAvailable": true
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 1,
+      "moderate": 4,
+      "high": 2,
+      "critical": 0,
+      "total": 7
+    },
+    "dependencies": {
+      "prod": 430,
+      "dev": 501,
+      "optional": 82,
+      "peer": 42,
+      "peerOptional": 0,
+      "total": 978
+    }
+  }
+}
