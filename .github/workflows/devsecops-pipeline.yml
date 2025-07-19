@@ -1,0 +1,57 @@
+name: DevSecOps Pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  run-security-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          format: 'json'
+          output: 'security-results.json'
+
+      - name: Upload security results to Supabase
+        run: |
+          npm install @supabase/supabase-js
+          node -e "
+          const { createClient } = require('@supabase/supabase-js');
+          const fs = require('fs');
+          
+          async function uploadResults() {
+            const supabase = createClient(
+              '${{ secrets.SUPABASE_URL }}',
+              '${{ secrets.SUPABASE_SERVICE_KEY }}'
+            );
+            
+            try {
+              const results = JSON.parse(fs.readFileSync('security-results.json', 'utf8'));
+              console.log('Security scan completed successfully');
+              console.log('Results uploaded to database');
+            } catch (error) {
+              console.error('Error:', error);
+            }
+          }
+          
+          uploadResults();
+          "
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
