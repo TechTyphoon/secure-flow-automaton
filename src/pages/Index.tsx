@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import Header from '@/components/Header';
-import SecurityMetrics from '@/components/SecurityMetrics';
-import PipelineFlow from '@/components/PipelineFlow';
-import VulnerabilityDashboard from '@/components/VulnerabilityDashboard';
-import ComplianceOverview from '@/components/ComplianceOverview';
-import ToolSelection from '@/components/ToolSelection';
-import UserPersonas from '@/components/UserPersonas';
-import ProjectTimeline from '@/components/ProjectTimeline';
-import HowItWorksModal from '@/components/HowItWorksModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Shield, Users, Calendar, BarChart3, HelpCircle } from 'lucide-react';
 import { Link } from "react-router-dom";
 import { useAuth } from "@/components/AuthContext";
+
+// Lazy load heavy components for better performance
+const SecurityMetrics = lazy(() => import('@/components/SecurityMetrics'));
+const PipelineFlow = lazy(() => import('@/components/PipelineFlow'));
+const VulnerabilityDashboard = lazy(() => import('@/components/VulnerabilityDashboard'));
+const ComplianceOverview = lazy(() => import('@/components/ComplianceOverview'));
+const ToolSelection = lazy(() => import('@/components/ToolSelection'));
+const UserPersonas = lazy(() => import('@/components/UserPersonas'));
+const ProjectTimeline = lazy(() => import('@/components/ProjectTimeline'));
+const HowItWorksModal = lazy(() => import('@/components/HowItWorksModal'));
+
+// Loading component for better UX
+const ComponentLoader = () => (
+  <div className="flex items-center justify-center p-8">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  </div>
+);
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -71,32 +80,48 @@ const Index = () => {
             </TabsList>
 
             <TabsContent value="dashboard" className="space-y-8 mt-6">
-              <SecurityMetrics />
+              <Suspense fallback={<ComponentLoader />}>
+                <SecurityMetrics />
+              </Suspense>
               <div className="space-y-8">
-                <PipelineFlow />
-                <VulnerabilityDashboard />
-                <ComplianceOverview />
+                <Suspense fallback={<ComponentLoader />}>
+                  <PipelineFlow />
+                </Suspense>
+                <Suspense fallback={<ComponentLoader />}>
+                  <VulnerabilityDashboard />
+                </Suspense>
+                <Suspense fallback={<ComponentLoader />}>
+                  <ComplianceOverview />
+                </Suspense>
               </div>
             </TabsContent>
 
             <TabsContent value="research" className="mt-6">
-              <ToolSelection />
+              <Suspense fallback={<ComponentLoader />}>
+                <ToolSelection />
+              </Suspense>
             </TabsContent>
 
             <TabsContent value="personas" className="mt-6">
-              <UserPersonas />
+              <Suspense fallback={<ComponentLoader />}>
+                <UserPersonas />
+              </Suspense>
             </TabsContent>
 
             <TabsContent value="timeline" className="mt-6">
-              <ProjectTimeline />
+              <Suspense fallback={<ComponentLoader />}>
+                <ProjectTimeline />
+              </Suspense>
             </TabsContent>
           </Tabs>
         </div>
       </main>
-      <HowItWorksModal 
-        open={howItWorksOpen} 
-        onClose={() => setHowItWorksOpen(false)} 
-      />
+      <Suspense fallback={<div />}>
+        <HowItWorksModal 
+          open={howItWorksOpen} 
+          onClose={() => setHowItWorksOpen(false)} 
+        />
+      </Suspense>
     </>
   );
 };

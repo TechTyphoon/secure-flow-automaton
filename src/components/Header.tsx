@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { Shield, Bell, User, Settings } from "lucide-react";
+import { Shield, Bell, User, Settings, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationsModal from "@/components/NotificationsModal";
 import ProfileDropdown from "@/components/ProfileDropdown";
@@ -48,6 +48,9 @@ const Header = () => {
                 {notificationCount}
               </span>
             )}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/monitoring')} title="System Monitoring">
+            <Activity className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setProfileOpen((v) => !v)}>
             <User className="h-5 w-5" />

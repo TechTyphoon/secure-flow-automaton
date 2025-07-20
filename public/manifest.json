@@ -1,0 +1,189 @@
+{
+  "name": "SecureFlow Automaton",
+  "short_name": "SecureFlow",
+  "description": "Enterprise DevSecOps automation platform with comprehensive security monitoring and performance optimization",
+  "version": "1.0.0",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1f2937",
+  "background_color": "#ffffff",
+  "lang": "en-US",
+  "dir": "ltr",
+  "categories": [
+    "developer",
+    "security",
+    "productivity",
+    "monitoring"
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-wide.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "platform": "wide",
+      "label": "SecureFlow Dashboard - Desktop View"
+    },
+    {
+      "src": "/screenshots/mobile-narrow.jpg", 
+      "sizes": "360x640",
+      "type": "image/jpeg",
+      "platform": "narrow",
+      "label": "SecureFlow Mobile Interface"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96", 
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Security Dashboard",
+      "short_name": "Security",
+      "description": "View security monitoring and threat detection",
+      "url": "/monitoring?tab=security",
+      "icons": [
+        {
+          "src": "/icons/shortcut-security.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Performance Analytics",
+      "short_name": "Performance", 
+      "description": "Monitor application performance and optimization",
+      "url": "/monitoring?tab=performance",
+      "icons": [
+        {
+          "src": "/icons/shortcut-performance.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Vulnerability Scan",
+      "short_name": "Scan",
+      "description": "Start a new security vulnerability scan",
+      "url": "/?action=scan",
+      "icons": [
+        {
+          "src": "/icons/shortcut-scan.png",
+          "sizes": "96x96", 
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Project Timeline",
+      "short_name": "Timeline",
+      "description": "View project development timeline and milestones",
+      "url": "/?view=timeline",
+      "icons": [
+        {
+          "src": "/icons/shortcut-timeline.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "handle_links": "preferred",
+  "protocol_handlers": [
+    {
+      "protocol": "mailto",
+      "url": "/contact?email=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/import",
+      "accept": {
+        "application/json": [".json"],
+        "text/csv": [".csv"],
+        "application/xml": [".xml"]
+      },
+      "icons": [
+        {
+          "src": "/icons/file-handler.png",
+          "sizes": "256x256",
+          "type": "image/png"
+        }
+      ],
+      "launch_type": "single-client"
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "reports",
+          "accept": ["application/json", "text/csv", ".json", ".csv"]
+        }
+      ]
+    }
+  }
+}
