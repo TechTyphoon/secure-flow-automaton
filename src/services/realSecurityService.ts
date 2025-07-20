@@ -87,13 +87,13 @@ export class RealSecurityService {
   private githubToken: string;
 
   constructor() {
-    this.githubToken = process.env.GITHUB_TOKEN || '';
-    this.sonarCloudToken = process.env.SONARCLOUD_TOKEN || '';
+    // In browser environment, process.env is not available
+    // These would need to be provided through Supabase edge functions
+    // For demo purposes, we'll use empty tokens and mock data
+    this.githubToken = '';
+    this.sonarCloudToken = '';
     
-    // Make GitHub token optional for demo purposes
-    if (!this.githubToken) {
-      console.warn('GITHUB_TOKEN not provided - using mock data for demo');
-    }
+    console.warn('Running in demo mode - using mock data for security scans');
     
     this.octokit = new Octokit({
       auth: this.githubToken || undefined,
