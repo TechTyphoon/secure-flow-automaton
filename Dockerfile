@@ -13,7 +13,7 @@ COPY package*.json ./
 COPY bun.lockb ./
 
 # Install dependencies
-RUN npm ci --only=production --silent
+RUN npm ci --silent
 
 # Copy source code
 COPY . .
@@ -44,9 +44,8 @@ RUN apk update && apk add --no-cache \
 # Set timezone
 ENV TZ=UTC
 
-# Create nginx user and group
-RUN addgroup -g 1001 -S nginx && \
-    adduser -S -D -H -u 1001 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx
+# Use existing nginx user from Alpine image
+# (nginx user already exists in nginx:alpine)
 
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
