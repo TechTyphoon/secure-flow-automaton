@@ -5,6 +5,14 @@ import { createClient } from '@supabase/supabase-js';
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL || 'http://127.0.0.1:54321';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Check for required environment variables
+if (!supabaseKey) {
+  console.log('⚠️  SUPABASE_SERVICE_ROLE_KEY not found. Running in dry-run mode.');
+  console.log('📊 Security scan results would be posted if credentials were available.');
+  process.exit(0);
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function postSecurityResults() {
