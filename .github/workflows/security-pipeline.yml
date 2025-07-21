@@ -31,7 +31,7 @@ jobs:
     - name: Run ESLint Security
       run: |
         npm install --save-dev eslint-plugin-security
-        npx eslint . --ext .ts,.tsx --config .eslintrc.security.js --format json --output-file eslint-results.json || true
+        npx eslint . --ext .ts,.tsx --config .eslintrc.security.cjs --format json --output-file eslint-results.json || true
 
     - name: Run SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master

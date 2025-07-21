@@ -16,193 +16,292 @@ interface State {
   errorId: string;
 }
 
-class ErrorBoundary extends Component<Props, State> {
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { SecurityLogger } from '@/lib/security';
+import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+  errorId: string | null;
+}
+
+/**
+ * Enhanced Error Boundary with Security Logging and User-Friendly Interface
+ * 
+ * Security enhancements:
+ * - Logs all errors for security monitoring
+ * - Prevents information disclosure in error messages
+ * - Provides safe fallback UI
+ * - Tracks error patterns for threat detection
+ */
+export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: '',
+      errorId: null,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
-    // Generate unique error ID for tracking
-    const errorId = `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+    // Update state to show fallback UI
     return {
       hasError: true,
       error,
-      errorId,
+      errorId: `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error details
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Generate unique error ID for tracking
+    const errorId = `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
+    // Log error securely (without exposing sensitive information)
+    SecurityLogger.logEvent('application_error', {
+      errorId,
+      message: error.message,
+      stack: this.sanitizeStackTrace(error.stack || ''),
+      componentStack: this.sanitizeStackTrace(errorInfo.componentStack),
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      errorType: error.name,
+      userId: this.getCurrentUserId(),
+    });
+
+    // Update state with error information
     this.setState({
       error,
       errorInfo,
+      errorId,
     });
 
-    // Call custom error handler if provided
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
-    }
+    // Check for suspicious error patterns that might indicate attacks
+    this.checkForSuspiciousPatterns(error);
+  }
 
-    // Report to health monitoring if available
-    if (typeof window !== 'undefined' && (window as any).healthMonitor) {
-      (window as any).healthMonitor.recordError(error, 'error-boundary');
-    }
+  /**
+   * Sanitize stack trace to remove potentially sensitive information
+   */
+  private sanitizeStackTrace(stack: string): string {
+    return stack
+      .replace(/file:\/\/\/[^:]+/g, '[FILE_PATH]') // Remove file paths
+      .replace(/https?:\/\/[^/]+/g, '[URL]') // Remove URLs
+      .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP]') // Remove IP addresses
+      .split('\n')
+      .slice(0, 10) // Limit stack trace depth
+      .join('\n');
+  }
 
-    // Send error to monitoring service (in production)
-    if (process.env.NODE_ENV === 'production') {
-      this.reportErrorToService(error, errorInfo);
+  /**
+   * Get current user ID safely
+   */
+  private getCurrentUserId(): string | undefined {
+    try {
+      // This would integrate with your auth system
+      return 'user_id_placeholder';
+    } catch {
+      return undefined;
     }
   }
 
-  private reportErrorToService = (error: Error, errorInfo: ErrorInfo) => {
-    // In a real application, you would send this to your error monitoring service
-    // like Sentry, LogRocket, Bugsnag, etc.
-    
-    const errorReport = {
-      message: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
+  /**
+   * Check for suspicious error patterns that might indicate security issues
+   */
+  private checkForSuspiciousPatterns(error: Error) {
+    const suspiciousPatterns = [
+      /script/i,
+      /eval/i,
+      /injection/i,
+      /xss/i,
+      /csrf/i,
+      /unauthorized/i,
+      /permission/i,
+    ];
+
+    const message = error.message.toLowerCase();
+    const isSuspicious = suspiciousPatterns.some(pattern => pattern.test(message));
+
+    if (isSuspicious) {
+      SecurityLogger.logEvent('suspicious_error_pattern', {
+        errorMessage: error.message,
+        pattern: 'security_related',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Check for rapid error succession (potential DoS)
+    const errorCount = this.getRecentErrorCount();
+    if (errorCount > 10) {
+      SecurityLogger.logEvent('rapid_error_succession', {
+        errorCount,
+        timeWindow: '60s',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * Get count of recent errors (simplified implementation)
+   */
+  private getRecentErrorCount(): number {
+    try {
+      const errorLog = localStorage.getItem('recent_errors') || '[]';
+      const errors = JSON.parse(errorLog);
+      const oneMinuteAgo = Date.now() - 60000;
+      return errors.filter((timestamp: number) => timestamp > oneMinuteAgo).length;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Record error timestamp for rate limiting
+   */
+  private recordErrorTimestamp() {
+    try {
+      const errorLog = localStorage.getItem('recent_errors') || '[]';
+      const errors = JSON.parse(errorLog);
+      const oneMinuteAgo = Date.now() - 60000;
+      
+      // Keep only recent errors and add current one
+      const recentErrors = errors.filter((timestamp: number) => timestamp > oneMinuteAgo);
+      recentErrors.push(Date.now());
+      
+      localStorage.setItem('recent_errors', JSON.stringify(recentErrors));
+    } catch {
+      // Fail silently if localStorage is not available
+    }
+  }
+
+  /**
+   * Handle error recovery actions
+   */
+  private handleRetry = () => {
+    SecurityLogger.logEvent('error_boundary_retry', {
       errorId: this.state.errorId,
       timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href,
-    };
+    });
 
-    // Example: Send to monitoring service
-    // fetch('/api/errors', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(errorReport),
-    // });
-
-    console.log('Error report:', errorReport);
-  };
-
-  private handleRetry = () => {
     this.setState({
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: '',
+      errorId: null,
     });
   };
 
-  private handleReload = () => {
-    window.location.reload();
+  private handleHome = () => {
+    SecurityLogger.logEvent('error_boundary_home', {
+      errorId: this.state.errorId,
+      timestamp: new Date().toISOString(),
+    });
+
+    window.location.href = '/';
   };
 
-  private handleGoHome = () => {
-    window.location.href = '/';
+  private handleReportError = () => {
+    SecurityLogger.logEvent('error_report_requested', {
+      errorId: this.state.errorId,
+      timestamp: new Date().toISOString(),
+    });
+
+    // In a real app, this would open a support ticket or feedback form
+    alert(`Error reported. Reference ID: ${this.state.errorId}`);
   };
 
   render() {
     if (this.state.hasError) {
-      // Custom fallback UI
+      // Record error occurrence
+      this.recordErrorTimestamp();
+
+      // Show custom fallback UI if provided
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
-      // Default error UI
+      // Default secure error UI
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <Card className="max-w-2xl w-full">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-red-600">
-                <AlertTriangle className="h-6 w-6" />
-                <span>Something went wrong</span>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <AlertTriangle className="h-12 w-12 text-red-500" />
+              </div>
+              <CardTitle className="text-xl text-red-700">
+                Oops! Something went wrong
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* User-friendly message */}
-              <div className="space-y-2">
-                <p className="text-gray-700">
-                  We're sorry, but something unexpected happened. Our team has been notified 
-                  and we're working to fix this issue.
-                </p>
-                <p className="text-sm text-gray-600">
-                  Error ID: <code className="bg-gray-100 px-1 rounded">{this.state.errorId}</code>
-                </p>
+            <CardContent className="space-y-4">
+              <div className="text-center text-gray-600">
+                <p>We encountered an unexpected error. Our team has been notified and is working on a fix.</p>
+                {this.state.errorId && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Error ID: <code className="bg-gray-100 px-2 py-1 rounded">{this.state.errorId}</code>
+                  </p>
+                )}
               </div>
 
-              {/* Action buttons */}
-              <div className="flex flex-wrap gap-3">
-                <Button onClick={this.handleRetry} className="flex items-center space-x-2">
-                  <RefreshCw className="h-4 w-4" />
-                  <span>Try Again</span>
+              <div className="flex flex-col space-y-2">
+                <Button 
+                  onClick={this.handleRetry} 
+                  className="w-full"
+                  variant="default"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
                 </Button>
                 
                 <Button 
-                  variant="outline" 
-                  onClick={this.handleReload}
-                  className="flex items-center space-x-2"
+                  onClick={this.handleHome} 
+                  className="w-full"
+                  variant="outline"
                 >
-                  <RefreshCw className="h-4 w-4" />
-                  <span>Reload Page</span>
+                  <Home className="h-4 w-4 mr-2" />
+                  Go Home
                 </Button>
                 
                 <Button 
-                  variant="outline" 
-                  onClick={this.handleGoHome}
-                  className="flex items-center space-x-2"
+                  onClick={this.handleReportError} 
+                  className="w-full"
+                  variant="ghost"
+                  size="sm"
                 >
-                  <Home className="h-4 w-4" />
-                  <span>Go Home</span>
+                  <Bug className="h-4 w-4 mr-2" />
+                  Report Issue
                 </Button>
               </div>
 
-              {/* Error details (for development) */}
-              {process.env.NODE_ENV === 'development' && this.state.error && (
-                <details className="mt-6">
-                  <summary className="cursor-pointer flex items-center space-x-2 text-gray-600 hover:text-gray-800">
-                    <Bug className="h-4 w-4" />
-                    <span>Error Details (Development Mode)</span>
+              {/* Development mode: Show error details */}
+              {import.meta.env.DEV && this.state.error && (
+                <details className="mt-4 p-3 bg-gray-50 rounded border text-xs">
+                  <summary className="cursor-pointer font-medium text-gray-700 mb-2">
+                    Development Details (Hidden in Production)
                   </summary>
-                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded">
-                    <div className="space-y-2">
-                      <div>
-                        <strong>Error:</strong>
-                        <pre className="mt-1 text-sm bg-white p-2 rounded border overflow-x-auto">
-                          {this.state.error.message}
-                        </pre>
-                      </div>
-                      
-                      {this.state.error.stack && (
-                        <div>
-                          <strong>Stack Trace:</strong>
-                          <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-x-auto max-h-40">
-                            {this.state.error.stack}
-                          </pre>
-                        </div>
-                      )}
-                      
-                      {this.state.errorInfo?.componentStack && (
-                        <div>
-                          <strong>Component Stack:</strong>
-                          <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-x-auto max-h-40">
-                            {this.state.errorInfo.componentStack}
-                          </pre>
-                        </div>
-                      )}
+                  <div className="space-y-2">
+                    <div>
+                      <strong>Error:</strong> {this.state.error.message}
+                    </div>
+                    <div>
+                      <strong>Stack:</strong>
+                      <pre className="mt-1 overflow-auto max-h-32 text-xs bg-gray-100 p-2 rounded">
+                        {this.sanitizeStackTrace(this.state.error.stack || '')}
+                      </pre>
                     </div>
                   </div>
                 </details>
               )}
-
-              {/* Help information */}
-              <div className="border-t pt-4 text-sm text-gray-600">
-                <p>
-                  If this problem persists, please contact our support team with the error ID above.
-                </p>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -213,20 +312,20 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-// Higher-order component for easier usage
-export const withErrorBoundary = <P extends object>(
+/**
+ * HOC for wrapping components with error boundary
+ */
+export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorFallback?: ReactNode,
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
-) => {
-  const WrappedComponent = (props: P) => (
-    <ErrorBoundary fallback={errorFallback} onError={onError}>
-      <Component {...props} />
-    </ErrorBoundary>
-  );
-
-  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-  return WrappedComponent;
-};
+  fallback?: ReactNode
+) {
+  return function WrappedComponent(props: P) {
+    return (
+      <ErrorBoundary fallback={fallback}>
+        <Component {...props} />
+      </ErrorBoundary>
+    );
+  };
+}
 
 export default ErrorBoundary;
