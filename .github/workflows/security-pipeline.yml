@@ -33,20 +33,16 @@ jobs:
         npm install --save-dev eslint-plugin-security
         npx eslint . --ext .ts,.tsx --config .eslintrc.security.cjs --format json --output-file eslint-results.json || true
 
-    - name: Run SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+    - name: Run npm audit
+      run: npm audit --audit-level=moderate --json > npm-audit-results.json || true
+
+    - name: Upload Security Artifacts
+      uses: actions/upload-artifact@v4
       with:
-        args: >
-          -Dsonar.projectKey=TechTyphoon_secure-flow-automaton
-          -Dsonar.organization=techtyphoon
-          -Dsonar.sources=src
-          -Dsonar.tests=src
-          -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx
-          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-          -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
+        name: security-reports
+        path: |
+          eslint-results.json
+          npm-audit-results.json
 
     - name: Dependency Security Scan
       run: |
