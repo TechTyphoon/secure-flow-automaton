@@ -65,7 +65,12 @@
     "start": "npm run dev",
     "start:prod": "npm run build:prod && npm run preview",
     "railway:start": "serve dist -s -l ${PORT:-3000}",
-    "deploy:railway": "railway up"
+    "deploy:railway": "railway up",
+    "auto:setup": "node scripts/auto-setup.js",
+    "auto:full": "npm run auto:setup && npm run auto:monitor",
+    "auto:monitor": "bash monitor.sh &",
+    "auto:stop": "pkill -f monitor.sh",
+    "auto:status": "echo '🔍 Checking automation status...' && ps aux | grep -E '(monitor|auto-setup)' | grep -v grep || echo 'No automation processes running'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
