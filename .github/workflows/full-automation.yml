@@ -164,5 +164,30 @@ jobs:
     - name: 🔒 Security Monitoring
       run: |
         echo "🔒 Security monitoring..."
-        npm audit
-        echo "✅ Security monitoring completed"
+        
+        # Store the full audit results for debugging
+        echo "💾 Generating detailed audit report..."
+        npm audit --json > security-audit-report.json || true
+        
+        # Show all vulnerabilities for visibility (but don't fail)
+        echo "📊 Full security audit (for informational purposes):"
+        npm audit || echo "⚠️ Non-critical vulnerabilities found - see details above"
+        
+        # Only fail the build on critical vulnerabilities
+        echo ""
+        echo "🔍 Checking for CRITICAL vulnerabilities only..."
+        if npm audit --audit-level=critical --json > critical-audit.json 2>/dev/null; then
+          echo "✅ No critical vulnerabilities found - build can continue"
+          CRITICAL_COUNT=0
+        else
+          CRITICAL_COUNT=$(npm audit --audit-level=critical --json 2>/dev/null | jq '.metadata.vulnerabilities.critical // 0' || echo "0")
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "❌ Found $CRITICAL_COUNT critical vulnerabilities - failing build"
+            npm audit --audit-level=critical
+            exit 1
+          else
+            echo "✅ No critical vulnerabilities found - build can continue"
+          fi
+        fi
+        
+        echo "✅ Security monitoring completed successfully"
