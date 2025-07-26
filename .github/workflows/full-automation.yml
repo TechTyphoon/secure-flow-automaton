@@ -1,154 +1,32 @@
-name: 🤖 Full Automation Pipeline
+name: Full Automation Pipeline
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  schedule:
-    # Run automatically daily at 2 AM
-    - cron: '0 2 * * *'
   workflow_dispatch:
 
-env:
-  NODE_VERSION: '20'
-
 jobs:
-  auto-setup:
-    name: 🚀 Automated Setup & Deployment
+  automation:
+    name: Automated Build
     runs-on: ubuntu-latest
     
     steps:
-    - name: 📥 Checkout Repository
+    - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: 🏗️ Setup Node.js Environment
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ env.NODE_VERSION }}
+        node-version: '20'
         cache: 'npm'
 
-    - name: 📦 Install Dependencies
+    - name: Install Dependencies
       run: npm ci
 
-    - name: 🧪 Run Comprehensive Tests
+    - name: Run Tests
       run: npm test
 
-    - name: 🏗️ Build Application
+    - name: Build Application
       run: npm run build
-
-    - name: 🔍 Security & Quality Checks
-      run: |
-        npm run lint
-        npm run lint:security
-      continue-on-error: true
-
-    - name: 📊 Generate Reports
-      run: |
-        npm audit --json > audit-report.json || true
-        npm run lint -- --format json --output-file lint-report.json || true
-      continue-on-error: true
-
-    - name: 📤 Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: automation-reports
-        path: |
-          audit-report.json
-          lint-report.json
-          dist/
-        retention-days: 7
-
-    - name: 🚀 Deploy to Production
-      if: github.ref == 'refs/heads/main'
-      run: |
-        echo "🚀 Deploying to production..."
-        # Add your deployment commands here
-        echo "✅ Deployment completed successfully"
-
-    - name: 📊 Upload Artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: automation-reports
-        path: |
-          automation.log
-          audit-report.json
-          lint-report.json
-          AUTOMATION_REPORT.md
-
-    - name: 💬 Success Notification
-      if: success()
-      run: |
-        echo "🎉 AUTOMATION COMPLETED SUCCESSFULLY!"
-        echo "====================================="
-        echo "✅ All tests passed"
-        echo "✅ Build successful"
-        echo "✅ Security checks completed"
-        echo "✅ Code quality validated"
-        echo "✅ Automated fixes applied"
-        echo "✅ Changes committed and pushed"
-        echo "🚀 Ready for production!"
-
-  continuous-monitoring:
-    name: 🔄 Continuous Monitoring
-    runs-on: ubuntu-latest
-    needs: auto-setup
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: 📥 Checkout Repository
-      uses: actions/checkout@v4
-
-    - name: 🏗️ Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: 📦 Install Dependencies
-      run: npm ci
-
-    - name: 🔍 Health Check
-      run: |
-        echo "🔍 Running health checks..."
-        npm test
-        npm run build
-        echo "✅ Health check passed"
-
-    - name: 📊 Performance Monitoring
-      run: |
-        echo "📊 Monitoring performance..."
-        # Add performance monitoring commands
-        echo "✅ Performance monitoring completed"
-
-    - name: 🔒 Security Monitoring
-      run: |
-        echo "🔒 Security monitoring..."
-        
-        # Store the full audit results for debugging
-        echo "💾 Generating detailed audit report..."
-        npm audit --json > security-audit-report.json || true
-        
-        # Show all vulnerabilities for visibility (but don't fail)
-        echo "📊 Full security audit (for informational purposes):"
-        npm audit || echo "⚠️ Non-critical vulnerabilities found - see details above"
-        
-        # Only fail the build on critical vulnerabilities
-        echo ""
-        echo "🔍 Checking for CRITICAL vulnerabilities only..."
-        if npm audit --audit-level=critical --json > critical-audit.json 2>/dev/null; then
-          echo "✅ No critical vulnerabilities found - build can continue"
-          CRITICAL_COUNT=0
-        else
-          CRITICAL_COUNT=$(npm audit --audit-level=critical --json 2>/dev/null | jq '.metadata.vulnerabilities.critical // 0' || echo "0")
-          if [ "$CRITICAL_COUNT" -gt 0 ]; then
-            echo "❌ Found $CRITICAL_COUNT critical vulnerabilities - failing build"
-            npm audit --audit-level=critical
-            exit 1
-          else
-            echo "✅ No critical vulnerabilities found - build can continue"
-          fi
-        fi
-        
-        echo "✅ Security monitoring completed successfully"
