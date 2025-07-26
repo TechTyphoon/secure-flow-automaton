@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Demo mode - simplified configuration for quick testing
+  secureflow-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile.ultimate
+      target: development
+    container_name: secureflow-demo
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+      - VITE_APP_TITLE=SecureFlow Automaton - Demo Mode
+      - VITE_DEMO_MODE=true
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Lightweight database for demo
+  demo-db:
+    image: postgres:15-alpine
+    container_name: secureflow-demo-db
+    environment:
+      - POSTGRES_DB=secureflow_demo
+      - POSTGRES_USER=demo_user
+      - POSTGRES_PASSWORD=demo_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - demo_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  demo_db_data:
+    driver: local
+
+networks:
+  default:
+    name: secureflow-demo-network

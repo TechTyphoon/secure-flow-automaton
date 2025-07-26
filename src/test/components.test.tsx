@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
@@ -146,10 +146,14 @@ describe('Component Rendering', () => {
     const input = screen.getByTestId('search-input');
     const submitButton = screen.getByTestId('submit-button');
 
-    await user.type(input, 'SQL injection');
+    await act(async () => {
+      await user.type(input, 'SQL injection');
+    });
     expect((input as HTMLInputElement).value).toBe('SQL injection');
 
-    await user.click(submitButton);
+    await act(async () => {
+      await user.click(submitButton);
+    });
     expect(mockSubmit).toHaveBeenCalledWith('SQL injection');
   });
 });

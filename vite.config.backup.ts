@@ -113,7 +113,6 @@ export default defineConfig(({ mode }) => ({
     logOverride: { 'this-is-undefined-in-esm': 'silent' },
     target: 'esnext',
   },
-}));
   
   build: {
     // Cross-platform build optimizations

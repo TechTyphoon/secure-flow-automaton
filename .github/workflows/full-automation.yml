@@ -16,7 +16,7 @@ on:
         default: 'false'
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
   AUTOMATION_MODE: 'full'
 
 jobs:

@@ -40,7 +40,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint . --ext .ts,.tsx --report-unused-disable-directives --max-warnings 200 --ignore-pattern 'coverage/**'",
+    "lint": "eslint . --ext .ts,.tsx --report-unused-disable-directives --max-warnings 200 --ignore-pattern 'coverage/**' --ignore-pattern '*.backup.*'",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",

@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
@@ -31,7 +31,6 @@ jobs:
 
       - name: Run security lint
         run: |
-          npm install --save-dev eslint-plugin-security
           npx eslint . --ext .ts,.tsx --config .eslintrc.security.cjs --format json --output-file eslint-results.json || true
 
       - name: Run tests
@@ -57,7 +56,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
