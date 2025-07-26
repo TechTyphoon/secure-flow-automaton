@@ -1,38 +1,6 @@
 {
   "auditReportVersion": 2,
   "vulnerabilities": {
-    "@vitejs/plugin-react-swc": {
-      "name": "@vitejs/plugin-react-swc",
-      "severity": "moderate",
-      "isDirect": true,
-      "via": [
-        "vite"
-      ],
-      "effects": [],
-      "range": "<=3.7.1",
-      "nodes": [
-        "node_modules/@vitejs/plugin-react-swc"
-      ],
-      "fixAvailable": true
-    },
-    "@vitest/coverage-v8": {
-      "name": "@vitest/coverage-v8",
-      "severity": "moderate",
-      "isDirect": true,
-      "via": [
-        "vitest"
-      ],
-      "effects": [],
-      "range": "<=2.2.0-beta.2",
-      "nodes": [
-        "node_modules/@vitest/coverage-v8"
-      ],
-      "fixAvailable": {
-        "name": "@vitest/coverage-v8",
-        "version": "3.2.4",
-        "isSemVerMajor": true
-      }
-    },
     "compression": {
       "name": "compression",
       "severity": "low",
@@ -52,55 +20,6 @@
         "version": "10.0.2",
         "isSemVerMajor": true
       }
-    },
-    "esbuild": {
-      "name": "esbuild",
-      "severity": "moderate",
-      "isDirect": false,
-      "via": [
-        {
-          "source": 1102341,
-          "name": "esbuild",
-          "dependency": "esbuild",
-          "title": "esbuild enables any website to send any requests to the development server and read the response",
-          "url": "https://github.com/advisories/GHSA-67mh-4wv8-2f99",
-          "severity": "moderate",
-          "cwe": [
-            "CWE-346"
-          ],
-          "cvss": {
-            "score": 5.3,
-            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
-          },
-          "range": "<=0.24.2"
-        }
-      ],
-      "effects": [
-        "vite"
-      ],
-      "range": "<=0.24.2",
-      "nodes": [
-        "node_modules/esbuild"
-      ],
-      "fixAvailable": {
-        "name": "vitest",
-        "version": "3.2.4",
-        "isSemVerMajor": true
-      }
-    },
-    "lovable-tagger": {
-      "name": "lovable-tagger",
-      "severity": "moderate",
-      "isDirect": true,
-      "via": [
-        "vite"
-      ],
-      "effects": [],
-      "range": "*",
-      "nodes": [
-        "node_modules/lovable-tagger"
-      ],
-      "fixAvailable": false
     },
     "on-headers": {
       "name": "on-headers",
@@ -154,88 +73,24 @@
         "version": "10.0.2",
         "isSemVerMajor": true
       }
-    },
-    "vite": {
-      "name": "vite",
-      "severity": "moderate",
-      "isDirect": true,
-      "via": [
-        "esbuild"
-      ],
-      "effects": [
-        "@vitejs/plugin-react-swc",
-        "lovable-tagger",
-        "vite-node",
-        "vitest"
-      ],
-      "range": "0.11.0 - 6.1.6",
-      "nodes": [
-        "node_modules/vite"
-      ],
-      "fixAvailable": {
-        "name": "vitest",
-        "version": "3.2.4",
-        "isSemVerMajor": true
-      }
-    },
-    "vite-node": {
-      "name": "vite-node",
-      "severity": "moderate",
-      "isDirect": false,
-      "via": [
-        "vite"
-      ],
-      "effects": [
-        "vitest"
-      ],
-      "range": "<=2.2.0-beta.2",
-      "nodes": [
-        "node_modules/vite-node"
-      ],
-      "fixAvailable": {
-        "name": "vitest",
-        "version": "3.2.4",
-        "isSemVerMajor": true
-      }
-    },
-    "vitest": {
-      "name": "vitest",
-      "severity": "moderate",
-      "isDirect": true,
-      "via": [
-        "vite",
-        "vite-node"
-      ],
-      "effects": [
-        "@vitest/coverage-v8"
-      ],
-      "range": "0.0.1 - 0.0.12 || 0.0.29 - 0.0.122 || 0.3.3 - 2.2.0-beta.2",
-      "nodes": [
-        "node_modules/vitest"
-      ],
-      "fixAvailable": {
-        "name": "vitest",
-        "version": "3.2.4",
-        "isSemVerMajor": true
-      }
     }
   },
   "metadata": {
     "vulnerabilities": {
       "info": 0,
       "low": 3,
-      "moderate": 7,
+      "moderate": 0,
       "high": 0,
       "critical": 0,
-      "total": 10
+      "total": 3
     },
     "dependencies": {
-      "prod": 494,
-      "dev": 519,
-      "optional": 107,
+      "prod": 410,
+      "dev": 563,
+      "optional": 87,
       "peer": 40,
       "peerOptional": 0,
-      "total": 1058
+      "total": 1018
     }
   }
 }
