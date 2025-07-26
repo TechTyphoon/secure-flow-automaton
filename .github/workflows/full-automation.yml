@@ -6,8 +6,8 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    # Run automatically every hour
-    - cron: '0 * * * *'
+    # Run automatically daily at 2 AM
+    - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
       force_setup:

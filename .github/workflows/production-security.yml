@@ -9,7 +9,7 @@ on:
     - cron: '0 2 * * *' # Daily at 2 AM
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
