@@ -837,4 +837,4 @@ This project is licensed under the **MIT License**. See [LICENSE](./LICENSE) for
 
 For questions, support, or contributions, please visit our [GitHub repository](https://github.com/your-repo) or join our [Discord community](https://discord.com/channels/1119885301872070706/1280461670979993613).
 
-**Built with ❤️ using Lovable**
+**Built with ❤️ using Lovable**# Trigger workflows
