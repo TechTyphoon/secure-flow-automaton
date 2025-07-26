@@ -1,5 +1,5 @@
 # Multi-stage production Dockerfile with enhanced security hardening
-ARG NODE_VERSION=18-alpine
+ARG NODE_VERSION=20-alpine
 ARG NGINX_VERSION=1.24-alpine
 
 # Build stage with security enhancements

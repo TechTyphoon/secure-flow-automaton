@@ -1,36 +1,56 @@
 
 # 🛡️ SecureFlow## 🚀 Quick Start
 
-### 🐳 Docker (Recommended)
+### 📋 Prerequisites
+
+- **Node.js** 18.0.0 or higher ([Download](https://nodejs.org/))
+- **npm** 9.0.0 or higher (comes with Node.js)
+- **Git** for version control ([Download](https://git-scm.com/))
+- **Docker** (optional, for containerized development)
+
+### 🏃‍♂️ One-Command Setup (Recommended)
+
+**For your friend - this just works everywhere! 🎯**
 
 ```bash
-# Clone the repository
+# Clone and auto-setup (works on all platforms)
 git clone https://github.com/TechTyphoon/secure-flow-automaton.git
 cd secure-flow-automaton
-
-# Quick start with Docker
-docker-compose -f docker-compose.prod.yml up --build
-
-# Or use npm scripts
-npm run docker:prod
+bash friend-proof-setup.sh
 ```
 
-**Visit [http://localhost:8080](http://localhost:8080)** to access the application.
+This script automatically:
+- ✅ Checks system requirements
+- ✅ Installs dependencies with fallbacks
+- ✅ Configures environment
+- ✅ Verifies everything works
+- ✅ Starts the development server
 
-### 🔧 Jenkins CI/CD Setup
+### 🛠️ Alternative Setup Options
+
+<details>
+<summary><strong>🔧 Standard Setup</strong></summary>
 
 ```bash
-# Setup Jenkins with complete CI/CD pipeline
-cd jenkins
-./setup.sh
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
+bash quick-setup.sh
+```
 
-# Or use npm scripts
-npm run jenkins:start
+</details>
 
-# Access Jenkins at http://localhost:8080
-# Get initial admin password:
-docker exec secureflow-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
-```align="center">
+<details>
+<summary><strong>⚡ Quick Setup (if you have Node.js)</strong></summary>
+
+```bash
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
+npm install
+npm run verify
+npm run dev
+```
+
+</details>align="center">
   <img src="./public/placeholder.svg" alt="SecureFlow Automaton Logo" width="200" height="200">
   
   **Enterprise-grade DevSecOps Pipeline Automation Platform**
@@ -44,15 +64,27 @@ docker exec secureflow-jenkins cat /var/jenkins_home/secrets/initialAdminPasswor
   [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
 </div>
 
-## � Quick Start
+## 🚀 Quick Start
 
-### 🐳 Docker (Recommended)
+### � Prerequisites
+
+- **Node.js** 18.0.0 or higher ([Download](https://nodejs.org/))
+- **npm** 9.0.0 or higher (comes with Node.js)
+- **Git** for version control ([Download](https://git-scm.com/))
+- **Docker** (optional, for containerized development)
+
+### 🏃‍♂️ One-Command Setup
 
 ```bash
-# Clone the repository
+# Clone and auto-setup (works on all platforms)
 git clone https://github.com/TechTyphoon/secure-flow-automaton.git
 cd secure-flow-automaton
+bash quick-setup.sh
+```
 
+### 🐳 Docker (Recommended for Production)
+
+```bash
 # Quick start with Docker
 docker-compose -f docker-compose.prod.yml up --build
 
@@ -64,18 +96,113 @@ npm run docker:prod
 
 ### 💻 Local Development
 
-```bash
+<details>
+<summary><strong>🪟 Windows Setup</strong></summary>
+
+```powershell
+# Using PowerShell or Command Prompt
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
+
 # Install dependencies
 npm install
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your configuration
+# Setup environment
+copy .env.example .env
+# Edit .env with your configuration
 
 # Start development server
 npm run dev
 
-# Open http://localhost:8080
+# Open in browser: http://localhost:8080
+```
+
+For Windows users, we recommend:
+- **Git Bash** for better shell compatibility
+- **Windows Terminal** for improved experience
+- **WSL2** for Linux-like environment
+
+</details>
+
+<details>
+<summary><strong>🍎 macOS Setup</strong></summary>
+
+```bash
+# Clone and setup
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
+
+# Install dependencies
+npm install
+
+# Setup environment
+cp .env.example .env
+# Edit .env: nano .env
+
+# Start development server
+npm run dev
+
+# Open in browser: http://localhost:8080
+```
+
+For macOS users with Apple Silicon (M1/M2):
+- Use Node.js ARM64 version for best performance
+- Some dependencies may require additional build tools
+
+</details>
+
+<details>
+<summary><strong>🐧 Linux Setup</strong></summary>
+
+```bash
+# Clone and setup
+git clone https://github.com/TechTyphoon/secure-flow-automaton.git
+cd secure-flow-automaton
+
+# Install dependencies
+npm install
+
+# Setup environment
+cp .env.example .env
+# Edit .env: nano .env
+
+# Start development server
+npm run dev
+
+# Open in browser: http://localhost:8080
+```
+
+For Linux users:
+- Ensure build-essential is installed: `sudo apt install build-essential`
+- For older distributions, consider using NodeSource repository
+
+</details>
+
+### 🔧 Development Scripts
+
+```bash
+# Development
+npm run dev              # Start development server (auto-detects platform)
+npm run dev:windows      # Windows-optimized development
+npm run dev:unix         # Unix-optimized development
+
+# Building
+npm run build            # Production build with type checking
+npm run build:dev        # Development build
+npm run build:prod       # Production build (optimized)
+
+# Testing & Quality
+npm run test             # Run tests
+npm run test:coverage    # Run tests with coverage
+npm run lint             # Check code quality
+npm run lint:fix         # Fix linting issues
+npm run format           # Format code with Prettier
+npm run type-check       # TypeScript compilation check
+
+# Utilities
+npm run clean            # Clean build artifacts (cross-platform)
+npm run verify           # Verify installation and setup
+npm run setup:full       # Complete setup from scratch
 ```
 - **Developer Experience**: Security-first development workflows and IDE integration
 - **Security Engineer**: Advanced threat analysis and incident response workflows  
