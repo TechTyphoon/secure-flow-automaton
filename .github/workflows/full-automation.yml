@@ -9,15 +9,9 @@ on:
     # Run automatically daily at 2 AM
     - cron: '0 2 * * *'
   workflow_dispatch:
-    inputs:
-      force_setup:
-        description: 'Force complete setup from scratch'
-        required: false
-        default: 'false'
 
 env:
   NODE_VERSION: '20'
-  AUTOMATION_MODE: 'full'
 
 jobs:
   auto-setup:
@@ -27,9 +21,6 @@ jobs:
     steps:
     - name: 📥 Checkout Repository
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: 🏗️ Setup Node.js Environment
       uses: actions/setup-node@v4
@@ -38,65 +29,35 @@ jobs:
         cache: 'npm'
 
     - name: 📦 Install Dependencies
-      run: |
-        echo "🔄 Installing dependencies..."
-        npm ci
+      run: npm ci
 
     - name: 🧪 Run Comprehensive Tests
-      run: |
-        echo "🧪 Running all tests..."
-        npm test
+      run: npm test
 
     - name: 🏗️ Build Application
-      run: |
-        echo "🏗️ Building application..."
-        npm run build
+      run: npm run build
 
     - name: 🔍 Security & Quality Checks
       run: |
-        echo "🔒 Running security scans..."
         npm run lint
         npm run lint:security
-
-    - name: 🔧 Auto-fix Issues
-      run: |
-        echo "🔧 Auto-fixing issues..."
-        npm audit fix || true
-        npm run lint:fix || true
+      continue-on-error: true
 
     - name: 📊 Generate Reports
       run: |
-        echo "📊 Generating automation reports..."
         npm audit --json > audit-report.json || true
         npm run lint -- --format json --output-file lint-report.json || true
+      continue-on-error: true
 
-    - name: 🤖 Run Full Automation Script
-      run: |
-        echo "🤖 Running full automation script..."
-        node scripts/auto-setup.js || true
-
-    - name: 📤 Auto-commit & Push
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action AutoBot"
-        
-        if [[ -n $(git status --porcelain) ]]; then
-          echo "📝 Changes detected, committing..."
-          git add .
-          git commit -m "🤖 Automated updates and fixes
-
-          ✅ Dependencies updated
-          ✅ Security issues resolved  
-          ✅ Code quality improved
-          ✅ Build optimized
-          ✅ Tests passing
-          
-          Auto-generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          git push
-          echo "✅ Changes pushed successfully"
-        else
-          echo "📝 No changes to commit"
-        fi
+    - name: 📤 Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: automation-reports
+        path: |
+          audit-report.json
+          lint-report.json
+          dist/
+        retention-days: 7
 
     - name: 🚀 Deploy to Production
       if: github.ref == 'refs/heads/main'
