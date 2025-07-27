@@ -100,7 +100,10 @@ export default defineConfig(({ mode }) => ({
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     __PLATFORM__: JSON.stringify(os.platform()),
+    // Global fallbacks for missing environment variables
+    'process.env.NODE_ENV': JSON.stringify(mode),
   },
+  envPrefix: ['VITE_', 'SUPABASE_', 'SONARQUBE_', 'SNYK_', 'SLACK_'],
   
   // ESBuild configuration for better performance
   esbuild: {

@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { BaseSecurityService } from './apiClient';
+import { SecurityNotificationService } from './notifications';
 
 export interface SonarQubeMetrics {
   component: string;
@@ -46,15 +48,17 @@ export interface SonarQubeIssue {
   type: 'CODE_SMELL' | 'BUG' | 'VULNERABILITY' | 'SECURITY_HOTSPOT';
 }
 
-export class SonarQubeService {
+export class SonarQubeService extends BaseSecurityService {
   private baseUrl: string;
   private token: string;
   private projectKey: string;
+  private notifications = new SecurityNotificationService();
 
   constructor(baseUrl?: string, token?: string, projectKey?: string) {
-    this.baseUrl = baseUrl || process.env.SONAR_URL || 'https://sonarcloud.io';
-    this.token = token || process.env.SONAR_TOKEN || '';
-    this.projectKey = projectKey || process.env.SONAR_PROJECT_KEY || 'secure-flow-automaton';
+    super('SonarQube');
+    this.baseUrl = baseUrl || import.meta.env.VITE_SONAR_URL || import.meta.env.SONAR_URL || 'https://sonarcloud.io';
+    this.token = token || import.meta.env.VITE_SONAR_TOKEN || import.meta.env.SONAR_TOKEN || '';
+    this.projectKey = projectKey || import.meta.env.VITE_SONAR_PROJECT_KEY || import.meta.env.SONAR_PROJECT_KEY || 'TechTyphoon_secure-flow-automaton';
   }
 
   private getAuthHeaders() {
@@ -65,78 +69,142 @@ export class SonarQubeService {
   }
 
   async getProjectMetrics(): Promise<SonarQubeMetrics | null> {
-    if (!this.token) {
-      console.warn('SonarQube token not configured, using mock data');
-      return this.getMockMetrics();
-    }
+    return this.withFallback(
+      async () => {
+        if (!this.token) return null;
 
-    try {
-      const response = await axios.get(
-        `${this.baseUrl}/api/measures/component`,
-        {
-          params: {
-            component: this.projectKey,
-            metricKeys: [
-              'coverage',
-              'duplicated_lines_density',
-              'ncloc',
-              'bugs',
-              'vulnerabilities',
-              'code_smells',
-              'security_hotspots',
-              'reliability_rating',
-              'security_rating',
-              'maintainability_rating'
-            ].join(',')
+        const response = await this.apiClient.makeSecureRequest<any>(
+          `${this.baseUrl}/api/measures/component`,
+          {
+            method: 'GET',
+            params: {
+              component: this.projectKey,
+              metricKeys: [
+                'coverage',
+                'duplicated_lines_density',
+                'ncloc',
+                'bugs',
+                'vulnerabilities',
+                'code_smells',
+                'security_hotspots',
+                'reliability_rating',
+                'security_rating',
+                'maintainability_rating'
+              ].join(',')
+            },
+            headers: this.getAuthHeaders(),
           },
-          headers: this.getAuthHeaders(),
-          timeout: 10000,
+          'sonarqube',
+          `metrics-${this.projectKey}`
+        );
+
+        if (!response?.component?.measures) return null;
+
+        const metrics: Record<string, string> = {};
+        response.component.measures.forEach((measure: any) => {
+          metrics[measure.metric] = measure.value;
+        });
+
+        // Send alert for critical vulnerabilities
+        const vulnCount = parseInt(metrics.vulnerabilities || '0');
+        const securityRating = parseInt(metrics.security_rating || '1');
+        
+        if (vulnCount > 5 || securityRating > 2) {
+          await this.notifications.sendAlert({
+            id: `sonar-${Date.now()}`,
+            type: 'security_hotspot',
+            severity: securityRating > 3 ? 'critical' : 'high',
+            title: 'SonarQube Security Issues Detected',
+            description: `Found ${vulnCount} vulnerabilities with security rating ${securityRating}/5`,
+            source: 'sonarqube',
+            component: this.projectKey,
+            createdAt: new Date().toISOString(),
+          });
         }
-      );
 
-      const metrics: Record<string, string> = {};
-      response.data.component.measures.forEach((measure: any) => {
-        metrics[measure.metric] = measure.value;
-      });
-
-      return {
-        component: response.data.component.key,
-        metrics,
-      };
-    } catch (error) {
-      console.error('SonarQube API error:', error);
-      return this.getMockMetrics();
-    }
+        return {
+          component: response.component.key,
+          metrics,
+        };
+      },
+      () => this.getMockMetrics(),
+      'getProjectMetrics'
+    );
   }
 
   async getIssues(severity?: string, type?: string): Promise<SonarQubeIssue[]> {
-    if (!this.token) {
-      console.warn('SonarQube token not configured, using mock data');
-      return this.getMockIssues();
-    }
+    return this.withFallback(
+      async () => {
+        if (!this.token) return null;
 
+        const params: any = {
+          componentKeys: this.projectKey,
+          ps: 500, // page size
+        };
+
+        if (severity) params.severities = severity;
+        if (type) params.types = type;
+
+        const response = await this.apiClient.makeSecureRequest<any>(
+          `${this.baseUrl}/api/issues/search`,
+          {
+            method: 'GET',
+            params,
+            headers: this.getAuthHeaders(),
+          },
+          'sonarqube',
+          `issues-${this.projectKey}-${severity || 'all'}-${type || 'all'}`
+        );
+
+        return response?.issues || null;
+      },
+      () => this.getMockIssues(),
+      'getIssues'
+    );
+  }
+
+  async getHealthStatus() {
+    const startTime = Date.now();
+    
     try {
-      const params: any = {
-        componentKeys: this.projectKey,
-        ps: 500, // page size
-      };
+      if (!this.token) {
+        return {
+          service: 'sonarqube',
+          status: 'degraded' as const,
+          responseTime: -1,
+          lastCheck: new Date().toISOString(),
+          message: 'No API token configured - using mock data'
+        };
+      }
 
-      if (severity) params.severities = severity;
-      if (type) params.types = type;
-
-      const response = await axios.get(
-        `${this.baseUrl}/api/issues/search`,
+      const response = await this.apiClient.makeSecureRequest<string>(
+        `${this.baseUrl}/api/system/ping`,
         {
-          params,
+          method: 'GET',
           headers: this.getAuthHeaders(),
-          timeout: 15000,
-        }
+        },
+        'sonarqube',
+        'health-check'
       );
 
-      return response.data.issues;
-    } catch (error) {
-      console.error('SonarQube Issues API error:', error);
-      return this.getMockIssues();
+      const responseTime = Date.now() - startTime;
+      const isHealthy = response?.includes('pong');
+
+      return {
+        service: 'sonarqube',
+        status: isHealthy ? 'healthy' as const : 'unhealthy' as const,
+        responseTime,
+        lastCheck: new Date().toISOString(),
+        message: isHealthy ? 'Service operational' : 'Health check failed'
+      };
+    } catch (error: any) {
+      return {
+        service: 'sonarqube',
+        status: 'unhealthy' as const,
+        responseTime: Date.now() - startTime,
+        lastCheck: new Date().toISOString(),
+        message: `Health check failed: ${error.message}`
+      };
     }
   }
 

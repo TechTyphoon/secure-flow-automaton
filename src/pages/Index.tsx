@@ -15,6 +15,7 @@ const ToolSelection = lazy(() => import('@/components/ToolSelection'));
 const UserPersonas = lazy(() => import('@/components/UserPersonas'));
 const ProjectTimeline = lazy(() => import('@/components/ProjectTimeline'));
 const HowItWorksModal = lazy(() => import('@/components/HowItWorksModal'));
+const SecurityServiceDashboard = lazy(() => import('@/components/SecurityServiceDashboard'));
 
 // Loading component for better UX
 const ComponentLoader = () => (
@@ -60,10 +61,14 @@ const Index = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+            <TabsList className="grid grid-cols-5 w-full max-w-3xl">
               <TabsTrigger value="dashboard" className="flex items-center space-x-2">
                 <BarChart3 className="h-4 w-4" />
                 <span>Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="services" className="flex items-center space-x-2">
+                <Shield className="h-4 w-4" />
+                <span>Services</span>
               </TabsTrigger>
               <TabsTrigger value="research" className="flex items-center space-x-2">
                 <Shield className="h-4 w-4" />
@@ -94,6 +99,12 @@ const Index = () => {
                   <ComplianceOverview />
                 </Suspense>
               </div>
+            </TabsContent>
+
+            <TabsContent value="services" className="mt-6">
+              <Suspense fallback={<ComponentLoader />}>
+                <SecurityServiceDashboard />
+              </Suspense>
             </TabsContent>
 
             <TabsContent value="research" className="mt-6">

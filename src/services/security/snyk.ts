@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { BaseSecurityService } from './apiClient';
+import { SecurityNotificationService } from './notifications';
 
 export interface SnykVulnerability {
   id: string;
@@ -61,14 +63,16 @@ export interface SnykProject {
   browseUrl: string;
 }
 
-export class SnykService {
+export class SnykService extends BaseSecurityService {
   private baseUrl: string = 'https://api.snyk.io';
   private token: string;
   private orgId: string;
+  private notifications = new SecurityNotificationService();
 
   constructor(token?: string, orgId?: string) {
-    this.token = token || process.env.SNYK_TOKEN || '';
-    this.orgId = orgId || process.env.SNYK_ORG_ID || '';
+    super('Snyk');
+    this.token = token || import.meta.env.VITE_SNYK_TOKEN || import.meta.env.SNYK_TOKEN || '';
+    this.orgId = orgId || import.meta.env.VITE_SNYK_ORG_ID || import.meta.env.SNYK_ORG_ID || 'TechTyphoon';
   }
 
   private getAuthHeaders() {
@@ -79,61 +83,139 @@ export class SnykService {
   }
 
   async getProjects(): Promise<SnykProject[]> {
-    if (!this.token || !this.orgId) {
-      console.warn('Snyk token/orgId not configured, using mock data');
-      return this.getMockProjects();
-    }
+    return this.withFallback(
+      async () => {
+        if (!this.token || !this.orgId) return null;
 
-    try {
-      const response = await axios.get(
-        `${this.baseUrl}/v1/org/${this.orgId}/projects`,
-        {
-          headers: this.getAuthHeaders(),
-          timeout: 15000,
-        }
-      );
+        const response = await this.apiClient.makeSecureRequest<any>(
+          `${this.baseUrl}/v1/org/${this.orgId}/projects`,
+          {
+            method: 'GET',
+            headers: this.getAuthHeaders(),
+          },
+          'snyk',
+          `projects-${this.orgId}`
+        );
 
-      return response.data.projects;
-    } catch (error) {
-      console.error('Snyk Projects API error:', error);
-      return this.getMockProjects();
-    }
+        return response?.projects || null;
+      },
+      () => this.getMockProjects(),
+      'getProjects'
+    );
   }
 
-  async testProject(projectId?: string): Promise<SnykTestResult> {
-    if (!this.token || !this.orgId) {
-      console.warn('Snyk token/orgId not configured, using mock data');
-      return this.getMockTestResult();
-    }
+  async testDependencies(projectId?: string): Promise<SnykTestResult> {
+    return this.withFallback(
+      async () => {
+        if (!this.token || !this.orgId) return null;
 
+        // Use the first project if no specific project ID provided
+        if (!projectId) {
+          const projects = await this.getProjects();
+          if (!projects || projects.length === 0) return null;
+          projectId = projects[0].id;
+        }
+
+        const response = await this.apiClient.makeSecureRequest<any>(
+          `${this.baseUrl}/v1/org/${this.orgId}/project/${projectId}/issues`,
+          {
+            method: 'GET',
+            headers: this.getAuthHeaders(),
+            params: {
+              'severity-threshold': 'low',
+              'ignore-policy': 'false'
+            }
+          },
+          'snyk',
+          `test-${projectId}`
+        );
+
+        if (!response?.issues) return null;
+
+        // Process and categorize vulnerabilities
+        const vulnerabilities: SnykVulnerability[] = response.issues.vulnerabilities || [];
+        const summary = {
+          total: vulnerabilities.length,
+          critical: vulnerabilities.filter(v => v.severity === 'critical').length,
+          high: vulnerabilities.filter(v => v.severity === 'high').length,
+          medium: vulnerabilities.filter(v => v.severity === 'medium').length,
+          low: vulnerabilities.filter(v => v.severity === 'low').length,
+        };
+
+        // Send alert for critical vulnerabilities
+        if (summary.critical > 0 || summary.high > 3) {
+          await this.notifications.sendAlert({
+            id: `snyk-${Date.now()}`,
+            type: 'dependency_risk',
+            severity: summary.critical > 0 ? 'critical' : 'high',
+            title: 'Critical Dependencies Vulnerabilities Found',
+            description: `Snyk detected ${summary.critical} critical and ${summary.high} high severity vulnerabilities in project dependencies`,
+            source: 'snyk',
+            component: projectId,
+            createdAt: new Date().toISOString(),
+          });
+        }
+
+        return {
+          vulnerabilities,
+          dependencyCount: response.dependencyCount || 0,
+          packageManager: response.packageManager || 'npm',
+          projectName: response.projectName || 'secure-flow-automaton',
+          summary
+        };
+      },
+      () => this.getMockTestResult(),
+      'testDependencies'
+    );
+  }
+
+  async getHealthStatus() {
+    const startTime = Date.now();
+    
     try {
-      const projects = await this.getProjects();
-      const targetProject = projectId 
-        ? projects.find(p => p.id === projectId)
-        : projects[0];
-
-      if (!targetProject) {
-        throw new Error('No project found');
+      if (!this.token) {
+        return {
+          service: 'snyk',
+          status: 'degraded' as const,
+          responseTime: -1,
+          lastCheck: new Date().toISOString(),
+          message: 'No API token configured - using mock data'
+        };
       }
 
-      const response = await axios.post(
-        `${this.baseUrl}/v1/org/${this.orgId}/project/${targetProject.id}/issues`,
-        {},
+      const response = await this.apiClient.makeSecureRequest<any>(
+        `${this.baseUrl}/v1/user/me`,
         {
+          method: 'GET',
           headers: this.getAuthHeaders(),
-          timeout: 20000,
-        }
+        },
+        'snyk',
+        'health-check'
       );
 
-      return this.formatTestResult(response.data);
-    } catch (error) {
-      console.error('Snyk Test API error:', error);
-      return this.getMockTestResult();
+      const responseTime = Date.now() - startTime;
+      const isHealthy = !!response?.id;
+
+      return {
+        service: 'snyk',
+        status: isHealthy ? 'healthy' as const : 'unhealthy' as const,
+        responseTime,
+        lastCheck: new Date().toISOString(),
+        message: isHealthy ? 'Service operational' : 'Authentication check failed'
+      };
+    } catch (error: any) {
+      return {
+        service: 'snyk',
+        status: 'unhealthy' as const,
+        responseTime: Date.now() - startTime,
+        lastCheck: new Date().toISOString(),
+        message: `Health check failed: ${error.message}`
+      };
     }
   }
 
   async getVulnerabilities(severity?: string): Promise<SnykVulnerability[]> {
-    const testResult = await this.testProject();
+    const testResult = await this.testDependencies();
     
     if (severity) {
       return testResult.vulnerabilities.filter(vuln => vuln.severity === severity);
@@ -143,7 +225,7 @@ export class SnykService {
   }
 
   async getDependencyCount(): Promise<number> {
-    const testResult = await this.testProject();
+    const testResult = await this.testDependencies();
     return testResult.dependencyCount;
   }
 
@@ -349,7 +431,7 @@ export class SnykService {
   }
 
   async getSecuritySummary() {
-    const testResult = await this.testProject();
+    const testResult = await this.testDependencies();
     const projects = await this.getProjects();
     
     return {
