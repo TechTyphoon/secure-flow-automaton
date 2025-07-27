@@ -7,13 +7,14 @@ import ThreatDetection from "@/components/ThreatDetection";
 import SecurityAnalytics from "@/components/SecurityAnalytics";
 import AutomatedSecurityResponse from "@/components/AutomatedSecurityResponse";
 import RealUserMonitoring from "@/components/RealUserMonitoring";
+import EnhancedRUMDashboard from "@/components/EnhancedRUMDashboard";
 import IntelligentPerformanceOptimizer from "@/components/IntelligentPerformanceOptimizer";
 import AdvancedPerformanceAnalytics from "@/components/AdvancedPerformanceAnalytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Activity, Shield, BarChart3, Settings, RefreshCw, Zap, Eye, Bot } from "lucide-react";
+import { Activity, Shield, BarChart3, Settings, RefreshCw, Zap, Eye, Bot, Brain } from "lucide-react";
 
 const Monitoring = () => {
   const [lastRefresh, setLastRefresh] = useState(new Date());
@@ -112,8 +113,12 @@ const Monitoring = () => {
         </div>
 
         {/* Detailed Monitoring Tabs */}
-        <Tabs defaultValue="health" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-8">
+        <Tabs defaultValue="enhanced-rum" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-9">
+            <TabsTrigger value="enhanced-rum" className="flex items-center gap-2">
+              <Brain className="w-4 h-4" />
+              Enhanced RUM
+            </TabsTrigger>
             <TabsTrigger value="health" className="flex items-center gap-2">
               <Activity className="w-4 h-4" />
               Health
@@ -128,7 +133,7 @@ const Monitoring = () => {
             </TabsTrigger>
             <TabsTrigger value="rum" className="flex items-center gap-2">
               <Eye className="w-4 h-4" />
-              RUM
+              Legacy RUM
             </TabsTrigger>
             <TabsTrigger value="optimization" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
@@ -147,6 +152,20 @@ const Monitoring = () => {
               Auto Response
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="enhanced-rum" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Enhanced Production Monitoring</CardTitle>
+                <CardDescription>
+                  AI-powered real user monitoring with predictive analytics, anomaly detection, and comprehensive performance insights
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <EnhancedRUMDashboard />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="health" className="space-y-4">
             <Card>
