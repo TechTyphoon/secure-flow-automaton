@@ -1,0 +1,60 @@
+name: ✅ Reliable CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  
+jobs:
+  ci:
+    name: 🔧 Build, Test & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: package-lock.json
+
+    - name: 📦 Install Dependencies
+      run: |
+        npm ci --prefer-offline --no-audit
+        echo "✅ Dependencies installed successfully"
+
+    - name: 🔍 Type Check
+      run: |
+        npm run type-check
+        echo "✅ TypeScript compilation successful"
+
+    - name: 🧪 Run Tests
+      run: |
+        npm test -- --reporter=verbose
+        echo "✅ All tests passed"
+
+    - name: 🏗️ Build Production
+      run: |
+        npm run build
+        echo "✅ Production build completed"
+        echo "📊 Build artifacts:"
+        ls -lh dist/assets/ | head -5
+
+    - name: 🎉 Success Summary
+      run: |
+        echo "🎯 CI Pipeline Completed Successfully!"
+        echo "✅ TypeScript: No errors"
+        echo "✅ Tests: All passing"
+        echo "✅ Build: Production ready"
+        echo "🚀 Ready for deployment"
