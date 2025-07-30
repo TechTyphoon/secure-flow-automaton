@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  quantum-edge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - QUANTUM_CONFIG=./src/config/quantum-config.ts
+      - NETWORK_CONFIG=./src/config/network-config.ts
+      - DEPLOYMENT_CONFIG=./src/config/deployment-config.ts
+    volumes:
+      - .:/app
+    networks:
+      - quantum-network
+
+networks:
+  quantum-network:
+    driver: bridge
