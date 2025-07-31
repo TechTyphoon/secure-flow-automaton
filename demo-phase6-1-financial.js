@@ -12,27 +12,8 @@
 class MockQuantumFinancialServices {
   async initialize() {
     console.log('🚀 Initializing Quantum Financial Services Platform...');
-    await this.simulateDelay(20// Run the demo
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  runQuantumFinancialDemo()
-    .then(() => benchmarkQuantumAdvantage())
-    .then(() => {
-      console.log('🌟 Phase 6.1 Quantum Financial Services - Production Ready! 🌟');
-      process.exit(0);
-    })
-    .catch(error => {
-      console.error('Demo failed:', error);
-      process.exit(1);
-    });
-}
-
-export { runQuantumFinancialDemo };.log('✅ Quantum Financial Services Platform initialized successfully!');
+    await this.simulateDelay(200);
+    console.log('✅ Quantum Financial Services Platform initialized successfully!');
   }
 
   async executeQuantumTrade(order) {
@@ -468,7 +449,14 @@ async function benchmarkQuantumAdvantage() {
 }
 
 // Run the demo
-if (require.main === module) {
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+if (import.meta.url === `file://${process.argv[1]}`) {
   runQuantumFinancialDemo()
     .then(() => benchmarkQuantumAdvantage())
     .then(() => {
