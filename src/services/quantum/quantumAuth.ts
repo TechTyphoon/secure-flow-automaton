@@ -281,7 +281,7 @@ class FuzzyVault {
 
   private modInverse(a: number, m: number): number {
     // Extended Euclidean Algorithm
-    let m0 = m;
+    const m0 = m;
     let x0 = 0, x1 = 1;
     
     if (m === 1) return 0;
@@ -512,16 +512,19 @@ export class QuantumResistantAuthentication extends EventEmitter {
     let protectedData: Uint8Array;
     
     switch (protectionScheme) {
-      case 'FUZZY_VAULT':
+      case 'FUZZY_VAULT': {
         const { vault } = await this.fuzzyVault.lockTemplate(biometricFeatures, protectionKey);
         protectedData = this.serializeVault(vault);
         break;
-      case 'FUZZY_COMMITMENT':
+      }
+      case 'FUZZY_COMMITMENT': {
         protectedData = await this.createFuzzyCommitment(biometricFeatures, protectionKey);
         break;
-      case 'HELPER_DATA':
+      }
+      case 'HELPER_DATA': {
         protectedData = await this.generateHelperData(biometricFeatures, protectionKey);
         break;
+      }
       default:
         throw new Error(`Unsupported protection scheme: ${protectionScheme}`);
     }
@@ -652,7 +655,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
       let factorConfidence = 0;
 
       switch (factor.type) {
-        case 'BIOMETRIC':
+        case 'BIOMETRIC': {
           const biometricResult = await this.verifyBiometric(
             request.userId,
             factor.subtype as BiometricTemplate['type'],
@@ -662,8 +665,9 @@ export class QuantumResistantAuthentication extends EventEmitter {
           factorConfidence = biometricResult.confidence;
           biometricScores.set(factor.subtype, factorConfidence);
           break;
+        }
 
-        case 'QUANTUM_SIGNATURE':
+        case 'QUANTUM_SIGNATURE': {
           const signatureResult = await this.verifyQuantumSignature(
             request.userId,
             factorData.message,
@@ -672,8 +676,9 @@ export class QuantumResistantAuthentication extends EventEmitter {
           factorVerified = signatureResult.verified;
           factorConfidence = signatureResult.confidence;
           break;
+        }
 
-        case 'KNOWLEDGE':
+        case 'KNOWLEDGE': {
           const knowledgeResult = await this.verifyKnowledgeFactor(
             request.userId,
             factor.subtype,
@@ -682,8 +687,9 @@ export class QuantumResistantAuthentication extends EventEmitter {
           factorVerified = knowledgeResult.verified;
           factorConfidence = knowledgeResult.confidence;
           break;
+        }
 
-        case 'POSSESSION':
+        case 'POSSESSION': {
           const possessionResult = await this.verifyPossessionFactor(
             request.userId,
             factor.subtype,
@@ -692,8 +698,9 @@ export class QuantumResistantAuthentication extends EventEmitter {
           factorVerified = possessionResult.verified;
           factorConfidence = possessionResult.confidence;
           break;
+        }
 
-        case 'BEHAVIOR':
+        case 'BEHAVIOR': {
           const behaviorResult = await this.verifyBehavioralFactor(
             request.userId,
             factor.subtype,
@@ -702,6 +709,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
           factorVerified = behaviorResult.verified;
           factorConfidence = behaviorResult.confidence;
           break;
+        }
       }
 
       if (factorVerified) {
@@ -840,20 +848,22 @@ export class QuantumResistantAuthentication extends EventEmitter {
     // Implement knowledge-based authentication (password, PIN, etc.)
     // This is a simplified implementation
     switch (factorType) {
-      case 'password':
+      case 'password': {
         const passwordHash = this.hashPassword(data.password, userId);
         const storedHash = this.getStoredPasswordHash(userId);
         return {
           verified: passwordHash === storedHash,
           confidence: passwordHash === storedHash ? 1.0 : 0
         };
+      }
       
-      case 'pin':
+      case 'pin': {
         const storedPin = this.getStoredPin(userId);
         return {
           verified: data.pin === storedPin,
           confidence: data.pin === storedPin ? 1.0 : 0
         };
+      }
       
       default:
         return { verified: false, confidence: 0 };
@@ -867,16 +877,18 @@ export class QuantumResistantAuthentication extends EventEmitter {
   ): Promise<{ verified: boolean; confidence: number }> {
     // Implement possession-based authentication (tokens, certificates, etc.)
     switch (factorType) {
-      case 'hardware_token':
+      case 'hardware_token': {
         const tokenResponse = this.verifyHardwareToken(data.tokenId, data.challenge, data.response);
         return tokenResponse;
+      }
       
-      case 'certificate':
+      case 'certificate': {
         const certValid = await this.verifyCertificate(data.certificate);
         return {
           verified: certValid,
           confidence: certValid ? 1.0 : 0
         };
+      }
       
       default:
         return { verified: false, confidence: 0 };
@@ -890,19 +902,21 @@ export class QuantumResistantAuthentication extends EventEmitter {
   ): Promise<{ verified: boolean; confidence: number }> {
     // Implement behavioral authentication (keystroke dynamics, gait, etc.)
     switch (factorType) {
-      case 'keystroke_dynamics':
+      case 'keystroke_dynamics': {
         const keystrokeScore = this.analyzeKeystrokeDynamics(userId, data.timings);
         return {
           verified: keystrokeScore >= 0.7,
           confidence: keystrokeScore
         };
+      }
       
-      case 'mouse_dynamics':
+      case 'mouse_dynamics': {
         const mouseScore = this.analyzeMouseDynamics(userId, data.movements);
         return {
           verified: mouseScore >= 0.7,
           confidence: mouseScore
         };
+      }
       
       default:
         return { verified: false, confidence: 0 };

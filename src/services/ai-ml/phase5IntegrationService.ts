@@ -456,7 +456,7 @@ export class Phase5IntegrationService {
       const productionModels = models.filter(m => m.status === 'production');
       
       // Demonstrate model monitoring
-      let monitoringResults = [];
+      const monitoringResults = [];
       if (productionModels.length > 0) {
         const model = productionModels[0];
         const monitoring = await this.mlOpsService.monitorModel(model.id);

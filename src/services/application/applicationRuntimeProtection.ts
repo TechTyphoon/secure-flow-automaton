@@ -1320,7 +1320,7 @@ export class ApplicationRuntimeProtectionService {
 
     try {
       // Simulate action execution
-      let result: 'success' | 'failure' | 'partial' = 'success';
+      const result: 'success' | 'failure' | 'partial' = 'success';
       let message = '';
 
       switch (action.type) {

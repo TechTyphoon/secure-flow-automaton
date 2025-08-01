@@ -1,0 +1,76 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # SecureFlow Automaton Application
+  - job_name: 'secure-flow-automaton'
+    static_configs:
+      - targets: ['secure-flow-automaton:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Quantum Edge Computing Service
+  - job_name: 'quantum-edge'
+    static_configs:
+      - targets: ['quantum-edge:3001']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # PostgreSQL Database
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Redis Cache
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Nginx Reverse Proxy
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/nginx_status'
+    scrape_interval: 10s
+
+  # Consciousness Engine
+  - job_name: 'consciousness-engine'
+    static_configs:
+      - targets: ['consciousness-engine:3004']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Transcendence Engine
+  - job_name: 'transcendence-engine'
+    static_configs:
+      - targets: ['transcendence-engine:3005']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Security Scanner
+  - job_name: 'security-scanner'
+    static_configs:
+      - targets: ['security-scanner:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Quantum Key Distribution Service
+  - job_name: 'qkd-service'
+    static_configs:
+      - targets: ['qkd-service:3003']
+    metrics_path: '/metrics'
+    scrape_interval: 20s 

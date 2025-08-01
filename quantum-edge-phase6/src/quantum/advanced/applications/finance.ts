@@ -33,6 +33,7 @@ export class FinanceApplication {
 
     private quantumRiskAssessmentAlgorithm(data: number[]): number {
         // Placeholder for quantum risk assessment algorithm implementation
+        if (data.length === 0) return 0;
         return Math.max(...data); // Simple max value as a placeholder
     }
 }

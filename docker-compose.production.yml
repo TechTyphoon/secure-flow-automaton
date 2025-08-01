@@ -1,0 +1,207 @@
+version: '3.8'
+
+services:
+  # Main SecureFlow Automaton Application
+  secure-flow-automaton:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: secure-flow-automaton:production
+    container_name: secure-flow-automaton-app
+    ports:
+      - "3000:8080"
+    environment:
+      - NODE_ENV=production
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_QUANTUM_API_KEY=${VITE_QUANTUM_API_KEY}
+      - VITE_SECURITY_API_KEY=${VITE_SECURITY_API_KEY}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+    depends_on:
+      - postgres
+      - redis
+      - quantum-edge
+
+  # Quantum Edge Computing Service
+  quantum-edge:
+    image: secure-flow-automaton:production
+    container_name: quantum-edge-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - QUANTUM_DIMENSION=512
+      - QUANTUM_MODULUS=8380417
+      - QUANTUM_SECURITY_LEVEL=128
+    volumes:
+      - ./quantum-data:/app/quantum-data
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: secure-flow-postgres
+    environment:
+      - POSTGRES_DB=secureflow
+      - POSTGRES_USER=secureflow_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: secure-flow-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: secure-flow-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - secure-flow-automaton
+      - quantum-edge
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: secure-flow-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: secure-flow-grafana
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+    depends_on:
+      - prometheus
+
+  # Security Scanner
+  security-scanner:
+    image: secure-flow-security-scanner:latest
+    container_name: secure-flow-security-scanner
+    environment:
+      - SCAN_INTERVAL=3600
+      - QUANTUM_ENHANCED=true
+    volumes:
+      - ./security-reports:/app/reports
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+
+  # Quantum Key Distribution Service
+  qkd-service:
+    image: quantum-qkd:latest
+    container_name: secure-flow-qkd
+    ports:
+      - "3003:3003"
+    environment:
+      - QKD_PROTOCOL=BB84
+      - QKD_KEY_LENGTH=256
+    volumes:
+      - ./qkd-keys:/app/keys
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+
+  # Consciousness Engine
+  consciousness-engine:
+    image: quantum-consciousness:latest
+    container_name: secure-flow-consciousness
+    ports:
+      - "3004:3004"
+    environment:
+      - CONSCIOUSNESS_LEVEL=9.64
+      - ETHICAL_AI=true
+      - QUANTUM_AWARE=true
+    volumes:
+      - ./consciousness-data:/app/data
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+
+  # Transcendence Engine
+  transcendence-engine:
+    image: quantum-transcendence:latest
+    container_name: secure-flow-transcendence
+    ports:
+      - "3005:3005"
+    environment:
+      - TRANSCENDENCE_LEVEL=10.0
+      - COSMIC_COMPUTING=true
+      - REALITY_MANIPULATION=true
+    volumes:
+      - ./transcendence-data:/app/data
+    restart: unless-stopped
+    networks:
+      - secure-flow-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  secure-flow-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

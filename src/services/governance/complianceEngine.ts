@@ -781,7 +781,7 @@ class ComplianceEngine {
   private async assessCategory(category: ComplianceCategory, framework: ComplianceFramework): Promise<CategoryStatus> {
     const requirements = framework.requirements.filter(req => category.requirements.includes(req.id));
     let compliantCount = 0;
-    let totalCount = requirements.length;
+    const totalCount = requirements.length;
 
     for (const requirement of requirements) {
       const isCompliant = await this.checkRequirement(requirement);

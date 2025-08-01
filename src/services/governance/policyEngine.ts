@@ -813,15 +813,17 @@ class PolicyEngine {
         return this.mockGetTargetProperty(target, rule.condition) === rule.value;
       case 'not_equals':
         return this.mockGetTargetProperty(target, rule.condition) !== rule.value;
-      case 'contains':
+      case 'contains': {
         const value = this.mockGetTargetProperty(target, rule.condition);
         return Array.isArray(value) ? value.includes(rule.value) : String(value).includes(rule.value);
-      case 'not_contains':
+      }
+      case 'not_contains': {
         const notValue = this.mockGetTargetProperty(target, rule.condition);
         if (Array.isArray(rule.value)) {
           return !rule.value.some(v => String(notValue).includes(v));
         }
         return !String(notValue).includes(rule.value);
+      }
       default:
         return true;
     }

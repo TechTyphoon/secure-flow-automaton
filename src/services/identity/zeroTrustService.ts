@@ -387,10 +387,11 @@ export class ZeroTrustIdentityService {
     session.lastVerification = new Date();
 
     switch (contAuthResult.status) {
-      case 'verified':
+      case 'verified': {
         return { valid: true, action: 'continue' };
+      }
       
-      case 'challenge_required':
+      case 'challenge_required': {
         const challenge = await this.mfaEngine.initiateMfaChallenge(
           session.userId,
           ['totp'], // Default to TOTP for continuous auth
@@ -402,8 +403,9 @@ export class ZeroTrustIdentityService {
           reason: contAuthResult.reason,
           challengeId: challenge.id,
         };
+      }
       
-      case 'step_up_required':
+      case 'step_up_required': {
         const stepUpChallenge = await this.continuousAuth.initiateStepUpAuth(
           session.authSession.id,
           'mfa'
@@ -414,6 +416,7 @@ export class ZeroTrustIdentityService {
           reason: contAuthResult.reason,
           challengeId: stepUpChallenge.challengeId,
         };
+      }
       
       case 'denied':
         await this.terminateSession(sessionId, contAuthResult.reason || 'Access denied');

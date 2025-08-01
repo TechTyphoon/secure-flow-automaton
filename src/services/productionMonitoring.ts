@@ -299,11 +299,12 @@ class ProductionMonitoringService {
       case 'layout-shift':
         this.updateMetric('cls', (entry as any).value);
         break;
-      case 'navigation':
+      case 'navigation': {
         const navEntry = entry as PerformanceNavigationTiming;
         this.updateMetric('ttfb', navEntry.responseStart - navEntry.requestStart);
         this.updateMetric('fcp', navEntry.loadEventEnd - navEntry.fetchStart);
         break;
+      }
     }
   }
 

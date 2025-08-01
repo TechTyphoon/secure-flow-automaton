@@ -5,9 +5,14 @@ export class SatelliteNetwork {
         this.satelliteLinks = new Map();
     }
 
-    public establishLink(linkId: string, parameters: any): void {
+    public establishLink(linkId: string, parameters: any): { status: string; linkId: string; parameters: any } {
         // Logic to establish a quantum communication link through satellite
         this.satelliteLinks.set(linkId, parameters);
+        return {
+            status: 'established',
+            linkId: linkId,
+            parameters: parameters
+        };
     }
 
     public transmitData(linkId: string, data: any): Promise<any> {

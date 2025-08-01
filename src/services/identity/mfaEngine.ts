@@ -281,13 +281,15 @@ export class MultiFactorAuthEngine {
     let challengeData: string;
 
     switch (method) {
-      case 'totp':
+      case 'totp': {
         challengeData = 'Enter code from authenticator app';
         break;
-      case 'sms':
+      }
+      case 'sms': {
         const smsCode = this.generateNumericCode(6);
         challengeData = `SMS code sent to your phone: ${smsCode}`;
         break;
+      }
       case 'push':
         challengeData = 'Check your mobile device for push notification';
         break;

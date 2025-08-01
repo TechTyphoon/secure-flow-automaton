@@ -624,22 +624,26 @@ class QuantumTrafficManager {
 
   private async evaluateCondition(request: ServiceRequest, condition: TrafficCondition): Promise<boolean> {
     switch (condition.type) {
-      case 'TIME':
+      case 'TIME': {
         const currentHour = new Date().getHours();
         return this.compareValues(currentHour, condition.operator, condition.value);
+      }
 
-      case 'RATE_LIMIT':
+      case 'RATE_LIMIT': {
         // Check if request rate exceeds limit
         const currentRate = await this.getCurrentRequestRate(request.sourceService);
         return this.compareValues(currentRate, condition.operator, condition.value);
+      }
 
-      case 'QUANTUM_THRESHOLD':
+      case 'QUANTUM_THRESHOLD': {
         // Check quantum-specific thresholds
         const quantumMetric = await this.getQuantumMetric(request, condition.value as string);
         return quantumMetric !== null;
+      }
 
-      case 'SECURITY_LEVEL':
+      case 'SECURITY_LEVEL': {
         return this.compareValues(request.securityLevel, condition.operator, condition.value);
+      }
 
       default:
         return true;
@@ -650,12 +654,15 @@ class QuantumTrafficManager {
     const expectedNum = typeof expected === 'string' ? parseFloat(expected) : expected;
     
     switch (operator) {
-      case 'EQUALS':
+      case 'EQUALS': {
         return actual === expectedNum;
-      case 'GREATER_THAN':
+      }
+      case 'GREATER_THAN': {
         return actual > expectedNum;
-      case 'LESS_THAN':
+      }
+      case 'LESS_THAN': {
         return actual < expectedNum;
+      }
       default:
         return false;
     }
@@ -669,10 +676,12 @@ class QuantumTrafficManager {
   private async getQuantumMetric(request: ServiceRequest, metricName: string): Promise<number | null> {
     // Simulate quantum metric retrieval
     switch (metricName) {
-      case 'qber_rate':
+      case 'qber_rate': {
         return Math.random() * 0.15;
-      case 'quantum_operations':
+      }
+      case 'quantum_operations': {
         return Math.random() * 100;
+      }
       default:
         return null;
     }

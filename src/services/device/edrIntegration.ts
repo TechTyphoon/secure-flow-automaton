@@ -755,9 +755,9 @@ export class EDRIntegrationService {
     const duration = Math.floor((endTime.getTime() - scanResult.startTime.getTime()) / 1000);
 
     // Simulate scan results based on type
-    let filesScanned = scanType === 'full' ? 150000 : 25000;
-    let threatsFound = Math.floor(Math.random() * 3);
-    let suspiciousItems = Math.floor(Math.random() * 5);
+    const filesScanned = scanType === 'full' ? 150000 : 25000;
+    const threatsFound = Math.floor(Math.random() * 3);
+    const suspiciousItems = Math.floor(Math.random() * 5);
 
     const findings: EDRFinding[] = [];
 

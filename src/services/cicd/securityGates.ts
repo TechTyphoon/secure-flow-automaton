@@ -727,7 +727,7 @@ class SecurityGatesEngine {
     context: ExecutionContext, 
     gateIds?: string[]
   ): SecurityGate[] {
-    let gates = Array.from(this.gates.values()).filter(gate => {
+    const gates = Array.from(this.gates.values()).filter(gate => {
       if (!gate.enabled) return false;
       if (gate.stage !== stage) return false;
       if (gateIds && !gateIds.includes(gate.id)) return false;
