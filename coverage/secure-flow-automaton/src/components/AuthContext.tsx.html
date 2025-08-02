@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">12.62% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>13/103</span>
+                <span class='fraction'>0/103</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>1/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">12.62% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>13/103</span>
+                <span class='fraction'>0/103</span>
             </div>
         
             
@@ -196,12 +196,10 @@
 <a name='L131'></a><a href='#L131'>131</a>
 <a name='L132'></a><a href='#L132'>132</a>
 <a name='L133'></a><a href='#L133'>133</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -210,18 +208,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -328,10 +328,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">&nbsp;
-import React, { useEffect, useState, createContext, useContext } from "react";
-import { supabase } from "@/integrations/supabase/client";
+<span class="cstat-no" title="statement not covered" >import React, { useEffect, useState, createContext, useContext } from "react";</span>
+<span class="cstat-no" title="statement not covered" >import { supabase } from "@/integrations/supabase/client";</span>
 import type { User, Session } from "@supabase/supabase-js";
-import { SessionManager, SecurityLogger, validatePassword } from "@/lib/security";
+<span class="cstat-no" title="statement not covered" >import { SessionManager, SecurityLogger, validatePassword } from "@/lib/security";</span>
 &nbsp;
 type AuthContextType = {
   user: User | null;
@@ -342,18 +342,18 @@ type AuthContextType = {
   validateUserPassword: (password: string) =&gt; { isValid: boolean; errors: string[]; strength: string };
 };
 &nbsp;
-const AuthContext = createContext&lt;AuthContextType&gt;({
-  user: null,
-  session: null,
-  initializing: true,
-  sessionTimeoutWarning: false,
-  extendSession: <span class="fstat-no" title="function not covered" >() =&gt; {},</span>
-  validateUserPassword: <span class="fstat-no" title="function not covered" >() =&gt; ({ isValid: false, errors: [], strength: 'weak' }),</span>
-});
+<span class="cstat-no" title="statement not covered" >const AuthContext = createContext&lt;AuthContextType&gt;({</span>
+<span class="cstat-no" title="statement not covered" >  user: null,</span>
+<span class="cstat-no" title="statement not covered" >  session: null,</span>
+<span class="cstat-no" title="statement not covered" >  initializing: true,</span>
+<span class="cstat-no" title="statement not covered" >  sessionTimeoutWarning: false,</span>
+<span class="cstat-no" title="statement not covered" >  extendSession: () =&gt; {},</span>
+<span class="cstat-no" title="statement not covered" >  validateUserPassword: () =&gt; ({ isValid: false, errors: [], strength: 'weak' }),</span>
+<span class="cstat-no" title="statement not covered" >});</span>
 &nbsp;
-export const useAuth = <span class="fstat-no" title="function not covered" >() =&gt; useContext(AuthContext);</span>
+<span class="cstat-no" title="statement not covered" >export const useAuth = () =&gt; useContext(AuthContext);</span>
 &nbsp;
-export const AuthProvider = <span class="fstat-no" title="function not covered" >({ children }: { children: React.ReactNode }) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >export const AuthProvider = ({ children }: { children: React.ReactNode }) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  const [user, setUser] = useState&lt;User | null&gt;(null);</span>
 <span class="cstat-no" title="statement not covered" >  const [session, setSession] = useState&lt;Session | null&gt;(null);</span>
 <span class="cstat-no" title="statement not covered" >  const [initializing, setInitializing] = useState(true);</span>
@@ -466,7 +466,7 @@ export const AuthProvider = <span class="fstat-no" title="function not covered" 
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-26T19:06:03.313Z
+                at 2025-08-01T15:51:31.303Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

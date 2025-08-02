@@ -37,6 +37,25 @@ export class SecurityConfigManager {
         owner: 'TechTyphoon',
         repo: 'secure-flow-automaton',
       },
+      docker: {
+        enabled: !!(import.meta.env.VITE_DOCKER_TOKEN || import.meta.env.DOCKER_TOKEN),
+        username: import.meta.env.VITE_DOCKER_USERNAME || import.meta.env.DOCKER_USERNAME || '',
+        token: import.meta.env.VITE_DOCKER_TOKEN || import.meta.env.DOCKER_TOKEN || '',
+        registry: import.meta.env.VITE_DOCKER_REGISTRY || import.meta.env.DOCKER_REGISTRY || 'docker.io',
+      },
+      aws: {
+        enabled: !!(import.meta.env.VITE_AWS_ACCESS_KEY_ID || import.meta.env.AWS_ACCESS_KEY_ID),
+        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || import.meta.env.AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || import.meta.env.AWS_SECRET_ACCESS_KEY || '',
+        region: import.meta.env.VITE_AWS_REGION || import.meta.env.AWS_REGION || 'us-east-1',
+        s3Bucket: import.meta.env.VITE_AWS_S3_BUCKET || import.meta.env.AWS_S3_BUCKET || 'secureflow-automaton-prod',
+      },
+      database: {
+        enabled: !!(import.meta.env.DATABASE_URL || import.meta.env.VITE_SUPABASE_URL),
+        url: import.meta.env.DATABASE_URL || '',
+        supabaseUrl: import.meta.env.VITE_SUPABASE_URL || import.meta.env.SUPABASE_URL || '',
+        supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY || '',
+      },
       notifications: {
         slack: {
           enabled: !!(import.meta.env.VITE_SLACK_WEBHOOK_URL || import.meta.env.SLACK_WEBHOOK_URL),
@@ -46,26 +65,73 @@ export class SecurityConfigManager {
         teams: {
           enabled: !!(import.meta.env.VITE_TEAMS_WEBHOOK_URL || import.meta.env.TEAMS_WEBHOOK_URL),
           webhookUrl: import.meta.env.VITE_TEAMS_WEBHOOK_URL || import.meta.env.TEAMS_WEBHOOK_URL || '',
+        },
+        email: {
+          enabled: !!(import.meta.env.VITE_SMTP_SERVER || import.meta.env.SMTP_SERVER),
+          smtpServer: import.meta.env.VITE_SMTP_SERVER || import.meta.env.SMTP_SERVER || '',
+          smtpPort: parseInt(import.meta.env.VITE_SMTP_PORT || import.meta.env.SMTP_PORT || '587'),
+          username: import.meta.env.VITE_SMTP_USERNAME || import.meta.env.SMTP_USERNAME || '',
+          password: import.meta.env.VITE_SMTP_PASSWORD || import.meta.env.SMTP_PASSWORD || '',
+          from: import.meta.env.VITE_SMTP_FROM || import.meta.env.SMTP_FROM || '',
         }
       },
+      monitoring: {
+        sentry: {
+          enabled: !!(import.meta.env.VITE_SENTRY_DSN || import.meta.env.SENTRY_DSN),
+          dsn: import.meta.env.VITE_SENTRY_DSN || import.meta.env.SENTRY_DSN || '',
+        },
+        datadog: {
+          enabled: !!(import.meta.env.VITE_DATADOG_API_KEY || import.meta.env.DATADOG_API_KEY),
+          apiKey: import.meta.env.VITE_DATADOG_API_KEY || import.meta.env.DATADOG_API_KEY || '',
+          appKey: import.meta.env.VITE_DATADOG_APP_KEY || import.meta.env.DATADOG_APP_KEY || '',
+        },
+        newrelic: {
+          enabled: !!(import.meta.env.VITE_NEWRELIC_LICENSE_KEY || import.meta.env.NEWRELIC_LICENSE_KEY),
+          licenseKey: import.meta.env.VITE_NEWRELIC_LICENSE_KEY || import.meta.env.NEWRELIC_LICENSE_KEY || '',
+          accountId: import.meta.env.VITE_NEWRELIC_ACCOUNT_ID || import.meta.env.NEWRELIC_ACCOUNT_ID || '',
+        },
+        logrocket: {
+          enabled: !!(import.meta.env.VITE_LOGROCKET_PUBLIC_KEY || import.meta.env.LOGROCKET_PUBLIC_KEY),
+          publicKey: import.meta.env.VITE_LOGROCKET_PUBLIC_KEY || import.meta.env.LOGROCKET_PUBLIC_KEY || '',
+        },
+      },
+      quantum: {
+        enabled: !!(import.meta.env.VITE_QUANTUM_EDGE_ENDPOINT || import.meta.env.QUANTUM_EDGE_ENDPOINT),
+        edgeEndpoint: import.meta.env.VITE_QUANTUM_EDGE_ENDPOINT || import.meta.env.QUANTUM_EDGE_ENDPOINT || '',
+        apiKey: import.meta.env.VITE_QUANTUM_API_KEY || import.meta.env.QUANTUM_API_KEY || '',
+        financialEnabled: import.meta.env.VITE_QUANTUM_FINANCIAL_ENABLED === 'true',
+        healthcareEnabled: import.meta.env.VITE_QUANTUM_HEALTHCARE_ENABLED === 'true',
+        supplyChainEnabled: import.meta.env.VITE_QUANTUM_SUPPLY_CHAIN_ENABLED === 'true',
+        energyEnabled: import.meta.env.VITE_QUANTUM_ENERGY_ENABLED === 'true',
+        aerospaceEnabled: import.meta.env.VITE_QUANTUM_AEROSPACE_ENABLED === 'true',
+        entertainmentEnabled: import.meta.env.VITE_QUANTUM_ENTERTAINMENT_ENABLED === 'true',
+      },
       fallbacks: {
-        useMockData: import.meta.env.MODE === 'development',
+        useMockData: false, // Disable mock data in production
         cacheTimeout: 300000, // 5 minutes
         retryAttempts: 3,
       }
     };
   }
 
-  getServiceConfig(service: 'sonarqube' | 'snyk' | 'github'): any {
+  getServiceConfig(service: 'sonarqube' | 'snyk' | 'github' | 'docker' | 'aws' | 'database'): any {
     return this.config[service];
   }
 
-  isServiceEnabled(service: 'sonarqube' | 'snyk' | 'github'): boolean {
+  isServiceEnabled(service: 'sonarqube' | 'snyk' | 'github' | 'docker' | 'aws' | 'database'): boolean {
     return this.config[service].enabled;
   }
 
   getNotificationConfig(): any {
     return this.config.notifications;
+  }
+
+  getMonitoringConfig(): any {
+    return this.config.monitoring;
+  }
+
+  getQuantumConfig(): any {
+    return this.config.quantum;
   }
 
   shouldUseMockData(service: string): boolean {
@@ -94,6 +160,25 @@ interface SecurityConfig {
     owner: string;
     repo: string;
   };
+  docker: {
+    enabled: boolean;
+    username: string;
+    token: string;
+    registry: string;
+  };
+  aws: {
+    enabled: boolean;
+    accessKeyId: string;
+    secretAccessKey: string;
+    region: string;
+    s3Bucket: string;
+  };
+  database: {
+    enabled: boolean;
+    url: string;
+    supabaseUrl: string;
+    supabaseAnonKey: string;
+  };
   notifications: {
     slack: {
       enabled: boolean;
@@ -104,6 +189,45 @@ interface SecurityConfig {
       enabled: boolean;
       webhookUrl: string;
     };
+    email: {
+      enabled: boolean;
+      smtpServer: string;
+      smtpPort: number;
+      username: string;
+      password: string;
+      from: string;
+    };
+  };
+  monitoring: {
+    sentry: {
+      enabled: boolean;
+      dsn: string;
+    };
+    datadog: {
+      enabled: boolean;
+      apiKey: string;
+      appKey: string;
+    };
+    newrelic: {
+      enabled: boolean;
+      licenseKey: string;
+      accountId: string;
+    };
+    logrocket: {
+      enabled: boolean;
+      publicKey: string;
+    };
+  };
+  quantum: {
+    enabled: boolean;
+    edgeEndpoint: string;
+    apiKey: string;
+    financialEnabled: boolean;
+    healthcareEnabled: boolean;
+    supplyChainEnabled: boolean;
+    energyEnabled: boolean;
+    aerospaceEnabled: boolean;
+    entertainmentEnabled: boolean;
   };
   fallbacks: {
     useMockData: boolean;

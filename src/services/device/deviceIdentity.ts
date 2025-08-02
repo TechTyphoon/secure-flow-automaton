@@ -145,8 +145,12 @@ export class DeviceIdentityService {
   private enrollmentRequests: Map<string, DeviceEnrollmentRequest> = new Map();
   private lifecycleEvents: Map<string, DeviceLifecycleEvent> = new Map();
   private authenticationSessions: Map<string, DeviceAuthenticationResult> = new Map();
+  private certificateAuthority: CertificateAuthority;
+  private complianceEngine: ComplianceEngine;
 
   constructor() {
+    this.certificateAuthority = new CertificateAuthority();
+    this.complianceEngine = new ComplianceEngine();
     this.initializeDeviceIdentityService();
   }
 
@@ -154,188 +158,111 @@ export class DeviceIdentityService {
    * Initialize device identity service with sample data
    */
   private initializeDeviceIdentityService(): void {
-    // Initialize sample device identities
+    // Initialize with sample devices for demonstration
+    this.initializeSampleDevices();
+    this.initializeSampleEvents();
+  }
+
+  private initializeSampleDevices(): void {
     const sampleDevices: DeviceIdentity[] = [
       {
-        deviceId: 'dev-laptop-001',
-        enrollmentId: 'enr-2025-001',
-        deviceName: 'CORP-LAPTOP-JS001',
+        deviceId: 'dev-001',
+        enrollmentId: 'enroll-001',
+        deviceName: 'CEO-Laptop-001',
         deviceType: 'laptop',
         platform: {
-          os: 'Windows 11 Pro',
-          version: '23H2',
+          os: 'Windows',
+          version: '11.0.22621',
           architecture: 'x64',
           manufacturer: 'Dell',
-          model: 'Latitude 7420'
+          model: 'Latitude 5520'
         },
         hardware: {
-          processorId: 'Intel-i7-1185G7-8cores',
-          memorySize: 32768, // MB
-          diskSize: 1024000, // MB
-          macAddresses: ['00:1B:44:11:3A:B7', '02:1B:44:11:3A:B8'],
-          serialNumbers: ['DL7420-2025-001'],
-          tpmPresent: true,
-          secureBootEnabled: true
-        },
-        ownership: 'corporate',
-        enrollmentDate: new Date('2025-07-15'),
-        lastSeen: new Date(),
-        status: 'active',
-        trustLevel: 'high',
-        certificates: [
-          {
-            id: 'cert-device-001',
-            type: 'device_identity',
-            subject: 'CN=CORP-LAPTOP-JS001,OU=Devices,O=SecureFlow',
-            issuer: 'CN=SecureFlow Device CA,O=SecureFlow',
-            serialNumber: '1A2B3C4D5E6F',
-            thumbprint: 'A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0',
-            validFrom: new Date('2025-07-15'),
-            validTo: new Date('2027-07-15'),
-            keyUsage: ['digital_signature', 'key_encipherment'],
-            status: 'valid',
-            autoRenewal: true
-          }
-        ],
-        metadata: {
-          location: 'New York Office',
-          department: 'Engineering',
-          assignedUser: 'john.smith@secureflow.com',
-          assetTag: 'SF-LAP-001',
-          purchaseDate: new Date('2025-07-01'),
-          warrantyExpiry: new Date('2028-07-01')
-        }
-      },
-      {
-        deviceId: 'dev-mobile-002',
-        enrollmentId: 'enr-2025-002',
-        deviceName: 'iPhone-SJ-15Pro',
-        deviceType: 'mobile',
-        platform: {
-          os: 'iOS',
-          version: '17.1.2',
-          architecture: 'arm64',
-          manufacturer: 'Apple',
-          model: 'iPhone 15 Pro'
-        },
-        hardware: {
-          processorId: 'Apple-A17-Pro',
-          memorySize: 8192,
+          processorId: 'BFEBFBFF000906EA',
+          memorySize: 16384,
           diskSize: 512000,
-          macAddresses: ['02:1B:44:22:4A:C8'],
-          serialNumbers: ['IP15P-2025-002'],
-          tpmPresent: true, // Secure Enclave
+          macAddresses: ['00:1B:44:11:3A:B7'],
+          serialNumbers: ['DL123456789'],
+          tpmPresent: true,
           secureBootEnabled: true
         },
         ownership: 'corporate',
-        enrollmentDate: new Date('2025-07-20'),
+        enrollmentDate: new Date('2024-01-15'),
         lastSeen: new Date(),
         status: 'active',
         trustLevel: 'high',
         certificates: [
           {
-            id: 'cert-mobile-002',
+            id: 'cert-001',
             type: 'device_identity',
-            subject: 'CN=iPhone-SJ-15Pro,OU=Mobile,O=SecureFlow',
-            issuer: 'CN=SecureFlow Mobile CA,O=SecureFlow',
-            serialNumber: '2B3C4D5E6F7G',
-            thumbprint: 'B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1',
-            validFrom: new Date('2025-07-20'),
-            validTo: new Date('2027-07-20'),
-            keyUsage: ['digital_signature', 'key_encipherment'],
+            subject: 'CN=CEO-Laptop-001,O=Company,C=US',
+            issuer: 'CN=Company-CA,O=Company,C=US',
+            serialNumber: '1234567890ABCDEF',
+            thumbprint: 'A1B2C3D4E5F6789012345678901234567890ABCD',
+            validFrom: new Date('2024-01-15'),
+            validTo: new Date('2025-01-15'),
+            keyUsage: ['digitalSignature', 'keyEncipherment'],
             status: 'valid',
             autoRenewal: true
           }
         ],
         metadata: {
-          location: 'San Francisco Office',
-          department: 'Marketing',
-          assignedUser: 'sarah.johnson@secureflow.com',
-          assetTag: 'SF-MOB-002',
-          purchaseDate: new Date('2025-07-15')
+          location: 'Headquarters',
+          department: 'Executive',
+          assignedUser: 'ceo@company.com',
+          assetTag: 'LAP-001',
+          purchaseDate: new Date('2023-06-15'),
+          warrantyExpiry: new Date('2026-06-15')
         }
       },
       {
-        deviceId: 'dev-server-003',
-        enrollmentId: 'enr-2025-003',
-        deviceName: 'PROD-WEB-01',
-        deviceType: 'server',
+        deviceId: 'dev-002',
+        enrollmentId: 'enroll-002',
+        deviceName: 'IT-Desktop-001',
+        deviceType: 'desktop',
         platform: {
-          os: 'Ubuntu Server',
-          version: '22.04.3 LTS',
+          os: 'Windows',
+          version: '10.0.19045',
           architecture: 'x64',
-          manufacturer: 'HPE',
-          model: 'ProLiant DL380 Gen10'
+          manufacturer: 'HP',
+          model: 'EliteDesk 800 G5'
         },
         hardware: {
-          processorId: 'Intel-Xeon-Gold-6248R-24cores',
-          memorySize: 131072,
-          diskSize: 4096000,
-          macAddresses: ['00:1B:44:33:5B:D9', '00:1B:44:33:5B:DA'],
-          serialNumbers: ['HPE-DL380-2025-003'],
+          processorId: 'BFEBFBFF000906EA',
+          memorySize: 32768,
+          diskSize: 1000000,
+          macAddresses: ['00:1B:44:11:3A:B8'],
+          serialNumbers: ['HP987654321'],
           tpmPresent: true,
           secureBootEnabled: true
         },
         ownership: 'corporate',
-        enrollmentDate: new Date('2025-07-10'),
+        enrollmentDate: new Date('2024-02-01'),
         lastSeen: new Date(),
         status: 'active',
-        trustLevel: 'critical',
+        trustLevel: 'high',
         certificates: [
           {
-            id: 'cert-server-003',
+            id: 'cert-002',
             type: 'device_identity',
-            subject: 'CN=PROD-WEB-01,OU=Servers,O=SecureFlow',
-            issuer: 'CN=SecureFlow Server CA,O=SecureFlow',
-            serialNumber: '3C4D5E6F7G8H',
-            thumbprint: 'C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2',
-            validFrom: new Date('2025-07-10'),
-            validTo: new Date('2026-07-10'),
-            keyUsage: ['digital_signature', 'key_encipherment', 'server_auth'],
+            subject: 'CN=IT-Desktop-001,O=Company,C=US',
+            issuer: 'CN=Company-CA,O=Company,C=US',
+            serialNumber: 'FEDCBA0987654321',
+            thumbprint: 'FEDCBA0987654321ABCDEF1234567890ABCDEF12',
+            validFrom: new Date('2024-02-01'),
+            validTo: new Date('2025-02-01'),
+            keyUsage: ['digitalSignature', 'keyEncipherment'],
             status: 'valid',
             autoRenewal: true
           }
         ],
         metadata: {
-          location: 'Primary Data Center',
-          department: 'Infrastructure',
-          assetTag: 'SF-SRV-003',
-          purchaseDate: new Date('2025-06-01'),
-          warrantyExpiry: new Date('2030-06-01')
-        }
-      },
-      {
-        deviceId: 'dev-iot-004',
-        enrollmentId: 'enr-2025-004',
-        deviceName: 'SecurityCamera-East-01',
-        deviceType: 'iot',
-        platform: {
-          os: 'Embedded Linux',
-          version: '5.4.0',
-          architecture: 'arm',
-          manufacturer: 'Axis',
-          model: 'P3248-LVE'
-        },
-        hardware: {
-          processorId: 'ARM-Cortex-A53-quad',
-          memorySize: 2048,
-          diskSize: 32000,
-          macAddresses: ['00:1B:44:44:6C:EA'],
-          serialNumbers: ['AXIS-P3248-2025-004'],
-          tpmPresent: false,
-          secureBootEnabled: false
-        },
-        ownership: 'corporate',
-        enrollmentDate: new Date('2025-07-25'),
-        lastSeen: new Date(),
-        status: 'active',
-        trustLevel: 'medium',
-        certificates: [],
-        metadata: {
-          location: 'Building East Entrance',
-          department: 'Security',
-          assetTag: 'SF-CAM-004',
-          purchaseDate: new Date('2025-07-20')
+          location: 'IT Department',
+          department: 'Information Technology',
+          assignedUser: 'admin@company.com',
+          assetTag: 'DESK-001',
+          purchaseDate: new Date('2023-08-01'),
+          warrantyExpiry: new Date('2026-08-01')
         }
       }
     ];
@@ -343,8 +270,6 @@ export class DeviceIdentityService {
     sampleDevices.forEach(device => {
       this.devices.set(device.deviceId, device);
     });
-
-    this.initializeSampleEvents();
   }
 
   /**
@@ -354,33 +279,13 @@ export class DeviceIdentityService {
     const sampleEvents: DeviceLifecycleEvent[] = [
       {
         id: 'event-001',
-        deviceId: 'dev-laptop-001',
+        deviceId: 'dev-001',
         eventType: 'enrollment',
-        timestamp: new Date('2025-07-15T10:00:00Z'),
-        initiatedBy: 'admin@secureflow.com',
-        reason: 'New employee device setup',
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        initiatedBy: 'system',
+        reason: 'Initial device enrollment',
         details: {
-          newStatus: 'active',
-          automaticAction: false,
-          approvalRequired: true,
-          approver: 'it-admin@secureflow.com'
-        },
-        impact: {
-          accessRevoked: [],
-          certificatesRevoked: [],
-          dataWipeRequired: false,
-          notificationsSent: ['john.smith@secureflow.com', 'it-admin@secureflow.com']
-        }
-      },
-      {
-        id: 'event-002',
-        deviceId: 'dev-mobile-002',
-        eventType: 'activation',
-        timestamp: new Date('2025-07-20T14:30:00Z'),
-        initiatedBy: 'sarah.johnson@secureflow.com',
-        reason: 'Self-service mobile enrollment completed',
-        details: {
-          previousStatus: 'inactive',
+          previousStatus: 'unknown',
           newStatus: 'active',
           automaticAction: true,
           approvalRequired: false
@@ -389,7 +294,7 @@ export class DeviceIdentityService {
           accessRevoked: [],
           certificatesRevoked: [],
           dataWipeRequired: false,
-          notificationsSent: ['sarah.johnson@secureflow.com']
+          notificationsSent: ['ceo@company.com']
         }
       }
     ];
@@ -403,222 +308,244 @@ export class DeviceIdentityService {
    * Enroll a new device
    */
   async enrollDevice(request: DeviceEnrollmentRequest): Promise<DeviceEnrollmentResponse> {
-    const enrollmentId = `enr-${Date.now()}`;
-    const deviceId = `dev-${request.deviceInfo.hostname.toLowerCase()}-${Date.now()}`;
-
-    // Store enrollment request
-    this.enrollmentRequests.set(enrollmentId, request);
-
-    // Generate device certificates
-    const certificates: DeviceCertificate[] = [
-      {
-        id: `cert-${deviceId}`,
-        type: 'device_identity',
-        subject: `CN=${request.deviceInfo.hostname},OU=Devices,O=SecureFlow`,
-        issuer: 'CN=SecureFlow Device CA,O=SecureFlow',
-        serialNumber: this.generateSerialNumber(),
-        thumbprint: this.generateThumbprint(),
-        validFrom: new Date(),
-        validTo: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000), // 2 years
-        keyUsage: ['digital_signature', 'key_encipherment'],
-        status: 'valid',
-        autoRenewal: true
+    try {
+      // Validate request
+      const validationResult = this.validateEnrollmentRequest(request);
+      if (!validationResult.isValid) {
+        return {
+          success: false,
+          errors: validationResult.errors
+        };
       }
-    ];
 
-    // Create device identity
-    const deviceIdentity: DeviceIdentity = {
-      deviceId,
-      enrollmentId,
-      deviceName: request.deviceInfo.hostname,
-      deviceType: this.detectDeviceType(request.deviceInfo),
-      platform: {
-        os: request.deviceInfo.os,
-        version: request.deviceInfo.version,
-        architecture: 'x64', // Default
-        manufacturer: request.deviceInfo.manufacturer,
-        model: request.deviceInfo.model
-      },
-      hardware: {
-        processorId: 'Unknown',
-        memorySize: 0,
-        diskSize: 0,
-        macAddresses: [request.deviceInfo.macAddress],
-        serialNumbers: [request.deviceInfo.serialNumber],
-        tpmPresent: false,
-        secureBootEnabled: false
-      },
-      ownership: 'corporate',
-      enrollmentDate: new Date(),
-      lastSeen: new Date(),
-      status: request.enrollmentMethod === 'autopilot' ? 'active' : 'inactive',
-      trustLevel: 'low',
-      certificates,
-      metadata: {
-        department: request.userInfo.department,
-        assignedUser: request.userInfo.email
+      // Check if device already exists
+      const existingDevice = Array.from(this.devices.values()).find(
+        device => device.hardware.serialNumbers.includes(request.deviceInfo.serialNumber)
+      );
+
+      if (existingDevice) {
+        return {
+          success: false,
+          errors: ['Device with this serial number is already enrolled']
+        };
       }
-    };
 
-    this.devices.set(deviceId, deviceIdentity);
+      // Generate device ID and enrollment ID
+      const deviceId = `dev-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const enrollmentId = `enroll-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // Create lifecycle event
-    const lifecycleEvent: DeviceLifecycleEvent = {
-      id: `event-${Date.now()}`,
-      deviceId,
-      eventType: 'enrollment',
-      timestamp: new Date(),
-      initiatedBy: request.userInfo.email,
-      reason: `Device enrollment via ${request.enrollmentMethod}`,
-      details: {
-        newStatus: deviceIdentity.status,
-        automaticAction: request.enrollmentMethod === 'autopilot',
-        approvalRequired: request.enrollmentMethod !== 'autopilot'
-      },
-      impact: {
-        accessRevoked: [],
-        certificatesRevoked: [],
-        dataWipeRequired: false,
-        notificationsSent: [request.userInfo.email]
-      }
-    };
+      // Create device identity
+      const device: DeviceIdentity = {
+        deviceId,
+        enrollmentId,
+        deviceName: request.deviceInfo.hostname,
+        deviceType: this.detectDeviceType(request.deviceInfo),
+        platform: {
+          os: request.deviceInfo.os,
+          version: request.deviceInfo.version,
+          architecture: 'x64', // Default, could be detected
+          manufacturer: request.deviceInfo.manufacturer,
+          model: request.deviceInfo.model
+        },
+        hardware: {
+          processorId: this.generateSerialNumber(),
+          memorySize: 8192, // Default, could be detected
+          diskSize: 256000, // Default, could be detected
+          macAddresses: [request.deviceInfo.macAddress],
+          serialNumbers: [request.deviceInfo.serialNumber],
+          tpmPresent: true, // Assume TPM is present for corporate devices
+          secureBootEnabled: true // Assume Secure Boot is enabled
+        },
+        ownership: 'corporate',
+        enrollmentDate: new Date(),
+        lastSeen: new Date(),
+        status: 'active',
+        trustLevel: 'medium', // Will be updated based on compliance checks
+        certificates: [],
+        metadata: {
+          location: 'Unknown',
+          department: request.userInfo.department,
+          assignedUser: request.userInfo.email,
+          assetTag: `DEV-${deviceId.split('-')[1]}`
+        }
+      };
 
-    this.lifecycleEvents.set(lifecycleEvent.id, lifecycleEvent);
+      // Generate device certificate
+      const certificate = await this.certificateAuthority.generateDeviceCertificate(device);
+      device.certificates.push(certificate);
 
-    return {
-      success: true,
-      deviceId,
-      enrollmentId,
-      certificates,
-      policies: ['device-baseline-policy', 'user-access-policy'],
-      nextSteps: [
-        'Install device certificates',
-        'Configure security policies',
-        'Complete compliance assessment',
-        ...(request.enrollmentMethod !== 'autopilot' ? ['Wait for IT approval'] : [])
-      ],
-      estimatedApprovalTime: request.enrollmentMethod === 'autopilot' ? 0 : 24 // hours
-    };
+      // Run compliance check
+      const complianceResult = await this.complianceEngine.checkDeviceCompliance(device);
+      device.trustLevel = complianceResult.trustLevel;
+
+      // Store device
+      this.devices.set(deviceId, device);
+
+      // Create enrollment event
+      const enrollmentEvent: DeviceLifecycleEvent = {
+        id: `event-${Date.now()}`,
+        deviceId,
+        eventType: 'enrollment',
+        timestamp: new Date(),
+        initiatedBy: request.userInfo.email,
+        reason: 'Device enrollment request',
+        details: {
+          previousStatus: 'unknown',
+          newStatus: 'active',
+          automaticAction: true,
+          approvalRequired: false
+        },
+        impact: {
+          accessRevoked: [],
+          certificatesRevoked: [],
+          dataWipeRequired: false,
+          notificationsSent: [request.userInfo.email]
+        }
+      };
+
+      this.lifecycleEvents.set(enrollmentEvent.id, enrollmentEvent);
+
+      return {
+        success: true,
+        deviceId,
+        enrollmentId,
+        certificates: [certificate],
+        policies: ['corporate-device-policy', 'security-compliance-policy'],
+        nextSteps: [
+          'Install required security software',
+          'Configure device policies',
+          'Complete security training'
+        ],
+        estimatedApprovalTime: 0 // Immediate approval for corporate devices
+      };
+
+    } catch (error) {
+      console.error('Device enrollment failed:', error);
+      return {
+        success: false,
+        errors: ['Device enrollment failed due to system error']
+      };
+    }
   }
 
   /**
    * Authenticate device
    */
   async authenticateDevice(auth: DeviceAuthentication): Promise<DeviceAuthenticationResult> {
-    const device = this.devices.get(auth.deviceId);
-    
-    if (!device) {
-      return {
-        success: false,
-        deviceId: auth.deviceId,
-        trustScore: 0,
-        authenticationMethods: [],
-        riskFactors: ['device_not_found'],
-        requiredActions: ['device_enrollment_required']
-      };
-    }
-
-    if (device.status !== 'active') {
-      return {
-        success: false,
-        deviceId: auth.deviceId,
-        trustScore: 0,
-        authenticationMethods: [],
-        riskFactors: ['device_inactive'],
-        requiredActions: ['contact_it_support']
-      };
-    }
-
-    // Calculate trust score based on multiple factors
-    let trustScore = 50; // Base score
-    const authMethods: string[] = [auth.method];
-    const riskFactors: string[] = [];
-
-    // Authentication method scoring
-    switch (auth.method) {
-      case 'certificate':
-        if (this.validateCertificate(device, auth.credentials.certificate)) {
-          trustScore += 25;
-        } else {
-          riskFactors.push('invalid_certificate');
-          trustScore -= 20;
-        }
-        break;
-      case 'tpm':
-        if (device.hardware.tpmPresent) {
-          trustScore += 30;
-        } else {
-          riskFactors.push('tpm_not_available');
-          trustScore -= 15;
-        }
-        break;
-      case 'hardware_token':
-        trustScore += 20;
-        break;
-      case 'biometric':
-        trustScore += 15;
-        break;
-      case 'multi_factor':
-        trustScore += 35;
-        authMethods.push('secondary_factor');
-        break;
-    }
-
-    // Device trust level adjustment
-    switch (device.trustLevel) {
-      case 'critical': trustScore += 20; break;
-      case 'high': trustScore += 15; break;
-      case 'medium': trustScore += 5; break;
-      case 'low': trustScore -= 10; break;
-      case 'unknown': trustScore -= 20; break;
-    }
-
-    // Location-based risk assessment
-    if (auth.location) {
-      if (this.isLocationTrusted(auth.location)) {
-        trustScore += 10;
-      } else {
-        riskFactors.push('untrusted_location');
-        trustScore -= 15;
+    try {
+      const device = this.devices.get(auth.deviceId);
+      if (!device) {
+        return {
+          success: false,
+          deviceId: auth.deviceId,
+          trustScore: 0,
+          authenticationMethods: [],
+          riskFactors: ['Device not found in registry'],
+          requiredActions: ['Enroll device first']
+        };
       }
+
+      // Validate certificate if provided
+      if (auth.credentials.certificate) {
+        const isValidCertificate = this.validateCertificate(device, auth.credentials.certificate);
+        if (!isValidCertificate) {
+          return {
+            success: false,
+            deviceId: auth.deviceId,
+            trustScore: 0,
+            authenticationMethods: [],
+            riskFactors: ['Invalid device certificate'],
+            requiredActions: ['Renew device certificate']
+          };
+        }
+      }
+
+      // Check device status
+      if (device.status !== 'active') {
+        return {
+          success: false,
+          deviceId: auth.deviceId,
+          trustScore: 0,
+          authenticationMethods: [],
+          riskFactors: [`Device status: ${device.status}`],
+          requiredActions: ['Contact IT support']
+        };
+      }
+
+      // Check location trust
+      const isLocationTrusted = this.isLocationTrusted(auth.location);
+      const locationRisk = isLocationTrusted ? 0 : 0.3;
+
+      // Calculate trust score
+      let trustScore = 0.8; // Base trust score
+      
+      // Add trust for valid certificate
+      if (auth.credentials.certificate) {
+        trustScore += 0.1;
+      }
+
+      // Add trust for TPM attestation
+      if (auth.credentials.tpmAttestation) {
+        trustScore += 0.05;
+      }
+
+      // Subtract risk for untrusted location
+      trustScore -= locationRisk;
+
+      // Subtract risk for old last seen
+      const hoursSinceLastSeen = (Date.now() - device.lastSeen.getTime()) / (1000 * 60 * 60);
+      if (hoursSinceLastSeen > 24) {
+        trustScore -= 0.1;
+      }
+
+      // Ensure trust score is between 0 and 1
+      trustScore = Math.max(0, Math.min(1, trustScore));
+
+      // Update last seen
+      device.lastSeen = new Date();
+
+      const authenticationMethods = [];
+      if (auth.credentials.certificate) authenticationMethods.push('certificate');
+      if (auth.credentials.tpmAttestation) authenticationMethods.push('tpm');
+      if (auth.credentials.biometricHash) authenticationMethods.push('biometric');
+      if (auth.credentials.tokenSerial) authenticationMethods.push('hardware_token');
+
+      const riskFactors = [];
+      if (!isLocationTrusted) riskFactors.push('Untrusted location');
+      if (hoursSinceLastSeen > 24) riskFactors.push('Device not seen recently');
+      if (device.trustLevel === 'low') riskFactors.push('Low trust level device');
+
+      const sessionToken = trustScore > 0.6 ? this.generateSessionToken(auth.deviceId) : undefined;
+      const sessionExpiry = sessionToken ? new Date(Date.now() + 8 * 60 * 60 * 1000) : undefined; // 8 hours
+
+      const result: DeviceAuthenticationResult = {
+        success: trustScore > 0.5,
+        deviceId: auth.deviceId,
+        trustScore,
+        authenticationMethods,
+        riskFactors,
+        sessionToken,
+        sessionExpiry,
+        requiredActions: riskFactors.length > 0 ? ['Contact security team'] : [],
+        restrictions: trustScore < 0.7 ? ['Limited access', 'Enhanced monitoring'] : []
+      };
+
+      // Store authentication session
+      this.authenticationSessions.set(`${auth.deviceId}_${Date.now()}`, result);
+
+      return result;
+
+    } catch (error) {
+      console.error('Device authentication failed:', error);
+      return {
+        success: false,
+        deviceId: auth.deviceId,
+        trustScore: 0,
+        authenticationMethods: [],
+        riskFactors: ['Authentication system error'],
+        requiredActions: ['Contact IT support']
+      };
     }
-
-    // Time-based analysis
-    const lastSeen = device.lastSeen.getTime();
-    const timeSinceLastSeen = Date.now() - lastSeen;
-    const daysSinceLastSeen = timeSinceLastSeen / (1000 * 60 * 60 * 24);
-
-    if (daysSinceLastSeen > 30) {
-      riskFactors.push('long_absence');
-      trustScore -= 10;
-    }
-
-    // Ensure trust score is within bounds
-    trustScore = Math.max(0, Math.min(100, trustScore));
-
-    // Update device last seen
-    device.lastSeen = new Date();
-
-    // Generate session token for successful authentication
-    const sessionToken = trustScore >= 60 ? this.generateSessionToken(auth.deviceId) : undefined;
-    const sessionExpiry = sessionToken ? new Date(Date.now() + 8 * 60 * 60 * 1000) : undefined; // 8 hours
-
-    const result: DeviceAuthenticationResult = {
-      success: trustScore >= 60,
-      deviceId: auth.deviceId,
-      trustScore,
-      authenticationMethods: authMethods,
-      riskFactors,
-      sessionToken,
-      sessionExpiry,
-      requiredActions: trustScore < 60 ? ['additional_verification_required'] : [],
-      restrictions: trustScore < 80 ? ['limited_network_access'] : []
-    };
-
-    // Store authentication session
-    this.authenticationSessions.set(auth.deviceId, result);
-
-    return result;
   }
 
   /**
@@ -779,17 +706,62 @@ export class DeviceIdentityService {
     return `session_${deviceId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private validateCertificate(device: DeviceIdentity, certificate?: string): boolean {
-    if (!certificate) return false;
-    // Simplified certificate validation
-    return device.certificates.some(cert => cert.status === 'valid' && cert.validTo > new Date());
+  private validateEnrollmentRequest(request: DeviceEnrollmentRequest): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    if (!request.deviceInfo.hostname) {
+      errors.push('Device hostname is required');
+    }
+
+    if (!request.deviceInfo.serialNumber) {
+      errors.push('Device serial number is required');
+    }
+
+    if (!request.deviceInfo.macAddress) {
+      errors.push('Device MAC address is required');
+    }
+
+    if (!request.userInfo.email) {
+      errors.push('User email is required');
+    }
+
+    if (!request.userInfo.department) {
+      errors.push('User department is required');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 
-  private isLocationTrusted(location: DeviceAuthentication['location']): boolean {
+  private validateCertificate(device: DeviceIdentity, certificate?: string): boolean {
+    if (!certificate) return false;
+    
+    // Check if device has a valid certificate
+    const validCertificate = device.certificates.find(cert => 
+      cert.status === 'valid' && 
+      cert.validTo > new Date()
+    );
+    
+    return !!validCertificate;
+  }
+
+  private isLocationTrusted(location?: DeviceAuthentication['location']): boolean {
     if (!location) return false;
-    // Simplified location trust evaluation
-    const trustedCountries = ['US', 'CA', 'UK', 'DE', 'FR'];
-    return trustedCountries.includes(location.country);
+    
+    // Define trusted locations (could be loaded from configuration)
+    const trustedLocations = [
+      { country: 'US', region: 'CA', city: 'San Francisco' },
+      { country: 'US', region: 'NY', city: 'New York' },
+      { country: 'US', region: 'TX', city: 'Austin' }
+    ];
+    
+    return trustedLocations.some(trusted => 
+      trusted.country === location.country &&
+      trusted.region === location.region &&
+      trusted.city === location.city
+    );
   }
 
   /**
@@ -811,6 +783,66 @@ export class DeviceIdentityService {
 
   getAuthenticationSessions(): DeviceAuthenticationResult[] {
     return Array.from(this.authenticationSessions.values());
+  }
+}
+
+// Certificate Authority Service
+class CertificateAuthority {
+  async generateDeviceCertificate(device: DeviceIdentity): Promise<DeviceCertificate> {
+    const certificateId = `cert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const serialNumber = Math.random().toString(16).toUpperCase();
+    const thumbprint = Array.from({ length: 40 }, () => 
+      Math.floor(Math.random() * 16).toString(16)
+    ).join('').toUpperCase();
+
+    return {
+      id: certificateId,
+      type: 'device_identity',
+      subject: `CN=${device.deviceName},O=Company,C=US`,
+      issuer: 'CN=Company-CA,O=Company,C=US',
+      serialNumber,
+      thumbprint,
+      validFrom: new Date(),
+      validTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+      keyUsage: ['digitalSignature', 'keyEncipherment'],
+      status: 'valid',
+      autoRenewal: true
+    };
+  }
+}
+
+// Compliance Engine Service
+class ComplianceEngine {
+  async checkDeviceCompliance(device: DeviceIdentity): Promise<{ trustLevel: DeviceIdentity['trustLevel'] }> {
+    let complianceScore = 0;
+    
+    // Check TPM presence
+    if (device.hardware.tpmPresent) complianceScore += 20;
+    
+    // Check Secure Boot
+    if (device.hardware.secureBootEnabled) complianceScore += 20;
+    
+    // Check corporate ownership
+    if (device.ownership === 'corporate') complianceScore += 20;
+    
+    // Check recent enrollment
+    const daysSinceEnrollment = (Date.now() - device.enrollmentDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSinceEnrollment < 30) complianceScore += 20;
+    
+    // Check valid certificates
+    const validCertificates = device.certificates.filter(cert => 
+      cert.status === 'valid' && cert.validTo > new Date()
+    );
+    if (validCertificates.length > 0) complianceScore += 20;
+    
+    // Determine trust level based on compliance score
+    let trustLevel: DeviceIdentity['trustLevel'] = 'unknown';
+    if (complianceScore >= 80) trustLevel = 'high';
+    else if (complianceScore >= 60) trustLevel = 'medium';
+    else if (complianceScore >= 40) trustLevel = 'low';
+    else trustLevel = 'critical';
+    
+    return { trustLevel };
   }
 }
 

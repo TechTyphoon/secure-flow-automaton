@@ -254,8 +254,12 @@ export class DataClassificationService {
   private assets: Map<string, DataAsset> = new Map();
   private rules: Map<string, ClassificationRule> = new Map();
   private discoveryResults: Map<string, DataDiscoveryResult> = new Map();
+  private mlClassifier: MLDataClassifier;
+  private complianceEngine: DataComplianceEngine;
 
   constructor() {
+    this.mlClassifier = new MLDataClassifier();
+    this.complianceEngine = new DataComplianceEngine();
     this.initializeClassificationService();
   }
 
@@ -263,137 +267,264 @@ export class DataClassificationService {
    * Initialize classification service with standard classifications
    */
   private initializeClassificationService(): void {
-    // Initialize standard data classifications
-    const standardClassifications: DataClassification[] = [
+    this.initializeClassifications();
+    this.initializeClassificationRules();
+    this.initializeSampleAssets();
+  }
+
+  private initializeClassifications(): void {
+    const classifications: DataClassification[] = [
       {
-        id: 'public',
-        name: 'Public',
+        id: 'class-public',
+        name: 'Public Information',
         level: 'public',
         category: 'operational',
         sensitivity: 10,
         description: 'Information that can be freely shared with the public',
-        compliance: [],
+        compliance: [
+          {
+            framework: 'gdpr',
+            requirement: 'Article 5 - Lawful processing',
+            mandatory: false,
+            controls: ['data_minimization', 'purpose_limitation'],
+            auditRequired: false
+          }
+        ],
         handling: {
-          encryption: { atRest: false, inTransit: false, algorithm: 'none', keyLength: 0 },
-          access: { authentication: 'basic', authorization: 'rbac', minimumClearance: [], needToKnow: false },
-          storage: { location: 'cloud', geography: ['global'], backup: true, replication: true },
-          sharing: { internal: true, external: true, anonymization: false, watermarking: false, dlp: false }
+          encryption: {
+            atRest: false,
+            inTransit: false,
+            algorithm: 'none',
+            keyLength: 0
+          },
+          access: {
+            authentication: 'basic',
+            authorization: 'dac',
+            minimumClearance: [],
+            needToKnow: false
+          },
+          storage: {
+            location: 'cloud',
+            geography: ['global'],
+            backup: true,
+            replication: true
+          },
+          sharing: {
+            internal: true,
+            external: true,
+            anonymization: false,
+            watermarking: false,
+            dlp: false
+          }
         },
         retention: {
           retentionPeriod: 2555, // 7 years
-          destructionRequired: false,
+          archivePeriod: 1825, // 5 years
+          destructionRequired: true,
           destructionMethod: 'secure_delete',
           legalHold: false,
           exceptions: []
         },
         metadata: {
           createdBy: 'system',
-          createdDate: new Date('2025-01-01'),
-          lastModified: new Date('2025-01-01'),
+          createdDate: new Date('2024-01-01'),
+          lastModified: new Date('2024-01-01'),
           version: '1.0'
         }
       },
       {
-        id: 'internal',
-        name: 'Internal',
+        id: 'class-internal',
+        name: 'Internal Use Only',
         level: 'internal',
         category: 'operational',
         sensitivity: 30,
-        description: 'Internal business information for employee access',
+        description: 'Information for internal company use only',
         compliance: [
-          { framework: 'iso27001', requirement: 'Information Security Management', mandatory: true, controls: ['A.8.2.1'], auditRequired: true }
+          {
+            framework: 'gdpr',
+            requirement: 'Article 32 - Security of processing',
+            mandatory: true,
+            controls: ['access_control', 'encryption'],
+            auditRequired: true
+          }
         ],
         handling: {
-          encryption: { atRest: true, inTransit: true, algorithm: 'AES-256', keyLength: 256 },
-          access: { authentication: 'mfa', authorization: 'rbac', minimumClearance: ['employee'], needToKnow: false },
-          storage: { location: 'hybrid', geography: ['us', 'eu'], backup: true, replication: true },
-          sharing: { internal: true, external: false, anonymization: false, watermarking: true, dlp: true }
+          encryption: {
+            atRest: true,
+            inTransit: true,
+            algorithm: 'AES-256',
+            keyLength: 256
+          },
+          access: {
+            authentication: 'basic',
+            authorization: 'rbac',
+            minimumClearance: ['employee'],
+            needToKnow: true
+          },
+          storage: {
+            location: 'onpremise',
+            geography: ['US', 'EU'],
+            backup: true,
+            replication: true
+          },
+          sharing: {
+            internal: true,
+            external: false,
+            anonymization: false,
+            watermarking: true,
+            dlp: true
+          }
         },
         retention: {
-          retentionPeriod: 2190, // 6 years
+          retentionPeriod: 1825, // 5 years
+          archivePeriod: 1095, // 3 years
           destructionRequired: true,
           destructionMethod: 'secure_delete',
           legalHold: false,
-          exceptions: ['legal_discovery']
+          exceptions: []
         },
         metadata: {
-          createdBy: 'data.governance@secureflow.com',
-          createdDate: new Date('2025-01-01'),
-          lastModified: new Date('2025-07-01'),
-          version: '1.1'
+          createdBy: 'system',
+          createdDate: new Date('2024-01-01'),
+          lastModified: new Date('2024-01-01'),
+          version: '1.0'
         }
       },
       {
-        id: 'confidential',
-        name: 'Confidential',
+        id: 'class-confidential',
+        name: 'Confidential Information',
         level: 'confidential',
         category: 'intellectual_property',
         sensitivity: 70,
-        description: 'Sensitive business information requiring special handling',
+        description: 'Sensitive business information requiring protection',
         compliance: [
-          { framework: 'iso27001', requirement: 'Information Classification', mandatory: true, controls: ['A.8.2.1', 'A.8.2.2'], auditRequired: true },
-          { framework: 'sox', requirement: 'Financial Data Protection', mandatory: true, controls: ['SOX-404'], auditRequired: true }
+          {
+            framework: 'gdpr',
+            requirement: 'Article 32 - Security of processing',
+            mandatory: true,
+            controls: ['access_control', 'encryption', 'audit_logging'],
+            auditRequired: true
+          },
+          {
+            framework: 'sox',
+            requirement: 'Section 404 - Internal controls',
+            mandatory: true,
+            controls: ['access_control', 'audit_trail'],
+            auditRequired: true
+          }
         ],
         handling: {
-          encryption: { atRest: true, inTransit: true, algorithm: 'AES-256', keyLength: 256 },
-          access: { authentication: 'mfa', authorization: 'abac', minimumClearance: ['confidential'], needToKnow: true },
-          storage: { location: 'onpremise', geography: ['us'], backup: true, replication: false },
-          sharing: { internal: true, external: false, anonymization: true, watermarking: true, dlp: true }
+          encryption: {
+            atRest: true,
+            inTransit: true,
+            algorithm: 'AES-256-GCM',
+            keyLength: 256
+          },
+          access: {
+            authentication: 'mfa',
+            authorization: 'abac',
+            minimumClearance: ['manager'],
+            needToKnow: true
+          },
+          storage: {
+            location: 'onpremise',
+            geography: ['US'],
+            backup: true,
+            replication: false
+          },
+          sharing: {
+            internal: true,
+            external: false,
+            anonymization: true,
+            watermarking: true,
+            dlp: true
+          }
         },
         retention: {
-          retentionPeriod: 2555, // 7 years
+          retentionPeriod: 1095, // 3 years
+          archivePeriod: 730, // 2 years
           destructionRequired: true,
           destructionMethod: 'cryptographic_erasure',
           legalHold: true,
-          exceptions: ['regulatory_requirement']
+          exceptions: ['legal_hold']
         },
         metadata: {
-          createdBy: 'legal@secureflow.com',
-          createdDate: new Date('2025-01-01'),
-          lastModified: new Date('2025-07-01'),
-          version: '1.2'
+          createdBy: 'system',
+          createdDate: new Date('2024-01-01'),
+          lastModified: new Date('2024-01-01'),
+          version: '1.0'
         }
       },
       {
-        id: 'restricted',
-        name: 'Restricted',
+        id: 'class-restricted',
+        name: 'Restricted Information',
         level: 'restricted',
-        category: 'personal',
+        category: 'financial',
         sensitivity: 90,
-        description: 'Highly sensitive personal or regulated data',
+        description: 'Highly sensitive information with strict controls',
         compliance: [
-          { framework: 'gdpr', requirement: 'Personal Data Protection', mandatory: true, controls: ['Art.32'], auditRequired: true },
-          { framework: 'hipaa', requirement: 'PHI Protection', mandatory: true, controls: ['164.312'], auditRequired: true },
-          { framework: 'pci_dss', requirement: 'Cardholder Data Protection', mandatory: true, controls: ['3.4'], auditRequired: true }
+          {
+            framework: 'pci_dss',
+            requirement: 'Requirement 3 - Protect stored cardholder data',
+            mandatory: true,
+            controls: ['encryption', 'key_management', 'access_control'],
+            auditRequired: true
+          },
+          {
+            framework: 'sox',
+            requirement: 'Section 302 - Corporate responsibility',
+            mandatory: true,
+            controls: ['access_control', 'audit_trail', 'segregation'],
+            auditRequired: true
+          }
         ],
         handling: {
-          encryption: { atRest: true, inTransit: true, algorithm: 'AES-256', keyLength: 256 },
-          access: { authentication: 'certificate', authorization: 'abac', minimumClearance: ['restricted'], needToKnow: true },
-          storage: { location: 'restricted', geography: ['us'], backup: true, replication: false },
-          sharing: { internal: false, external: false, anonymization: true, watermarking: true, dlp: true }
+          encryption: {
+            atRest: true,
+            inTransit: true,
+            algorithm: 'AES-256-GCM',
+            keyLength: 256
+          },
+          access: {
+            authentication: 'certificate',
+            authorization: 'mac',
+            minimumClearance: ['director'],
+            needToKnow: true
+          },
+          storage: {
+            location: 'restricted',
+            geography: ['US'],
+            backup: true,
+            replication: false
+          },
+          sharing: {
+            internal: false,
+            external: false,
+            anonymization: true,
+            watermarking: true,
+            dlp: true
+          }
         },
         retention: {
-          retentionPeriod: 2190, // 6 years
+          retentionPeriod: 730, // 2 years
+          archivePeriod: 365, // 1 year
           destructionRequired: true,
           destructionMethod: 'physical_destruction',
           legalHold: true,
-          exceptions: ['consent_withdrawal', 'right_to_be_forgotten']
+          exceptions: ['legal_hold', 'regulatory_requirement']
         },
         metadata: {
-          createdBy: 'privacy.officer@secureflow.com',
-          createdDate: new Date('2025-01-01'),
-          lastModified: new Date('2025-07-15'),
-          version: '1.3'
+          createdBy: 'system',
+          createdDate: new Date('2024-01-01'),
+          lastModified: new Date('2024-01-01'),
+          version: '1.0'
         }
       }
     ];
 
-    standardClassifications.forEach(classification => {
+    classifications.forEach(classification => {
       this.classifications.set(classification.id, classification);
     });
-
-    this.initializeClassificationRules();
-    this.initializeSampleAssets();
   }
 
   /**
@@ -402,124 +533,132 @@ export class DataClassificationService {
   private initializeClassificationRules(): void {
     const rules: ClassificationRule[] = [
       {
-        id: 'ssn-rule',
-        name: 'Social Security Number Detection',
+        id: 'rule-pii-detection',
+        name: 'PII Detection Rule',
+        enabled: true,
+        priority: 100,
+        conditions: [
+          {
+            type: 'content_pattern',
+            field: 'content',
+            operator: 'contains',
+            value: ['ssn', 'social security', 'credit card', 'passport'],
+            weight: 0.8
+          },
+          {
+            type: 'content_pattern',
+            field: 'content',
+            operator: 'contains',
+            value: ['@company.com', '@corp.com'],
+            weight: 0.6
+          }
+        ],
+        actions: [
+          {
+            type: 'classify',
+            parameters: { classificationId: 'class-confidential' },
+            automatic: true
+          },
+          {
+            type: 'notify',
+            parameters: { recipients: ['security@company.com'] },
+            automatic: true
+          }
+        ],
+        target: this.classifications.get('class-confidential')!,
+        confidence: 0.85,
+        performance: {
+          totalExecutions: 1250,
+          correctClassifications: 1187,
+          falsePositives: 45,
+          falseNegatives: 18,
+          accuracy: 0.95
+        }
+      },
+      {
+        id: 'rule-financial-data',
+        name: 'Financial Data Detection',
+        enabled: true,
+        priority: 90,
+        conditions: [
+          {
+            type: 'content_pattern',
+            field: 'content',
+            operator: 'contains',
+            value: ['account number', 'routing number', 'credit card', 'bank account'],
+            weight: 0.9
+          },
+          {
+            type: 'file_name',
+            field: 'name',
+            operator: 'contains',
+            value: ['financial', 'accounting', 'payroll'],
+            weight: 0.7
+          }
+        ],
+        actions: [
+          {
+            type: 'classify',
+            parameters: { classificationId: 'class-restricted' },
+            automatic: true
+          },
+          {
+            type: 'encrypt',
+            parameters: { algorithm: 'AES-256-GCM' },
+            automatic: true
+          }
+        ],
+        target: this.classifications.get('class-restricted')!,
+        confidence: 0.92,
+        performance: {
+          totalExecutions: 890,
+          correctClassifications: 856,
+          falsePositives: 23,
+          falseNegatives: 11,
+          accuracy: 0.97
+        }
+      },
+      {
+        id: 'rule-healthcare-data',
+        name: 'Healthcare Data Detection',
         enabled: true,
         priority: 95,
         conditions: [
           {
             type: 'content_pattern',
             field: 'content',
-            operator: 'matches',
-            value: '\\b\\d{3}-\\d{2}-\\d{4}\\b|\\b\\d{9}\\b',
+            operator: 'contains',
+            value: ['medical record', 'diagnosis', 'treatment', 'patient'],
             weight: 0.9
-          }
-        ],
-        actions: [
-          { type: 'classify', parameters: { classification: 'restricted' }, automatic: true },
-          { type: 'encrypt', parameters: { algorithm: 'AES-256' }, automatic: true },
-          { type: 'audit', parameters: { event: 'ssn_detected' }, automatic: true }
-        ],
-        target: this.classifications.get('restricted')!,
-        confidence: 95,
-        performance: {
-          totalExecutions: 1250,
-          correctClassifications: 1188,
-          falsePositives: 31,
-          falseNegatives: 31,
-          accuracy: 95.04
-        }
-      },
-      {
-        id: 'email-rule',
-        name: 'Email Address Detection',
-        enabled: true,
-        priority: 70,
-        conditions: [
+          },
           {
-            type: 'content_pattern',
-            field: 'content',
-            operator: 'matches',
-            value: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
+            type: 'file_name',
+            field: 'name',
+            operator: 'contains',
+            value: ['medical', 'health', 'patient'],
             weight: 0.8
           }
         ],
         actions: [
-          { type: 'classify', parameters: { classification: 'confidential' }, automatic: true },
-          { type: 'label', parameters: { label: 'personal_data' }, automatic: true }
-        ],
-        target: this.classifications.get('confidential')!,
-        confidence: 85,
-        performance: {
-          totalExecutions: 2340,
-          correctClassifications: 2105,
-          falsePositives: 117,
-          falseNegatives: 118,
-          accuracy: 89.96
-        }
-      },
-      {
-        id: 'credit-card-rule',
-        name: 'Credit Card Number Detection',
-        enabled: true,
-        priority: 98,
-        conditions: [
           {
-            type: 'content_pattern',
-            field: 'content',
-            operator: 'matches',
-            value: '\\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3[0-9]{13})\\b',
-            weight: 0.95
-          }
-        ],
-        actions: [
-          { type: 'classify', parameters: { classification: 'restricted' }, automatic: true },
-          { type: 'encrypt', parameters: { algorithm: 'AES-256' }, automatic: true },
-          { type: 'quarantine', parameters: { reason: 'pci_compliance' }, automatic: true }
-        ],
-        target: this.classifications.get('restricted')!,
-        confidence: 98,
-        performance: {
-          totalExecutions: 890,
-          correctClassifications: 872,
-          falsePositives: 9,
-          falseNegatives: 9,
-          accuracy: 98.00
-        }
-      },
-      {
-        id: 'financial-doc-rule',
-        name: 'Financial Document Classification',
-        enabled: true,
-        priority: 80,
-        conditions: [
-          {
-            type: 'file_name',
-            field: 'filename',
-            operator: 'contains',
-            value: ['financial', 'budget', 'revenue', 'profit', 'loss', 'invoice', 'statement'],
-            weight: 0.7
+            type: 'classify',
+            parameters: { classificationId: 'class-restricted' },
+            automatic: true
           },
           {
-            type: 'file_type',
-            field: 'extension',
-            operator: 'in_list',
-            value: ['.xlsx', '.xls', '.csv', '.pdf'],
-            weight: 0.3
+            type: 'notify',
+            parameters: { recipients: ['compliance@company.com'] },
+            automatic: true
           }
         ],
-        actions: [
-          { type: 'classify', parameters: { classification: 'confidential' }, automatic: true },
-          { type: 'label', parameters: { label: 'financial_data' }, automatic: true }
-        ],
-        target: this.classifications.get('confidential')!,
-        confidence: 78,
+        target: this.classifications.get('class-restricted')!,
+        confidence: 0.88,
         performance: {
-          totalExecutions: 1560,
-          correctClassifications: 1341,
-          falsePositives: 109,
-          falseNegatives: 110,
-          accuracy: 85.96
+          totalExecutions: 456,
+          correctClassifications: 432,
+          falsePositives: 18,
+          falseNegatives: 6,
+          accuracy: 0.96
         }
       }
     ];
@@ -536,193 +675,77 @@ export class DataClassificationService {
     const sampleAssets: DataAsset[] = [
       {
         id: 'asset-001',
-        name: 'customer_database.db',
+        name: 'employee_database.csv',
         type: 'database',
         location: {
-          system: 'production-db-01',
-          path: '/var/lib/mysql/customerdb',
-          database: 'customerdb',
-          table: 'customers'
+          system: 'HR-System',
+          path: '/data/hr/employees',
+          database: 'hr_db',
+          table: 'employees'
         },
-        classification: this.classifications.get('restricted')!,
+        classification: this.classifications.get('class-confidential')!,
         owner: {
-          business: 'sales@secureflow.com',
-          technical: 'dba@secureflow.com',
-          steward: 'data.governance@secureflow.com'
+          business: 'HR Department',
+          technical: 'hr-admin@company.com',
+          steward: 'hr-director@company.com'
         },
         discovery: {
           method: 'automated',
-          discoveredDate: new Date('2025-07-01'),
-          lastScanned: new Date('2025-07-28'),
-          confidence: 95
+          discoveredDate: new Date('2024-01-15'),
+          lastScanned: new Date(),
+          confidence: 0.95
         },
         content: {
-          size: 2048576000, // 2GB
-          format: 'MySQL',
+          size: 2048576, // 2MB
+          format: 'CSV',
           schema: {
             fields: [
-              { name: 'customer_id', type: 'int', nullable: false, classification: 'internal', sensitivity: 20, personalData: false, patterns: [] },
-              { name: 'first_name', type: 'varchar', nullable: false, classification: 'restricted', sensitivity: 80, personalData: true, patterns: ['name'] },
-              { name: 'last_name', type: 'varchar', nullable: false, classification: 'restricted', sensitivity: 80, personalData: true, patterns: ['name'] },
-              { name: 'email', type: 'varchar', nullable: false, classification: 'restricted', sensitivity: 85, personalData: true, patterns: ['email'] },
-              { name: 'ssn', type: 'varchar', nullable: true, classification: 'restricted', sensitivity: 95, personalData: true, patterns: ['ssn'] },
-              { name: 'credit_card', type: 'varchar', nullable: true, classification: 'restricted', sensitivity: 98, personalData: true, patterns: ['credit_card'] }
+              { name: 'employee_id', type: 'string', nullable: false, classification: 'internal', sensitivity: 30, personalData: false, patterns: [] },
+              { name: 'first_name', type: 'string', nullable: false, classification: 'confidential', sensitivity: 70, personalData: true, patterns: ['name'] },
+              { name: 'last_name', type: 'string', nullable: false, classification: 'confidential', sensitivity: 70, personalData: true, patterns: ['name'] },
+              { name: 'email', type: 'string', nullable: false, classification: 'confidential', sensitivity: 70, personalData: true, patterns: ['email'] },
+              { name: 'ssn', type: 'string', nullable: true, classification: 'restricted', sensitivity: 90, personalData: true, patterns: ['ssn'] },
+              { name: 'salary', type: 'number', nullable: true, classification: 'restricted', sensitivity: 90, personalData: true, patterns: [] }
             ],
-            relationships: [
-              { type: 'foreign_key', source: 'customer_id', target: 'orders.customer_id', description: 'Customer orders relationship' }
-            ],
-            constraints: [
-              { type: 'primary_key', field: 'customer_id', rule: 'unique_identifier' },
-              { type: 'not_null', field: 'email', rule: 'required_field' }
-            ]
+            relationships: [],
+            constraints: []
           },
+          sampleData: 'employee_id,first_name,last_name,email,ssn,salary\n001,John,Doe,john.doe@company.com,123-45-6789,75000',
           personalDataElements: [
-            { type: 'name', field: 'first_name, last_name', confidence: 95, masking: 'partial', purpose: ['customer_service'], consent: true, lawfulBasis: 'contract' },
-            { type: 'email', field: 'email', confidence: 98, masking: 'tokenization', purpose: ['marketing', 'customer_service'], consent: true, lawfulBasis: 'consent' },
-            { type: 'ssn', field: 'ssn', confidence: 99, masking: 'full', purpose: ['identity_verification'], consent: true, lawfulBasis: 'legal_obligation' },
-            { type: 'credit_card', field: 'credit_card', confidence: 99, masking: 'tokenization', purpose: ['payment_processing'], consent: true, lawfulBasis: 'contract' }
+            { type: 'name', field: 'first_name', confidence: 0.95, masking: 'partial', purpose: ['hr_management'], consent: true },
+            { type: 'name', field: 'last_name', confidence: 0.95, masking: 'partial', purpose: ['hr_management'], consent: true },
+            { type: 'email', field: 'email', confidence: 0.98, masking: 'none', purpose: ['hr_management'], consent: true },
+            { type: 'ssn', field: 'ssn', confidence: 0.99, masking: 'full', purpose: ['hr_management'], consent: true, lawfulBasis: 'legitimate_interest' }
           ]
         },
         lineage: {
           sources: [
-            { system: 'crm_system', location: '/api/customers', type: 'source', timestamp: new Date('2025-07-01') }
+            { system: 'HR-Application', location: '/api/employees', type: 'source', timestamp: new Date('2024-01-15') }
           ],
           transformations: [
-            { type: 'extract', description: 'Daily customer data sync', tool: 'ETL Pipeline', timestamp: new Date('2025-07-28'), impact: 'low' },
-            { type: 'transform', description: 'Data validation and cleansing', tool: 'Data Quality Engine', timestamp: new Date('2025-07-28'), impact: 'medium' }
+            { type: 'extract', description: 'Export from HR system', tool: 'HR-API', timestamp: new Date('2024-01-15'), impact: 'low' }
           ],
           destinations: [
-            { system: 'analytics_warehouse', location: '/dwh/customers', type: 'destination', timestamp: new Date('2025-07-28') }
+            { system: 'Data-Warehouse', location: '/warehouse/hr/employees', type: 'destination', timestamp: new Date('2024-01-15') }
           ],
-          lastUpdated: new Date('2025-07-28')
+          lastUpdated: new Date('2024-01-15')
         },
         protection: {
           encrypted: true,
           masked: true,
-          tokenized: true,
-          anonymized: false,
-          pseudonymized: true,
-          backupEncrypted: true,
-          dlpEnabled: true,
-          watermarked: false,
-          lastProtectionUpdate: new Date('2025-07-28')
-        },
-        compliance: {
-          gdpr: { compliant: true, issues: [], lastAssessment: new Date('2025-07-15') },
-          hipaa: { compliant: false, issues: ['not_applicable'], lastAssessment: new Date('2025-07-15') },
-          pci: { compliant: true, issues: [], lastAssessment: new Date('2025-07-20') },
-          overall: 'compliant'
-        }
-      },
-      {
-        id: 'asset-002',
-        name: 'financial_reports_2025.xlsx',
-        type: 'file',
-        location: {
-          system: 'file-server-01',
-          path: '/finance/reports/2025/Q2/financial_reports_2025.xlsx'
-        },
-        classification: this.classifications.get('confidential')!,
-        owner: {
-          business: 'cfo@secureflow.com',
-          technical: 'it.admin@secureflow.com',
-          steward: 'finance.manager@secureflow.com'
-        },
-        discovery: {
-          method: 'ml_classification',
-          discoveredDate: new Date('2025-07-25'),
-          lastScanned: new Date('2025-07-28'),
-          confidence: 88
-        },
-        content: {
-          size: 5242880, // 5MB
-          format: 'Excel',
-          personalDataElements: []
-        },
-        lineage: {
-          sources: [
-            { system: 'erp_system', location: '/financial/data', type: 'source', timestamp: new Date('2025-07-25') }
-          ],
-          transformations: [
-            { type: 'aggregate', description: 'Quarterly financial aggregation', tool: 'Excel', timestamp: new Date('2025-07-25'), impact: 'low' }
-          ],
-          destinations: [],
-          lastUpdated: new Date('2025-07-25')
-        },
-        protection: {
-          encrypted: true,
-          masked: false,
           tokenized: false,
           anonymized: false,
-          pseudonymized: false,
+          pseudonymized: true,
           backupEncrypted: true,
           dlpEnabled: true,
           watermarked: true,
-          lastProtectionUpdate: new Date('2025-07-25')
+          lastProtectionUpdate: new Date('2024-01-15')
         },
         compliance: {
-          gdpr: { compliant: true, issues: [], lastAssessment: new Date('2025-07-25') },
-          hipaa: { compliant: false, issues: ['not_applicable'], lastAssessment: new Date('2025-07-25') },
-          pci: { compliant: true, issues: [], lastAssessment: new Date('2025-07-25') },
-          overall: 'compliant'
-        }
-      },
-      {
-        id: 'asset-003',
-        name: 'employee_health_records',
-        type: 'database',
-        location: {
-          system: 'hr-db-01',
-          path: '/var/lib/postgresql/hrdb',
-          database: 'hrdb',
-          table: 'health_records'
-        },
-        classification: this.classifications.get('restricted')!,
-        owner: {
-          business: 'hr@secureflow.com',
-          technical: 'dba@secureflow.com',
-          steward: 'privacy.officer@secureflow.com'
-        },
-        discovery: {
-          method: 'manual',
-          discoveredDate: new Date('2025-07-10'),
-          lastScanned: new Date('2025-07-28'),
-          confidence: 100
-        },
-        content: {
-          size: 512000000, // 512MB
-          format: 'PostgreSQL',
-          personalDataElements: [
-            { type: 'health', field: 'medical_conditions', confidence: 99, masking: 'full', purpose: ['healthcare_admin'], consent: true, lawfulBasis: 'vital_interests' },
-            { type: 'name', field: 'employee_name', confidence: 98, masking: 'partial', purpose: ['hr_admin'], consent: true, lawfulBasis: 'contract' }
-          ]
-        },
-        lineage: {
-          sources: [
-            { system: 'health_provider_api', location: '/api/health', type: 'source', timestamp: new Date('2025-07-10') }
-          ],
-          transformations: [
-            { type: 'anonymize', description: 'Health data anonymization', tool: 'Privacy Engine', timestamp: new Date('2025-07-10'), impact: 'high' }
-          ],
-          destinations: [],
-          lastUpdated: new Date('2025-07-10')
-        },
-        protection: {
-          encrypted: true,
-          masked: true,
-          tokenized: false,
-          anonymized: true,
-          pseudonymized: true,
-          backupEncrypted: true,
-          dlpEnabled: true,
-          watermarked: false,
-          lastProtectionUpdate: new Date('2025-07-10')
-        },
-        compliance: {
-          gdpr: { compliant: true, issues: [], lastAssessment: new Date('2025-07-15') },
-          hipaa: { compliant: true, issues: [], lastAssessment: new Date('2025-07-15') },
-          pci: { compliant: false, issues: ['not_applicable'], lastAssessment: new Date('2025-07-15') },
-          overall: 'compliant'
+          gdpr: { compliant: true, issues: [], lastAssessment: new Date('2024-01-15') },
+          hipaa: { compliant: false, issues: ['Contains SSN without proper safeguards'], lastAssessment: new Date('2024-01-15') },
+          pci: { compliant: true, issues: [], lastAssessment: new Date('2024-01-15') },
+          overall: 'partial'
         }
       }
     ];
@@ -739,137 +762,154 @@ export class DataClassificationService {
     assetData: Partial<DataAsset>,
     autoApply: boolean = false
   ): Promise<{ classification: DataClassification; confidence: number; reasons: string[] }> {
-    const reasons: string[] = [];
-    let bestMatch: DataClassification = this.classifications.get('public')!;
-    let maxConfidence = 0;
-
-    // Apply classification rules
-    for (const rule of this.rules.values()) {
-      if (!rule.enabled) continue;
-
-      let ruleConfidence = 0;
-      let conditionsMet = 0;
-
-      for (const condition of rule.conditions) {
-        if (this.evaluateCondition(condition, assetData)) {
-          conditionsMet++;
-          ruleConfidence += condition.weight;
-          reasons.push(`Matched condition: ${condition.type} ${condition.operator} ${condition.value}`);
-        }
-      }
-
-      // Calculate rule confidence
-      const ruleScore = (conditionsMet / rule.conditions.length) * ruleConfidence * rule.confidence;
+    try {
+      // Use ML classifier for initial assessment
+      const mlResult = await this.mlClassifier.classifyContent(assetData);
       
-      if (ruleScore > maxConfidence) {
-        maxConfidence = ruleScore;
-        bestMatch = rule.target;
-        reasons.unshift(`Applied rule: ${rule.name} (confidence: ${ruleScore.toFixed(2)})`);
-      }
-    }
-
-    // Content-based classification
-    if (assetData.content?.personalDataElements && assetData.content.personalDataElements.length > 0) {
-      const personalDataTypes = assetData.content.personalDataElements.map(pde => pde.type);
+      // Apply classification rules
+      const ruleResults = await this.applyClassificationRules(assetData);
       
-      if (personalDataTypes.includes('ssn') || personalDataTypes.includes('credit_card') || personalDataTypes.includes('health')) {
-        if (maxConfidence < 90) {
-          bestMatch = this.classifications.get('restricted')!;
-          maxConfidence = 90;
-          reasons.unshift('Contains sensitive personal data (SSN/Credit Card/Health)');
-        }
-      } else if (personalDataTypes.length > 0) {
-        if (maxConfidence < 70) {
-          bestMatch = this.classifications.get('confidential')!;
-          maxConfidence = 70;
-          reasons.unshift('Contains personal data elements');
-        }
-      }
-    }
-
-    // File type based classification
-    if (assetData.type && assetData.location?.path) {
-      const filename = assetData.location.path.toLowerCase();
+      // Combine ML and rule-based results
+      const combinedScore = (mlResult.confidence * 0.6) + (ruleResults.confidence * 0.4);
+      const finalClassification = combinedScore > 0.7 ? ruleResults.classification : mlResult.classification;
       
-      if (filename.includes('financial') || filename.includes('revenue') || filename.includes('budget')) {
-        if (maxConfidence < 75) {
-          bestMatch = this.classifications.get('confidential')!;
-          maxConfidence = 75;
-          reasons.unshift('Financial document detected');
+      // Generate reasons for classification
+      const reasons = [
+        `ML confidence: ${(mlResult.confidence * 100).toFixed(1)}%`,
+        `Rule-based confidence: ${(ruleResults.confidence * 100).toFixed(1)}%`,
+        `Combined confidence: ${(combinedScore * 100).toFixed(1)}%`
+      ];
+
+      if (mlResult.reasons.length > 0) {
+        reasons.push(...mlResult.reasons);
+      }
+
+      if (ruleResults.reasons.length > 0) {
+        reasons.push(...ruleResults.reasons);
+      }
+
+      // Auto-apply classification if requested
+      if (autoApply && assetData.id) {
+        const asset = this.assets.get(assetData.id);
+        if (asset) {
+          asset.classification = finalClassification;
+          asset.discovery.lastScanned = new Date();
+          asset.discovery.confidence = combinedScore;
         }
       }
-    }
 
-    // Apply automatic actions if requested
-    if (autoApply) {
-      const applicableRule = Array.from(this.rules.values())
-        .find(rule => rule.target.id === bestMatch.id);
+      return {
+        classification: finalClassification,
+        confidence: combinedScore,
+        reasons
+      };
+
+    } catch (error) {
+      console.error('Asset classification failed:', error);
       
-      if (applicableRule) {
-        for (const action of applicableRule.actions.filter(a => a.automatic)) {
-          reasons.push(`Auto-applied action: ${action.type}`);
-        }
-      }
+      // Fallback to default classification
+      return {
+        classification: this.classifications.get('class-internal')!,
+        confidence: 0.5,
+        reasons: ['Classification failed, using default internal classification']
+      };
     }
-
-    return {
-      classification: bestMatch,
-      confidence: Math.round(maxConfidence),
-      reasons
-    };
   }
 
   /**
    * Evaluate classification condition
    */
-  private evaluateCondition(condition: ClassificationCondition, assetData: Partial<DataAsset>): boolean {
+  private async applyClassificationRules(assetData: Partial<DataAsset>): Promise<{
+    classification: DataClassification;
+    confidence: number;
+    reasons: string[];
+  }> {
+    let bestMatch = {
+      classification: this.classifications.get('class-internal')!,
+      confidence: 0,
+      reasons: [] as string[]
+    };
+
+    for (const rule of this.rules.values()) {
+      if (!rule.enabled) continue;
+
+      const matchScore = this.evaluateRule(rule, assetData);
+      
+      if (matchScore > bestMatch.confidence) {
+        bestMatch = {
+          classification: rule.target,
+          confidence: matchScore,
+          reasons: [`Matched rule: ${rule.name}`]
+        };
+      }
+    }
+
+    return bestMatch;
+  }
+
+  private evaluateRule(rule: ClassificationRule, assetData: Partial<DataAsset>): number {
+    let totalScore = 0;
+    let totalWeight = 0;
+
+    for (const condition of rule.conditions) {
+      const matches = this.evaluateCondition(condition, assetData);
+      totalScore += matches * condition.weight;
+      totalWeight += condition.weight;
+    }
+
+    return totalWeight > 0 ? totalScore / totalWeight : 0;
+  }
+
+  private evaluateCondition(condition: ClassificationCondition, assetData: Partial<DataAsset>): number {
     const getValue = (field: string): any => {
       switch (field) {
-        case 'content': return assetData.content?.sampleData || '';
-        case 'filename': return assetData.location?.path?.split('/').pop() || '';
-        case 'filepath': return assetData.location?.path || '';
-        case 'extension': return assetData.location?.path?.split('.').pop() || '';
-        case 'size': return assetData.content?.size || 0;
-        case 'type': return assetData.type || '';
-        default: return '';
+        case 'content':
+          return assetData.content?.sampleData || '';
+        case 'name':
+          return assetData.name || '';
+        case 'path':
+          return assetData.location?.path || '';
+        case 'size':
+          return assetData.content?.size || 0;
+        case 'type':
+          return assetData.type || '';
+        default:
+          return '';
       }
     };
 
     const value = getValue(condition.field);
-    const conditionValue = condition.value;
-
+    
     switch (condition.operator) {
       case 'contains':
-        if (Array.isArray(conditionValue)) {
-          return conditionValue.some(v => String(value).toLowerCase().includes(String(v).toLowerCase()));
+        if (Array.isArray(condition.value)) {
+          return condition.value.some(v => value.toLowerCase().includes(v.toLowerCase())) ? 1 : 0;
         }
-        return String(value).toLowerCase().includes(String(conditionValue).toLowerCase());
+        return value.toLowerCase().includes(condition.value.toLowerCase()) ? 1 : 0;
       
       case 'matches':
-        try {
-          const regex = new RegExp(String(conditionValue), 'i');
-          return regex.test(String(value));
-        } catch {
-          return false;
+        if (Array.isArray(condition.value)) {
+          return condition.value.some(v => value.toLowerCase() === v.toLowerCase()) ? 1 : 0;
         }
+        return value.toLowerCase() === condition.value.toLowerCase() ? 1 : 0;
       
       case 'equals':
-        return String(value).toLowerCase() === String(conditionValue).toLowerCase();
+        return value === condition.value ? 1 : 0;
       
       case 'greater_than':
-        return Number(value) > Number(conditionValue);
+        return value > condition.value ? 1 : 0;
       
       case 'less_than':
-        return Number(value) < Number(conditionValue);
+        return value < condition.value ? 1 : 0;
       
       case 'in_list':
-        if (Array.isArray(conditionValue)) {
-          return conditionValue.includes(value);
+        if (Array.isArray(condition.value)) {
+          return condition.value.includes(value) ? 1 : 0;
         }
-        return false;
+        return 0;
       
       default:
-        return false;
+        return 0;
     }
   }
 
@@ -881,64 +921,164 @@ export class DataClassificationService {
     locations: string[],
     fileTypes: string[] = []
   ): Promise<DataDiscoveryResult> {
-    const scanId = `discovery-${Date.now()}`;
-    const timestamp = new Date();
+    try {
+      const scanId = `scan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const startTime = Date.now();
 
-    // Simulate discovery process
-    const simulatedFindings: DataAsset[] = [];
-    let totalItems = 0;
-    let classified = 0;
-    let personalData = 0;
-    let sensitiveData = 0;
+      // Simulate discovery process
+      const discoveredAssets: DataAsset[] = [];
+      let totalItems = 0;
+      let classified = 0;
+      let personalData = 0;
+      let sensitiveData = 0;
+      let unclassified = 0;
+      let errors = 0;
 
-    // Add existing assets that match the scan scope
-    for (const asset of this.assets.values()) {
-      if (systems.includes(asset.location.system)) {
-        simulatedFindings.push(asset);
-        totalItems++;
-        classified++;
+      // Simulate scanning different systems
+      for (const system of systems) {
+        const systemAssets = await this.scanSystem(system, locations, fileTypes);
+        discoveredAssets.push(...systemAssets);
         
-        if (asset.content.personalDataElements.length > 0) {
-          personalData++;
-        }
-        
-        if (asset.classification.sensitivity >= 70) {
-          sensitiveData++;
+        for (const asset of systemAssets) {
+          totalItems++;
+          
+          try {
+            const classification = await this.classifyAsset(asset, true);
+            classified++;
+            
+            if (classification.classification.level === 'confidential' || classification.classification.level === 'restricted') {
+              sensitiveData++;
+            }
+            
+            if (asset.content?.personalDataElements && asset.content.personalDataElements.length > 0) {
+              personalData++;
+            }
+          } catch (error) {
+            errors++;
+            console.error(`Classification failed for asset ${asset.id}:`, error);
+          }
         }
       }
+
+      unclassified = totalItems - classified;
+
+      const scanTime = Date.now() - startTime;
+      const nextScanDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week
+
+      const result: DataDiscoveryResult = {
+        scanId,
+        timestamp: new Date(),
+        scope: {
+          systems,
+          locations,
+          fileTypes
+        },
+        statistics: {
+          totalItems,
+          classified,
+          personalData,
+          sensitiveData,
+          unclassified,
+          errors
+        },
+        findings: discoveredAssets,
+        recommendations: this.generateRecommendations(discoveredAssets),
+        nextScanDate
+      };
+
+      this.discoveryResults.set(scanId, result);
+      return result;
+
+    } catch (error) {
+      console.error('Data discovery failed:', error);
+      throw error;
     }
+  }
 
-    // Simulate additional discoveries
-    const additionalItems = Math.floor(Math.random() * 20) + 5;
-    totalItems += additionalItems;
-    classified += Math.floor(additionalItems * 0.8);
-    personalData += Math.floor(additionalItems * 0.3);
-    sensitiveData += Math.floor(additionalItems * 0.2);
+  private async scanSystem(system: string, locations: string[], fileTypes: string[]): Promise<DataAsset[]> {
+    // Simulate system scanning
+    const assets: DataAsset[] = [];
+    
+    // Generate mock assets based on system type
+    const systemAssetCount = Math.floor(Math.random() * 50) + 10;
+    
+    for (let i = 0; i < systemAssetCount; i++) {
+      const asset: DataAsset = {
+        id: `asset-${system}-${Date.now()}-${i}`,
+        name: `${system}_data_${i}.${fileTypes[Math.floor(Math.random() * fileTypes.length)] || 'csv'}`,
+        type: 'file',
+        location: {
+          system,
+          path: `/data/${system}/files`,
+          container: system
+        },
+        classification: this.classifications.get('class-internal')!,
+        owner: {
+          business: `${system} Department`,
+          technical: `${system}-admin@company.com`,
+          steward: `${system}-director@company.com`
+        },
+        discovery: {
+          method: 'automated',
+          discoveredDate: new Date(),
+          lastScanned: new Date(),
+          confidence: 0.8
+        },
+        content: {
+          size: Math.floor(Math.random() * 10000000) + 1000,
+          format: fileTypes[Math.floor(Math.random() * fileTypes.length)] || 'csv',
+          personalDataElements: []
+        },
+        lineage: {
+          sources: [],
+          transformations: [],
+          destinations: [],
+          lastUpdated: new Date()
+        },
+        protection: {
+          encrypted: false,
+          masked: false,
+          tokenized: false,
+          anonymized: false,
+          pseudonymized: false,
+          backupEncrypted: false,
+          dlpEnabled: false,
+          watermarked: false,
+          lastProtectionUpdate: new Date()
+        },
+        compliance: {
+          gdpr: { compliant: true, issues: [], lastAssessment: new Date() },
+          hipaa: { compliant: true, issues: [], lastAssessment: new Date() },
+          pci: { compliant: true, issues: [], lastAssessment: new Date() },
+          overall: 'compliant'
+        }
+      };
+      
+      assets.push(asset);
+    }
+    
+    return assets;
+  }
 
-    const result: DataDiscoveryResult = {
-      scanId,
-      timestamp,
-      scope: { systems, locations, fileTypes },
-      statistics: {
-        totalItems,
-        classified,
-        personalData,
-        sensitiveData,
-        unclassified: totalItems - classified,
-        errors: Math.floor(Math.random() * 3)
-      },
-      findings: simulatedFindings,
-      recommendations: [
-        'Review unclassified items for proper data handling',
-        'Implement encryption for sensitive data assets',
-        'Update data retention policies for personal data',
-        'Ensure GDPR compliance for EU personal data'
-      ],
-      nextScanDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Next week
-    };
-
-    this.discoveryResults.set(scanId, result);
-    return result;
+  private generateRecommendations(assets: DataAsset[]): string[] {
+    const recommendations: string[] = [];
+    
+    const unencryptedAssets = assets.filter(asset => !asset.protection.encrypted);
+    if (unencryptedAssets.length > 0) {
+      recommendations.push(`Encrypt ${unencryptedAssets.length} unencrypted assets`);
+    }
+    
+    const nonCompliantAssets = assets.filter(asset => asset.compliance.overall !== 'compliant');
+    if (nonCompliantAssets.length > 0) {
+      recommendations.push(`Review compliance for ${nonCompliantAssets.length} non-compliant assets`);
+    }
+    
+    const assetsWithoutDLP = assets.filter(asset => !asset.protection.dlpEnabled);
+    if (assetsWithoutDLP.length > 0) {
+      recommendations.push(`Enable DLP for ${assetsWithoutDLP.length} assets`);
+    }
+    
+    return recommendations;
   }
 
   /**
@@ -969,73 +1109,44 @@ export class DataClassificationService {
       partialCompliantAssets: assets.filter(a => a.compliance.overall === 'partial').length,
       complianceScore: 0
     };
-
-    summary.complianceScore = Math.round((summary.compliantAssets / summary.totalAssets) * 100);
-
+    
+    summary.complianceScore = summary.totalAssets > 0 ? 
+      (summary.compliantAssets / summary.totalAssets) * 100 : 0;
+    
     const byFramework = {
-      gdpr: { compliant: 0, nonCompliant: 0, issues: [] as string[] },
-      hipaa: { compliant: 0, nonCompliant: 0, issues: [] as string[] },
-      pci: { compliant: 0, nonCompliant: 0, issues: [] as string[] }
+      gdpr: {
+        compliant: assets.filter(a => a.compliance.gdpr.compliant).length,
+        nonCompliant: assets.filter(a => !a.compliance.gdpr.compliant).length,
+        issues: assets.flatMap(a => a.compliance.gdpr.issues)
+      },
+      hipaa: {
+        compliant: assets.filter(a => a.compliance.hipaa.compliant).length,
+        nonCompliant: assets.filter(a => !a.compliance.hipaa.compliant).length,
+        issues: assets.flatMap(a => a.compliance.hipaa.issues)
+      },
+      pci: {
+        compliant: assets.filter(a => a.compliance.pci.compliant).length,
+        nonCompliant: assets.filter(a => !a.compliance.pci.compliant).length,
+        issues: assets.flatMap(a => a.compliance.pci.issues)
+      }
     };
-
-    assets.forEach(asset => {
-      // GDPR
-      if (asset.compliance.gdpr.compliant) {
-        byFramework.gdpr.compliant++;
-      } else {
-        byFramework.gdpr.nonCompliant++;
-        byFramework.gdpr.issues.push(...asset.compliance.gdpr.issues);
-      }
-
-      // HIPAA
-      if (asset.compliance.hipaa.compliant) {
-        byFramework.hipaa.compliant++;
-      } else {
-        byFramework.hipaa.nonCompliant++;
-        byFramework.hipaa.issues.push(...asset.compliance.hipaa.issues);
-      }
-
-      // PCI
-      if (asset.compliance.pci.compliant) {
-        byFramework.pci.compliant++;
-      } else {
-        byFramework.pci.nonCompliant++;
-        byFramework.pci.issues.push(...asset.compliance.pci.issues);
-      }
-    });
-
-    // Remove duplicates and filter out 'not_applicable'
-    Object.values(byFramework).forEach(framework => {
-      framework.issues = [...new Set(framework.issues)].filter(issue => issue !== 'not_applicable');
-    });
-
+    
     const riskAreas: string[] = [];
+    if (byFramework.gdpr.nonCompliant > 0) riskAreas.push('GDPR Compliance');
+    if (byFramework.hipaa.nonCompliant > 0) riskAreas.push('HIPAA Compliance');
+    if (byFramework.pci.nonCompliant > 0) riskAreas.push('PCI DSS Compliance');
+    
     const recommendations: string[] = [];
-
-    if (summary.complianceScore < 80) {
-      riskAreas.push('Overall compliance below acceptable threshold');
-      recommendations.push('Prioritize compliance remediation activities');
+    if (summary.complianceScore < 90) {
+      recommendations.push('Implement automated compliance monitoring');
     }
-
     if (byFramework.gdpr.nonCompliant > 0) {
-      riskAreas.push('GDPR non-compliance detected');
-      recommendations.push('Review GDPR requirements for personal data handling');
+      recommendations.push('Review and update GDPR compliance controls');
     }
-
-    if (byFramework.pci.nonCompliant > 0) {
-      riskAreas.push('PCI DSS non-compliance for payment data');
-      recommendations.push('Implement PCI DSS controls for payment card data');
+    if (byFramework.hipaa.nonCompliant > 0) {
+      recommendations.push('Implement HIPAA-compliant data handling');
     }
-
-    const unprotectedSensitive = assets.filter(a => 
-      a.classification.sensitivity >= 70 && !a.protection.encrypted
-    ).length;
-
-    if (unprotectedSensitive > 0) {
-      riskAreas.push(`${unprotectedSensitive} sensitive assets without encryption`);
-      recommendations.push('Encrypt all sensitive data assets');
-    }
-
+    
     return {
       summary,
       byFramework,
@@ -1079,6 +1190,156 @@ export class DataClassificationService {
 
   getDiscoveryResult(scanId: string): DataDiscoveryResult | undefined {
     return this.discoveryResults.get(scanId);
+  }
+}
+
+// ML Data Classifier Service
+class MLDataClassifier {
+  async classifyContent(assetData: Partial<DataAsset>): Promise<{
+    classification: DataClassification;
+    confidence: number;
+    reasons: string[];
+  }> {
+    // Simulate ML-based classification
+    const content = assetData.content?.sampleData || '';
+    const fileName = assetData.name || '';
+    
+    let classification: DataClassification;
+    let confidence = 0.5;
+    const reasons: string[] = [];
+    
+    // Simple pattern-based classification (in real implementation, this would use ML models)
+    if (content.includes('ssn') || content.includes('credit card') || content.includes('passport')) {
+      classification = this.getClassificationByLevel('restricted');
+      confidence = 0.9;
+      reasons.push('Contains sensitive personal information');
+    } else if (content.includes('@company.com') || fileName.includes('employee') || fileName.includes('customer')) {
+      classification = this.getClassificationByLevel('confidential');
+      confidence = 0.8;
+      reasons.push('Contains business contact information');
+    } else if (fileName.includes('public') || fileName.includes('marketing')) {
+      classification = this.getClassificationByLevel('public');
+      confidence = 0.7;
+      reasons.push('Appears to be public information');
+    } else {
+      classification = this.getClassificationByLevel('internal');
+      confidence = 0.6;
+      reasons.push('Default internal classification');
+    }
+    
+    return { classification, confidence, reasons };
+  }
+  
+  private getClassificationByLevel(level: string): DataClassification {
+    const classifications = [
+      { level: 'public', id: 'class-public' },
+      { level: 'internal', id: 'class-internal' },
+      { level: 'confidential', id: 'class-confidential' },
+      { level: 'restricted', id: 'class-restricted' }
+    ];
+    
+    const match = classifications.find(c => c.level === level);
+    return this.getClassificationById(match?.id || 'class-internal');
+  }
+  
+  private getClassificationById(id: string): DataClassification {
+    // This would be replaced with actual classification lookup
+    return {
+      id: 'class-internal',
+      name: 'Internal Use Only',
+      level: 'internal',
+      category: 'operational',
+      sensitivity: 30,
+      description: 'Information for internal company use only',
+      compliance: [],
+      handling: {
+        encryption: { atRest: true, inTransit: true, algorithm: 'AES-256', keyLength: 256 },
+        access: { authentication: 'basic', authorization: 'rbac', minimumClearance: ['employee'], needToKnow: true },
+        storage: { location: 'onpremise', geography: ['US', 'EU'], backup: true, replication: true },
+        sharing: { internal: true, external: false, anonymization: false, watermarking: true, dlp: true }
+      },
+      retention: {
+        retentionPeriod: 1825,
+        archivePeriod: 1095,
+        destructionRequired: true,
+        destructionMethod: 'secure_delete',
+        legalHold: false,
+        exceptions: []
+      },
+      metadata: {
+        createdBy: 'system',
+        createdDate: new Date(),
+        lastModified: new Date(),
+        version: '1.0'
+      }
+    };
+  }
+}
+
+// Data Compliance Engine Service
+class DataComplianceEngine {
+  async checkCompliance(asset: DataAsset): Promise<{
+    gdpr: { compliant: boolean; issues: string[] };
+    hipaa: { compliant: boolean; issues: string[] };
+    pci: { compliant: boolean; issues: string[] };
+    overall: 'compliant' | 'non_compliant' | 'partial' | 'unknown';
+  }> {
+    const gdprIssues: string[] = [];
+    const hipaaIssues: string[] = [];
+    const pciIssues: string[] = [];
+    
+    // Check GDPR compliance
+    if (asset.content?.personalDataElements && asset.content.personalDataElements.length > 0) {
+      const hasConsent = asset.content.personalDataElements.every(element => element.consent);
+      if (!hasConsent) {
+        gdprIssues.push('Personal data processing without proper consent');
+      }
+      
+      const hasLawfulBasis = asset.content.personalDataElements.every(element => element.lawfulBasis);
+      if (!hasLawfulBasis) {
+        gdprIssues.push('Missing lawful basis for data processing');
+      }
+    }
+    
+    // Check HIPAA compliance
+    if (asset.content?.personalDataElements) {
+      const hasHealthData = asset.content.personalDataElements.some(element => 
+        element.type === 'health' || element.type === 'biometric'
+      );
+      if (hasHealthData && !asset.protection.encrypted) {
+        hipaaIssues.push('Health data not encrypted');
+      }
+    }
+    
+    // Check PCI compliance
+    if (asset.content?.personalDataElements) {
+      const hasPaymentData = asset.content.personalDataElements.some(element => 
+        element.type === 'credit_card'
+      );
+      if (hasPaymentData && !asset.protection.encrypted) {
+        pciIssues.push('Payment data not encrypted');
+      }
+    }
+    
+    const gdprCompliant = gdprIssues.length === 0;
+    const hipaaCompliant = hipaaIssues.length === 0;
+    const pciCompliant = pciIssues.length === 0;
+    
+    let overall: 'compliant' | 'non_compliant' | 'partial' | 'unknown' = 'unknown';
+    if (gdprCompliant && hipaaCompliant && pciCompliant) {
+      overall = 'compliant';
+    } else if (!gdprCompliant && !hipaaCompliant && !pciCompliant) {
+      overall = 'non_compliant';
+    } else {
+      overall = 'partial';
+    }
+    
+    return {
+      gdpr: { compliant: gdprCompliant, issues: gdprIssues },
+      hipaa: { compliant: hipaaCompliant, issues: hipaaIssues },
+      pci: { compliant: pciCompliant, issues: pciIssues },
+      overall
+    };
   }
 }
 

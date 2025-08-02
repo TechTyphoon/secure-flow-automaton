@@ -353,6 +353,25 @@ function isValidUrl(string: string): boolean {
  * Security event logger
  */
 export class SecurityLogger {
+  private static monitoringConfig = {
+    datadog: {
+      apiKey: import.meta.env.VITE_DATADOG_API_KEY,
+      appKey: import.meta.env.VITE_DATADOG_APP_KEY,
+      endpoint: 'https://api.datadoghq.com/api/v1/events'
+    },
+    newrelic: {
+      licenseKey: import.meta.env.VITE_NEWRELIC_LICENSE_KEY,
+      accountId: import.meta.env.VITE_NEWRELIC_ACCOUNT_ID,
+      endpoint: 'https://insights-collector.newrelic.com/v1/accounts'
+    },
+    sentry: {
+      dsn: import.meta.env.VITE_SENTRY_DSN
+    },
+    logrocket: {
+      publicKey: import.meta.env.VITE_LOGROCKET_PUBLIC_KEY
+    }
+  };
+
   public static logEvent(event: string, details: Record<string, unknown> = {}): void {
     const logEntry = {
       timestamp: new Date().toISOString(),
@@ -370,12 +389,93 @@ export class SecurityLogger {
 
     // In production, send to monitoring service
     if (import.meta.env.PROD) {
-      // TODO: Integrate with your monitoring service
-      fetch('/api/security-events', {
+      this.sendToMonitoringService(logEntry);
+    }
+  }
+
+  private static async sendToMonitoringService(logEntry: any): Promise<void> {
+    try {
+      // Try Datadog first
+      if (this.monitoringConfig.datadog.apiKey) {
+        await this.sendToDatadog(logEntry);
+        return;
+      }
+
+      // Try New Relic
+      if (this.monitoringConfig.newrelic.licenseKey) {
+        await this.sendToNewRelic(logEntry);
+        return;
+      }
+
+      // Try Sentry
+      if (this.monitoringConfig.sentry.dsn) {
+        await this.sendToSentry(logEntry);
+        return;
+      }
+
+      // Fallback to internal API
+      await fetch('/api/security-events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(logEntry),
       }).catch(console.error);
+
+    } catch (error) {
+      console.error('Failed to send security event to monitoring service:', error);
+    }
+  }
+
+  private static async sendToDatadog(logEntry: any): Promise<void> {
+    const response = await fetch(this.monitoringConfig.datadog.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'DD-API-KEY': this.monitoringConfig.datadog.apiKey!,
+        'DD-APPLICATION-KEY': this.monitoringConfig.datadog.appKey!
+      },
+      body: JSON.stringify({
+        title: `Security Event: ${logEntry.event}`,
+        text: JSON.stringify(logEntry.details),
+        tags: ['security', 'automaton', logEntry.event],
+        alert_type: 'info',
+        source_type_name: 'secure-flow-automaton'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Datadog API error: ${response.status}`);
+    }
+  }
+
+  private static async sendToNewRelic(logEntry: any): Promise<void> {
+    const response = await fetch(`${this.monitoringConfig.newrelic.endpoint}/${this.monitoringConfig.newrelic.accountId}/events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Insert-Key': this.monitoringConfig.newrelic.licenseKey!
+      },
+      body: JSON.stringify([{
+        eventType: 'SecurityEvent',
+        timestamp: Date.now(),
+        event: logEntry.event,
+        details: logEntry.details,
+        sessionId: logEntry.sessionId,
+        url: logEntry.url
+      }])
+    });
+
+    if (!response.ok) {
+      throw new Error(`New Relic API error: ${response.status}`);
+    }
+  }
+
+  private static async sendToSentry(logEntry: any): Promise<void> {
+    // Sentry is typically initialized globally, so we just capture the message
+    if (window.Sentry) {
+      window.Sentry.captureMessage(`Security Event: ${logEntry.event}`, {
+        level: 'info',
+        extra: logEntry.details
+      });
     }
   }
 }

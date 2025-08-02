@@ -416,24 +416,119 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
 
     private async getPolicyOptimizationActions(): Promise<AutomationAction[]> {
         // Get active policy optimization actions
-        return []; // Placeholder
+        const actions: AutomationAction[] = [];
+        
+        // Check for policy conflicts
+        const conflicts = await this.policyOptimizer.detectPolicyConflicts();
+        if (conflicts.length > 0) {
+            actions.push({
+                id: `policy-conflict-${Date.now()}`,
+                type: 'policy_optimization',
+                priority: 'high',
+                description: `Resolve ${conflicts.length} policy conflicts`,
+                status: 'pending',
+                createdAt: new Date(),
+                parameters: { conflicts },
+                estimatedDuration: 300, // 5 minutes
+                dependencies: []
+            });
+        }
+        
+        // Check for performance improvements
+        const improvements = await this.policyOptimizer.identifyPerformanceImprovements();
+        if (improvements.length > 0) {
+            actions.push({
+                id: `performance-improvement-${Date.now()}`,
+                type: 'policy_optimization',
+                priority: 'medium',
+                description: `Apply ${improvements.length} performance improvements`,
+                status: 'pending',
+                createdAt: new Date(),
+                parameters: { improvements },
+                estimatedDuration: 600, // 10 minutes
+                dependencies: []
+            });
+        }
+        
+        return actions;
     }
 
     private async getIncidentResponseActions(): Promise<AutomationAction[]> {
         // Get active incident response actions
-        return []; // Placeholder
+        const actions: AutomationAction[] = [];
+        
+        // Check for active security incidents
+        const activeIncidents = await this.incidentResponse.getActiveIncidents();
+        for (const incident of activeIncidents) {
+            actions.push({
+                id: `incident-response-${incident.id}`,
+                type: 'incident_response',
+                priority: incident.severity === 'critical' ? 'critical' : 'high',
+                description: `Respond to ${incident.type} incident`,
+                status: 'in_progress',
+                createdAt: new Date(),
+                parameters: { incident },
+                estimatedDuration: incident.estimatedResolutionTime || 1800, // 30 minutes default
+                dependencies: []
+            });
+        }
+        
+        // Check for automated remediation opportunities
+        const remediationTasks = await this.incidentResponse.getRemediationTasks();
+        for (const task of remediationTasks) {
+            actions.push({
+                id: `remediation-${task.id}`,
+                type: 'automated_remediation',
+                priority: 'medium',
+                description: `Execute remediation: ${task.description}`,
+                status: 'pending',
+                createdAt: new Date(),
+                parameters: { task },
+                estimatedDuration: task.estimatedDuration || 900, // 15 minutes default
+                dependencies: []
+            });
+        }
+        
+        return actions;
     }
 
     private async getSelfHealingActions(): Promise<AutomationAction[]> {
         // Get active self-healing actions
-        const healingQueue = this.selfHealing.getHealingQueue();
-        return healingQueue.map(job => ({
-            id: job.id,
-            type: 'self_healing',
-            priority: job.priority,
-            resource: job.configId,
-            estimatedDuration: job.estimatedDuration
-        }));
+        const actions: AutomationAction[] = [];
+        
+        // Check for system health issues
+        const healthIssues = await this.selfHealing.getHealthIssues();
+        for (const issue of healthIssues) {
+            actions.push({
+                id: `self-healing-${issue.id}`,
+                type: 'self_healing',
+                priority: issue.critical ? 'high' : 'medium',
+                description: `Self-heal: ${issue.description}`,
+                status: 'pending',
+                createdAt: new Date(),
+                parameters: { issue },
+                estimatedDuration: issue.estimatedResolutionTime || 600, // 10 minutes default
+                dependencies: []
+            });
+        }
+        
+        // Check for performance optimizations
+        const optimizations = await this.selfHealing.getPerformanceOptimizations();
+        for (const optimization of optimizations) {
+            actions.push({
+                id: `optimization-${optimization.id}`,
+                type: 'performance_optimization',
+                priority: 'low',
+                description: `Optimize: ${optimization.description}`,
+                status: 'pending',
+                createdAt: new Date(),
+                parameters: { optimization },
+                estimatedDuration: optimization.estimatedDuration || 300, // 5 minutes default
+                dependencies: []
+            });
+        }
+        
+        return actions;
     }
 
     private detectActionConflicts(actions: AutomationAction[]): ActionConflict[] {

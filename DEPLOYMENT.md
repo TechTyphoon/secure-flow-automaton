@@ -1,12 +1,36 @@
-# 🚀 SecureFlow Automaton - Production Deployment Guide
+# 🚀 SecureFlow Automaton - Portfolio Deployment Guide
 
-## 🎯 **INSTANT DEPLOYMENT OPTIONS**
+## 🎯 **ZERO-COST DEPLOYMENT OPTIONS**
 
-Your project is now configured for **5 different deployment methods**. Choose the best option for your needs:
+Your project is now configured for **5 different deployment methods** - all free using GitHub Student Pack resources. Choose the best option for your portfolio:
 
 ---
 
-## **Option 1: Vercel (Recommended - Fastest)**
+## **Option 1: GitHub Pages (Recommended - Free with Student Pack)**
+
+### ✨ **One-Click Deploy:**
+1. Go to your GitHub repository settings
+2. Scroll to "Pages" section
+3. Select "Deploy from a branch"
+4. Choose `main` branch and `/docs` or `/dist` folder
+5. ✅ **Your portfolio is live!**
+
+### 🔧 **Manual Deploy:**
+```bash
+# Add to package.json scripts:
+"deploy": "npm run build && gh-pages -d dist"
+
+# Deploy to GitHub Pages
+npm run deploy
+
+# Your portfolio will be live at: https://your-username.github.io/secure-flow-automaton
+```
+
+**✅ Perfect for:** Portfolio showcase, free hosting, easy sharing with recruiters
+
+---
+
+## **Option 2: Vercel (Free Tier - Great for Portfolios)**
 
 ### ✨ **One-Click Deploy:**
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/TechTyphoon/secure-flow-automaton)
@@ -19,14 +43,14 @@ npm install -g vercel
 # Deploy to production
 vercel --prod
 
-# Your app will be live at: https://your-project.vercel.app
+# Your portfolio will be live at: https://your-project.vercel.app
 ```
 
-**✅ Perfect for:** Static React apps, automatic HTTPS, global CDN
+**✅ Perfect for:** Portfolio showcase, automatic HTTPS, global CDN, custom domains
 
 ---
 
-## **Option 2: Netlify (Alternative Static)**
+## **Option 3: Netlify (Free Tier - Alternative)**
 
 ### ✨ **One-Click Deploy:**
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/TechTyphoon/secure-flow-automaton)
@@ -40,36 +64,36 @@ npm install -g netlify-cli
 npm run build
 netlify deploy --prod --dir=dist
 
-# Your app will be live at: https://your-app.netlify.app
+# Your portfolio will be live at: https://your-app.netlify.app
 ```
 
-**✅ Perfect for:** Static sites with forms, split testing, edge functions
+**✅ Perfect for:** Portfolio showcase, free hosting, easy sharing
 
 ---
 
-## **Option 3: Railway (Full-Stack)**
+## **Option 4: Railway (Free with Student Pack)**
 
 ### ✨ **One-Click Deploy:**
 1. Go to [Railway.app](https://railway.app)
-2. Connect your GitHub account
+2. Connect your GitHub account (Student Pack gives you free credits)
 3. Select "Deploy from GitHub repo"
 4. Choose `TechTyphoon/secure-flow-automaton`
 5. ✅ **Automatic deployment!**
 
-**✅ Perfect for:** Full-stack apps, databases, background jobs
+**✅ Perfect for:** Full-stack portfolio showcase, databases, background jobs
 
 ---
 
-## **Option 4: Docker (Any Cloud/VPS)**
+## **Option 5: Docker (Local Development)**
 
-### 🐳 **Local/VPS Deploy:**
+### 🐳 **Local Deploy (Free):**
 ```bash
 # 1. Clone and setup
 git clone https://github.com/TechTyphoon/secure-flow-automaton.git
 cd secure-flow-automaton
 
 # 2. Configure environment
-cp .env.production .env
+cp .env.example .env
 # Edit .env with your values
 
 # 3. Deploy with Docker
@@ -78,37 +102,7 @@ docker-compose -f docker-compose.prod.yml up -d
 # 4. Access at http://localhost:8080
 ```
 
-### ☁️ **Cloud Deploy (AWS/GCP/Azure):**
-```bash
-# Build and push to registry
-docker build -t secureflow-automaton .
-docker tag secureflow-automaton your-registry/secureflow-automaton
-docker push your-registry/secureflow-automaton
-
-# Deploy to your cloud platform
-```
-
-**✅ Perfect for:** Enterprise, custom infrastructure, microservices
-
----
-
-## **Option 5: GitHub Pages (Free Static)**
-
-### 🔧 **Setup GitHub Pages:**
-```bash
-# Add to package.json scripts:
-"deploy": "npm run build && gh-pages -d dist"
-
-# Install gh-pages
-npm install --save-dev gh-pages
-
-# Deploy
-npm run deploy
-
-# Access at: https://techtyphoon.github.io/secure-flow-automaton
-```
-
-**✅ Perfect for:** Free hosting, documentation, demos
+**✅ Perfect for:** Local development, demonstrating Docker skills to recruiters
 
 ---
 

@@ -401,13 +401,69 @@ export const useVulnerabilitiesDemo = () => {
   });
 };
 
-export const useSecurityScansDemo = () => {
+export const useSecurityScansReal = () => {
   return useQuery({
-    queryKey: ['security-scans-demo'],
+    queryKey: ['security-scans-real'],
     queryFn: async () => {
-      console.log('Fetching security scans in demo mode (no user filter)');
-      // Return empty array since security_scans table doesn't exist
-      return [];
+      console.log('🔍 Fetching real security scans...');
+      
+      try {
+        // Import the real security service
+        const { RealSecurityService } = await import('../services/security/realSecurityService');
+        const securityService = new RealSecurityService();
+        
+        const report = await securityService.getComprehensiveSecurityReport();
+        
+        return {
+          sonarQube: report.sonarQube || {
+            totalIssues: 0,
+            criticalIssues: [],
+            highIssues: [],
+            mediumIssues: [],
+            securityHotspots: [],
+            codeSmells: 0,
+            bugs: 0,
+            vulnerabilities: 0,
+            coverage: 0,
+            duplications: 0
+          },
+          snyk: report.snyk || {
+            totalVulnerabilities: 0,
+            criticalVulnerabilities: [],
+            highVulnerabilities: [],
+            mediumVulnerabilities: [],
+            lowVulnerabilities: [],
+            directVulnerabilities: 0,
+            transitiveVulnerabilities: 0,
+            licenseIssues: 0,
+            lastScan: new Date().toISOString()
+          },
+          github: report.github || {
+            totalAlerts: 0,
+            criticalAlerts: [],
+            highAlerts: [],
+            mediumAlerts: [],
+            lowAlerts: [],
+            dismissedAlerts: 0,
+            openAlerts: 0,
+            lastUpdated: new Date().toISOString()
+          },
+          docker: report.docker || {
+            scanStatus: 'not_configured',
+            totalVulnerabilities: 0,
+            criticalVulnerabilities: 0,
+            highVulnerabilities: 0,
+            mediumVulnerabilities: 0,
+            lowVulnerabilities: 0,
+            scanDate: new Date().toISOString(),
+            imageSize: '0 MB',
+            layers: 0
+          }
+        };
+      } catch (error) {
+        console.error('❌ Error fetching security scans:', error);
+        throw error;
+      }
     },
     refetchInterval: 30000,
   });
