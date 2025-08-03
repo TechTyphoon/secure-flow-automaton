@@ -7,7 +7,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./apps/web/*"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,
