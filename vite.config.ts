@@ -9,7 +9,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: process.env.NODE_ENV === 'production' ? '/secure-flow-automaton/' : '/',
+  base: '/',
   server: {
     host: process.env.HOST || (isWindows ? "localhost" : "::"),
     port: parseInt(process.env.PORT || "8080"),

@@ -41,7 +41,7 @@
     "dev": "vite --host 0.0.0.0 --port 8080",
     "dev:windows": "set NODE_OPTIONS=--max-old-space-size=4096 && vite --host 0.0.0.0 --port 8080",
     "dev:unix": "NODE_OPTIONS=--max-old-space-size=4096 vite --host 0.0.0.0 --port 8080",
-    "build": "npm run type-check && vite build",
+    "build": "npm run type-check && vite build --mode production",
     "build:dev": "vite build --mode development",
     "build:prod": "vite build --mode production",
     "preview": "vite preview --host 0.0.0.0 --port 8080",
