@@ -2,11 +2,6 @@
   command = "npm run build"
   publish = "dist"
 
-[build.environment]
-  NODE_ENV = "production"
-  VITE_APP_NAME = "SecureFlow Automaton"
-  VITE_APP_VERSION = "4.1.0"
-
 [[redirects]]
   from = "/*"
   to = "/index.html"
