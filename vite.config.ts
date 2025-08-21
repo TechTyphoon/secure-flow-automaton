@@ -16,6 +16,14 @@ export default defineConfig(({ mode }) => ({
     open: !process.env.CI, // Don't auto-open in CI environments
     strictPort: false, // Allow port changes if busy
     cors: true,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      '192.168.36.234',
+      '77b8142a6f5a.ngrok-free.app',
+      '.ngrok-free.app',
+      '.loca.lt'
+    ],
     hmr: {
       overlay: isDevelopment,
     },
