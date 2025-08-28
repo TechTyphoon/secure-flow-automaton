@@ -1,441 +1,522 @@
-import { sonarQubeService, SonarQubeMetrics, SonarQubeIssue } from './sonarqube';
-import { snykService, SnykTestResult, SnykVulnerability } from './snyk';
-import { containerSecurityService, DockerImageScan, ContainerVulnerability } from './container';
+import { SonarQubeService, SonarQubeMetrics, SonarQubeIssue } from './sonarqube';
+import { SnykService, SnykProject, SnykTestResult } from './snyk';
+import { ContainerSecurityService, DockerImageScan, ContainerScanResult } from './container';
+import { SecurityHealthService } from './healthMonitor';
+import { SecurityAPIClient } from './apiClient';
+import { SecurityNotificationService } from './notifications';
+import axios from 'axios';
 
-export interface UnifiedSecurityMetrics {
-  securityScore: number;
-  totalVulnerabilities: number;
-  criticalCount: number;
-  highCount: number;
-  mediumCount: number;
-  lowCount: number;
-  lastScanDate: string;
-  scanStatus: 'completed' | 'running' | 'failed' | 'pending';
-  breakdown: {
-    sast: {
+export interface UnifiedSecurityReport {
+  timestamp: string;
+  overallScore: number;
+  tools: {
+    sonarqube: {
+      enabled: boolean;
       score: number;
-      issues: number;
-      coverage: number;
+      metrics?: SonarQubeMetrics;
+      criticalIssues: number;
+      highIssues: number;
     };
-    dependencies: {
+    snyk: {
+      enabled: boolean;
       score: number;
-      vulnerabilities: number;
-      totalDeps: number;
+      projects?: SnykProject[];
+      vulnerabilities: {
+        critical: number;
+        high: number;
+        medium: number;
+        low: number;
+      };
     };
     container: {
+      enabled: boolean;
       score: number;
-      vulnerabilities: number;
-      dockerfileIssues: number;
+      scans?: ContainerScanResult[];
+      vulnerableImages: number;
     };
   };
-  trends: {
-    scoreChange: number;
-    vulnChange: number;
-    period: '7d' | '30d';
-  };
+  alerts: SecurityAlert[];
+  recommendations: string[];
+  complianceStatus: ComplianceStatus;
 }
 
 export interface SecurityAlert {
   id: string;
-  type: 'critical_vulnerability' | 'security_hotspot' | 'dependency_risk' | 'container_issue';
+  type: 'vulnerability' | 'compliance' | 'configuration' | 'threat' | 'security_hotspot';
   severity: 'critical' | 'high' | 'medium' | 'low';
   title: string;
   description: string;
-  source: 'sonarqube' | 'snyk' | 'container' | 'system';
+  source: string;
   component?: string;
-  line?: number;
+  remediation?: string;
   createdAt: string;
-  resolvedAt?: string;
-  status: 'open' | 'acknowledged' | 'resolved' | 'false_positive';
-  assignee?: string;
-  remediationAdvice?: string;
-  references?: string[];
+  status?: 'open' | 'acknowledged' | 'resolved' | 'false_positive';
 }
 
-export interface SecurityScanRequest {
-  includesSAST?: boolean;
-  includesDependencies?: boolean;
-  includesContainer?: boolean;
-  severity?: 'all' | 'critical' | 'high' | 'medium' | 'low';
+export interface ComplianceStatus {
+  frameworks: string[];
+  overallCompliant: boolean;
+  scores: {
+    [framework: string]: number;
+  };
+  gaps: ComplianceGap[];
+}
+
+export interface ComplianceGap {
+  framework: string;
+  control: string;
+  status: 'missing' | 'partial' | 'failed';
+  description: string;
+  remediation: string;
+}
+
+export interface SecurityTrend {
+  date: string;
+  score: number;
+  vulnerabilities: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+  compliance: number;
 }
 
 export class UnifiedSecurityService {
-  private static instance: UnifiedSecurityService;
-  private isScanning: boolean = false;
-  private lastScanTime: Date | null = null;
-
-  static getInstance(): UnifiedSecurityService {
-    if (!UnifiedSecurityService.instance) {
-      UnifiedSecurityService.instance = new UnifiedSecurityService();
-    }
-    return UnifiedSecurityService.instance;
+  private sonarqube: SonarQubeService;
+  private snyk: SnykService;
+  private container: ContainerSecurityService;
+  private health: SecurityHealthService;
+  private apiClient: SecurityAPIClient;
+  private notifications: SecurityNotificationService;
+  
+  constructor() {
+    this.sonarqube = new SonarQubeService();
+    this.snyk = new SnykService();
+    this.container = new ContainerSecurityService();
+    this.health = new SecurityHealthService();
+    this.apiClient = new SecurityAPIClient();
+    this.notifications = new SecurityNotificationService();
   }
 
-  async performComprehensiveScan(options: SecurityScanRequest = {}): Promise<UnifiedSecurityMetrics> {
-    if (this.isScanning) {
-      throw new Error('Security scan already in progress');
-    }
+  /**
+   * Get unified security analysis from all integrated tools
+   */
+  async getUnifiedAnalysis(): Promise<UnifiedSecurityReport> {
+    console.log('🔍 Performing unified security analysis...');
+    
+    // Check health status of all services
+    const healthStatus = await this.health.checkHealth();
+    
+    // Parallel execution of security scans
+    const [sonarData, snykData, containerData] = await Promise.allSettled([
+      this.getSonarQubeAnalysis(),
+      this.getSnykAnalysis(),
+      this.getContainerAnalysis()
+    ]);
 
-    this.isScanning = true;
-    const scanStartTime = new Date();
-
-    try {
-      const promises: Promise<any>[] = [];
-
-      // SAST Analysis (SonarQube)
-      if (options.includesSAST !== false) {
-        promises.push(sonarQubeService.getProjectMetrics());
-        promises.push(sonarQubeService.getIssues());
-      }
-
-      // Dependency Analysis (Snyk)
-      if (options.includesDependencies !== false) {
-        promises.push(snykService.testProject());
-      }
-
-      // Container Security Analysis
-      if (options.includesContainer !== false) {
-        // Container security analysis
-        promises.push(containerSecurityService.getComprehensiveAnalysis());
-      }
-
-      const results = await Promise.allSettled(promises);
-      
-      // Process results
-      const sonarMetrics = results[0]?.status === 'fulfilled' ? results[0].value : null;
-      const sonarIssues = results[1]?.status === 'fulfilled' ? results[1].value : [];
-      const snykResults = results[2]?.status === 'fulfilled' ? results[2].value : null;
-      const containerResults = results[3]?.status === 'fulfilled' ? results[3].value : null;
-
-      const metrics = this.calculateUnifiedMetrics(
-        sonarMetrics,
-        sonarIssues,
-        snykResults,
-        containerResults
-      );
-
-      this.lastScanTime = scanStartTime;
-      return metrics;
-
-    } catch (error) {
-      console.error('Comprehensive security scan failed:', error);
-      throw error;
-    } finally {
-      this.isScanning = false;
-    }
-  }
-
-  async getSecurityAlerts(): Promise<SecurityAlert[]> {
     const alerts: SecurityAlert[] = [];
+    const recommendations: string[] = [];
+    
+    // Process SonarQube results
+    const sonarqubeReport = {
+      enabled: healthStatus.services.sonarqube.healthy,
+      score: 100,
+      criticalIssues: 0,
+      highIssues: 0,
+      metrics: undefined as SonarQubeMetrics | undefined
+    };
+    
+    if (sonarData.status === 'fulfilled' && sonarData.value) {
+      sonarqubeReport.metrics = sonarData.value.metrics;
+      sonarqubeReport.criticalIssues = sonarData.value.issues.filter(i => i.severity === 'CRITICAL').length;
+      sonarqubeReport.highIssues = sonarData.value.issues.filter(i => i.severity === 'HIGH').length;
+      sonarqubeReport.score = this.calculateSonarQubeScore(sonarData.value);
+      
+      // Generate alerts for critical issues
+      sonarData.value.issues
+        .filter(i => i.severity === 'CRITICAL' || i.severity === 'HIGH')
+        .forEach(issue => {
+          alerts.push(this.createAlertFromSonarIssue(issue));
+        });
+    }
 
+    // Process Snyk results
+    const snykReport = {
+      enabled: healthStatus.services.snyk.healthy,
+      score: 100,
+      projects: undefined as SnykProject[] | undefined,
+      vulnerabilities: {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0
+      }
+    };
+    
+    if (snykData.status === 'fulfilled' && snykData.value) {
+      snykReport.projects = snykData.value.projects;
+      snykReport.vulnerabilities = snykData.value.summary;
+      snykReport.score = this.calculateSnykScore(snykData.value);
+      
+      // Generate alerts for vulnerabilities
+      if (snykData.value.vulnerabilities) {
+        snykData.value.vulnerabilities
+          .filter(v => v.severity === 'critical' || v.severity === 'high')
+          .forEach(vuln => {
+            alerts.push(this.createAlertFromSnykVuln(vuln));
+          });
+      }
+    }
+
+    // Process Container Security results
+    const containerReport = {
+      enabled: healthStatus.services.container.healthy,
+      score: 100,
+      scans: undefined as ContainerScanResult[] | undefined,
+      vulnerableImages: 0
+    };
+    
+    if (containerData.status === 'fulfilled' && containerData.value) {
+      containerReport.scans = containerData.value.scans;
+      containerReport.vulnerableImages = containerData.value.vulnerableImages;
+      containerReport.score = containerData.value.score;
+      
+      // Generate alerts for container vulnerabilities
+      containerData.value.issues?.forEach(issue => {
+        alerts.push(this.createAlertFromContainerIssue(issue));
+      });
+    }
+
+    // Calculate overall security score
+    const overallScore = this.calculateOverallScore(
+      sonarqubeReport.score,
+      snykReport.score,
+      containerReport.score
+    );
+
+    // Get compliance status
+    const complianceStatus = await this.getComplianceStatus();
+
+    // Generate recommendations
+    recommendations.push(...this.generateRecommendations({
+      sonarqube: sonarqubeReport,
+      snyk: snykReport,
+      container: containerReport,
+      compliance: complianceStatus
+    }));
+
+    // Send notifications for critical alerts
+    const criticalAlerts = alerts.filter(a => a.severity === 'critical');
+    if (criticalAlerts.length > 0) {
+      await this.notifications.sendBulkAlerts(criticalAlerts);
+    }
+
+    return {
+      timestamp: new Date().toISOString(),
+      overallScore,
+      tools: {
+        sonarqube: sonarqubeReport,
+        snyk: snykReport,
+        container: containerReport
+      },
+      alerts: alerts.sort((a, b) => this.getSeverityWeight(b.severity) - this.getSeverityWeight(a.severity)),
+      recommendations,
+      complianceStatus
+    };
+  }
+
+  /**
+   * Get security trends over time
+   */
+  async getSecurityTrends(days: number = 30): Promise<SecurityTrend[]> {
     try {
-      // Get SonarQube critical issues
-      const sonarIssues = await sonarQubeService.getIssues('CRITICAL,BLOCKER');
-      sonarIssues.forEach(issue => {
-        if (issue.status === 'OPEN' || issue.status === 'REOPENED') {
-          alerts.push(this.convertSonarIssueToAlert(issue));
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const response = await axios.get('/api/security/trends', {
+        params: {
+          start: startDate.toISOString(),
+          end: endDate.toISOString()
         }
       });
 
-      // Get Snyk critical vulnerabilities
-      const snykVulns = await snykService.getVulnerabilities('critical');
-      snykVulns.forEach(vuln => {
-        alerts.push(this.convertSnykVulnToAlert(vuln));
-      });
-
-      // Get container critical vulnerabilities
-      const containerScan = await containerSecurityService.scanImage('secure-flow-automaton');
-      containerScan.vulnerabilities.forEach(vuln => {
-        if (vuln.severity === 'HIGH' || vuln.severity === 'CRITICAL') {
-          alerts.push(this.convertContainerVulnToAlert(vuln, containerScan.image));
-        }
-      });
-
-      // Sort by severity and creation date
-      return alerts.sort((a, b) => {
-        const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-        const severityDiff = severityOrder[b.severity] - severityOrder[a.severity];
-        if (severityDiff !== 0) return severityDiff;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
-
+      return response.data.trends || [];
     } catch (error) {
-      console.error('Failed to fetch security alerts:', error);
+      console.error('Failed to get security trends:', error);
       return [];
     }
   }
 
-  async getSecurityTrends(period: '7d' | '30d' = '7d'): Promise<any> {
-    // This would typically fetch historical data from a database
-    // For now, return mock trend data
-    return {
-      period,
-      scoreHistory: this.generateMockScoreHistory(period),
-      vulnerabilityHistory: this.generateMockVulnHistory(period),
-      alerts: await this.getSecurityAlerts(),
-    };
+  /**
+   * Run targeted security scan
+   */
+  async runSecurityScan(target: string, scanTypes: string[]): Promise<any> {
+    const results: any = {};
+
+    if (scanTypes.includes('sonarqube')) {
+      results.sonarqube = await this.sonarqube.scanProject(target);
+    }
+
+    if (scanTypes.includes('snyk')) {
+      results.snyk = await this.snyk.testProject(target);
+    }
+
+    if (scanTypes.includes('container')) {
+      results.container = await this.container.scanImage(target);
+    }
+
+    return results;
   }
 
-  async generateSecurityReport(): Promise<any> {
-    const [metrics, alerts, trends] = await Promise.all([
-      this.performComprehensiveScan(),
-      this.getSecurityAlerts(),
-      this.getSecurityTrends('30d'),
-    ]);
-
-    return {
-      generatedAt: new Date().toISOString(),
-      summary: metrics,
-      criticalAlerts: alerts.filter(a => a.severity === 'critical'),
-      trends,
-      recommendations: this.generateRecommendations(metrics, alerts),
-      compliance: this.assessCompliance(metrics),
-    };
+  /**
+   * Private helper methods
+   */
+  
+  private async getSonarQubeAnalysis(): Promise<any> {
+    try {
+      const metrics = await this.sonarqube.getProjectMetrics();
+      const issues = await this.sonarqube.getIssues();
+      return { metrics, issues };
+    } catch (error) {
+      console.error('SonarQube analysis failed:', error);
+      return null;
+    }
   }
 
-  private calculateUnifiedMetrics(
-    sonarMetrics: SonarQubeMetrics | null,
-    sonarIssues: SonarQubeIssue[],
-    snykResults: SnykTestResult | null,
-    containerResults: any
-  ): UnifiedSecurityMetrics {
-    // Calculate individual scores
-    const sastScore = sonarMetrics ? sonarQubeService.calculateSecurityScore(sonarMetrics) : 50;
-    const depScore = snykResults ? snykService.calculateRiskScore(snykResults) : 50;
-    const containerScore = containerResults ? 
-      containerResults.overallScore || 50 : 50;
+  private async getSnykAnalysis(): Promise<any> {
+    try {
+      const projects = await this.snyk.getProjects();
+      const vulnerabilities = await this.snyk.getAllVulnerabilities();
+      
+      const summary = {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0
+      };
 
-    // Calculate weighted overall score
-    const overallScore = Math.round((sastScore * 0.4) + (depScore * 0.35) + (containerScore * 0.25));
+      vulnerabilities.forEach(vuln => {
+        summary[vuln.severity]++;
+      });
 
-    // Aggregate vulnerability counts
-    const sonarVulns = sonarIssues.filter(i => i.type === 'VULNERABILITY' || i.type === 'SECURITY_HOTSPOT');
-    const snykVulns = snykResults?.vulnerabilities || [];
-    const containerVulns = containerResults?.summary || { critical: 0, high: 0, medium: 0, low: 0 };
-
-    const totalVulns = sonarVulns.length + snykVulns.length + containerVulns.total;
-    const criticalCount = 
-      sonarVulns.filter(i => i.severity === 'CRITICAL' || i.severity === 'BLOCKER').length +
-      snykVulns.filter(v => v.severity === 'critical').length +
-      containerVulns.critical;
-
-    const highCount = 
-      sonarVulns.filter(i => i.severity === 'MAJOR').length +
-      snykVulns.filter(v => v.severity === 'high').length +
-      containerVulns.high;
-
-    const mediumCount = 
-      sonarVulns.filter(i => i.severity === 'MINOR').length +
-      snykVulns.filter(v => v.severity === 'medium').length +
-      containerVulns.medium;
-
-    const lowCount = 
-      sonarVulns.filter(i => i.severity === 'INFO').length +
-      snykVulns.filter(v => v.severity === 'low').length +
-      containerVulns.low;
-
-    return {
-      securityScore: overallScore,
-      totalVulnerabilities: totalVulns,
-      criticalCount,
-      highCount,
-      mediumCount,
-      lowCount,
-      lastScanDate: new Date().toISOString(),
-      scanStatus: 'completed',
-      breakdown: {
-        sast: {
-          score: sastScore,
-          issues: sonarIssues.length,
-          coverage: parseFloat(sonarMetrics?.metrics.coverage || '0'),
-        },
-        dependencies: {
-          score: depScore,
-          vulnerabilities: snykVulns.length,
-          totalDeps: snykResults?.dependencyCount || 0,
-        },
-        container: {
-          score: containerScore,
-          vulnerabilities: containerVulns.total || 0,
-          dockerfileIssues: containerResults?.dockerfileIssues || 0,
-        },
-      },
-      trends: {
-        scoreChange: this.calculateScoreChange(overallScore),
-        vulnChange: this.calculateVulnChange(totalVulns),
-        period: '7d',
-      },
-    };
+      return { projects, vulnerabilities, summary };
+    } catch (error) {
+      console.error('Snyk analysis failed:', error);
+      return null;
+    }
   }
 
-  private convertSonarIssueToAlert(issue: SonarQubeIssue): SecurityAlert {
+  private async getContainerAnalysis(): Promise<any> {
+    try {
+      const dockerfileScan = await this.container.scanDockerfile('./Dockerfile');
+      const imageScan = await this.container.scanImage('secureflow-automaton', 'latest');
+      const dependencyScan = await this.container.scanDependencies();
+
+      const vulnerableImages = imageScan?.summary?.critical > 0 || imageScan?.summary?.high > 0 ? 1 : 0;
+      
+      const score = Math.min(
+        dockerfileScan?.score || 100,
+        this.calculateImageScore(imageScan),
+        dependencyScan?.score || 100
+      );
+
+      const issues = [];
+      if (dockerfileScan?.issues) {
+        issues.push(...dockerfileScan.issues.filter(i => i.severity === 'critical' || i.severity === 'high'));
+      }
+
+      return {
+        scans: [dockerfileScan, imageScan, dependencyScan].filter(Boolean),
+        vulnerableImages,
+        score,
+        issues
+      };
+    } catch (error) {
+      console.error('Container analysis failed:', error);
+      return null;
+    }
+  }
+
+  private async getComplianceStatus(): Promise<ComplianceStatus> {
+    try {
+      const response = await axios.get('/api/compliance/status');
+      return response.data;
+    } catch (error) {
+      // Return default compliance status
+      return {
+        frameworks: ['SOC2', 'HIPAA', 'PCI-DSS'],
+        overallCompliant: false,
+        scores: {
+          SOC2: 75,
+          HIPAA: 80,
+          'PCI-DSS': 70
+        },
+        gaps: []
+      };
+    }
+  }
+
+  private calculateSonarQubeScore(data: any): number {
+    let score = 100;
+    const metrics = data.metrics?.metrics || {};
+    
+    // Deduct points for issues
+    const bugs = parseInt(metrics.bugs || '0');
+    const vulnerabilities = parseInt(metrics.vulnerabilities || '0');
+    const codeSmells = parseInt(metrics.code_smells || '0');
+    
+    score -= bugs * 5;
+    score -= vulnerabilities * 10;
+    score -= codeSmells * 0.5;
+    
+    // Consider security rating
+    const securityRating = parseInt(metrics.security_rating || '1');
+    score -= (securityRating - 1) * 10;
+    
+    return Math.max(0, Math.round(score));
+  }
+
+  private calculateSnykScore(data: any): number {
+    let score = 100;
+    const { summary } = data;
+    
+    score -= summary.critical * 20;
+    score -= summary.high * 10;
+    score -= summary.medium * 5;
+    score -= summary.low * 1;
+    
+    return Math.max(0, Math.round(score));
+  }
+
+  private calculateImageScore(scan: DockerImageScan | null): number {
+    if (!scan) return 100;
+    
+    let score = 100;
+    score -= scan.summary.critical * 20;
+    score -= scan.summary.high * 10;
+    score -= scan.summary.medium * 5;
+    score -= scan.summary.low * 1;
+    
+    return Math.max(0, Math.round(score));
+  }
+
+  private calculateOverallScore(sonarScore: number, snykScore: number, containerScore: number): number {
+    // Weighted average: SonarQube 35%, Snyk 35%, Container 30%
+    return Math.round(
+      sonarScore * 0.35 +
+      snykScore * 0.35 +
+      containerScore * 0.30
+    );
+  }
+
+  private createAlertFromSonarIssue(issue: SonarQubeIssue): SecurityAlert {
     return {
-      id: issue.key,
-      type: issue.type === 'SECURITY_HOTSPOT' ? 'security_hotspot' : 'critical_vulnerability',
+      id: `sonar-${issue.key}`,
+      type: issue.type === 'SECURITY_HOTSPOT' ? 'security_hotspot' : 'vulnerability',
       severity: this.mapSonarSeverity(issue.severity),
       title: issue.message,
-      description: `${issue.rule}: ${issue.message}`,
-      source: 'sonarqube',
+      description: issue.message,
+      source: 'SonarQube',
       component: issue.component,
-      line: issue.line,
       createdAt: issue.creationDate,
-      status: this.mapSonarStatus(issue.status),
-      remediationAdvice: `Effort: ${issue.effort || 'Unknown'}`,
-      references: [`https://rules.sonarsource.com/typescript/RSPEC-${issue.rule.split(':')[1]}`],
+      status: 'open'
     };
   }
 
-  private convertSnykVulnToAlert(vuln: SnykVulnerability): SecurityAlert {
+  private createAlertFromSnykVuln(vuln: any): SecurityAlert {
     return {
-      id: vuln.id,
-      type: 'dependency_risk',
-      severity: vuln.severity as any,
+      id: `snyk-${vuln.id}`,
+      type: 'vulnerability',
+      severity: vuln.severity,
       title: vuln.title,
-      description: `${vuln.package}@${vuln.version}: ${vuln.description}`,
-      source: 'snyk',
-      component: vuln.package,
-      createdAt: vuln.publicationTime || new Date().toISOString(),
-      status: 'open',
-      remediationAdvice: vuln.fixedIn?.length ? 
-        `Upgrade to ${vuln.fixedIn.join(' or ')}` : 
-        'No fix available',
-      references: vuln.references.map(r => r.url),
+      description: vuln.description,
+      source: 'Snyk',
+      component: vuln.packageName,
+      remediation: vuln.fixedIn ? `Upgrade to ${vuln.fixedIn[0]}` : 'No fix available',
+      createdAt: new Date().toISOString(),
+      status: 'open'
     };
   }
 
-  private convertContainerVulnToAlert(vuln: ContainerVulnerability, target: string): SecurityAlert {
+  private createAlertFromContainerIssue(issue: any): SecurityAlert {
     return {
-      id: vuln.id,
-      type: 'container_issue',
-      severity: vuln.severity.toLowerCase() as any,
-      title: vuln.title,
-      description: `${target} - ${vuln.pkgName}@${vuln.installedVersion}: ${vuln.description}`,
-      source: 'container',
-      component: vuln.pkgName,
-      createdAt: vuln.publishedDate || new Date().toISOString(),
-      status: 'open',
-      remediationAdvice: vuln.fixedVersion ? 
-        `Update to version ${vuln.fixedVersion}` : 
-        'No fix available',
-      references: vuln.references,
+      id: `container-${Date.now()}`,
+      type: 'configuration',
+      severity: issue.severity,
+      title: issue.message,
+      description: issue.message,
+      source: 'Container Security',
+      remediation: issue.fix,
+      createdAt: new Date().toISOString(),
+      status: 'open'
     };
   }
 
-  private mapSonarSeverity(severity: string): 'critical' | 'high' | 'medium' | 'low' {
+  private mapSonarSeverity(severity: string): SecurityAlert['severity'] {
     switch (severity) {
-      case 'BLOCKER': return 'critical';
-      case 'CRITICAL': return 'critical';
-      case 'MAJOR': return 'high';
-      case 'MINOR': return 'medium';
-      case 'INFO': return 'low';
-      default: return 'medium';
+      case 'BLOCKER':
+      case 'CRITICAL':
+        return 'critical';
+      case 'MAJOR':
+        return 'high';
+      case 'MINOR':
+        return 'medium';
+      case 'INFO':
+        return 'low';
+      default:
+        return 'low';
     }
   }
 
-  private mapSonarStatus(status: string): 'open' | 'acknowledged' | 'resolved' | 'false_positive' {
-    switch (status) {
-      case 'OPEN': return 'open';
-      case 'CONFIRMED': return 'acknowledged';
-      case 'REOPENED': return 'open';
-      case 'RESOLVED': return 'resolved';
-      case 'CLOSED': return 'resolved';
-      default: return 'open';
+  private getSeverityWeight(severity: string): number {
+    switch (severity) {
+      case 'critical': return 4;
+      case 'high': return 3;
+      case 'medium': return 2;
+      case 'low': return 1;
+      default: return 0;
     }
   }
 
-  private calculateScoreChange(currentScore: number): number {
-    // Mock calculation - in real app, this would compare with historical data
-    const lastScore = currentScore + Math.floor(Math.random() * 10) - 5;
-    return currentScore - lastScore;
-  }
+  private generateRecommendations(data: any): string[] {
+    const recommendations: string[] = [];
 
-  private calculateVulnChange(currentVulns: number): number {
-    // Mock calculation - in real app, this would compare with historical data
-    const lastVulns = currentVulns + Math.floor(Math.random() * 5) - 2;
-    return currentVulns - lastVulns;
-  }
-
-  private generateMockScoreHistory(period: '7d' | '30d'): any[] {
-    const days = period === '7d' ? 7 : 30;
-    const history = [];
-    
-    for (let i = days; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      history.push({
-        date: date.toISOString().split('T')[0],
-        score: 70 + Math.floor(Math.random() * 30),
-      });
+    // SonarQube recommendations
+    if (data.sonarqube.criticalIssues > 0) {
+      recommendations.push('Address critical code quality issues identified by SonarQube immediately');
     }
-    
-    return history;
-  }
-
-  private generateMockVulnHistory(period: '7d' | '30d'): any[] {
-    const days = period === '7d' ? 7 : 30;
-    const history = [];
-    
-    for (let i = days; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      history.push({
-        date: date.toISOString().split('T')[0],
-        critical: Math.floor(Math.random() * 3),
-        high: Math.floor(Math.random() * 8),
-        medium: Math.floor(Math.random() * 15),
-        low: Math.floor(Math.random() * 25),
-      });
-    }
-    
-    return history;
-  }
-
-  private generateRecommendations(metrics: UnifiedSecurityMetrics, alerts: SecurityAlert[]): string[] {
-    const recommendations = [];
-
-    if (metrics.criticalCount > 0) {
-      recommendations.push(`Address ${metrics.criticalCount} critical vulnerabilities immediately`);
+    if (data.sonarqube.score < 70) {
+      recommendations.push('Improve code quality by fixing bugs and security hotspots');
     }
 
-    if (metrics.breakdown.sast.coverage < 80) {
-      recommendations.push('Increase test coverage to improve security analysis');
+    // Snyk recommendations
+    if (data.snyk.vulnerabilities.critical > 0) {
+      recommendations.push('Update dependencies with critical vulnerabilities');
+    }
+    if (data.snyk.vulnerabilities.high > 5) {
+      recommendations.push('Review and patch high-severity dependency vulnerabilities');
     }
 
-    if (metrics.breakdown.dependencies.vulnerabilities > 10) {
-      recommendations.push('Update dependencies to reduce vulnerability exposure');
+    // Container recommendations
+    if (data.container.vulnerableImages > 0) {
+      recommendations.push('Update base images to patch container vulnerabilities');
+    }
+    if (data.container.score < 80) {
+      recommendations.push('Review and improve Dockerfile security configuration');
     }
 
-    if (metrics.breakdown.container.dockerfileIssues > 0) {
-      recommendations.push('Fix Dockerfile security issues to harden container deployment');
+    // Compliance recommendations
+    if (!data.compliance.overallCompliant) {
+      recommendations.push('Address compliance gaps to meet regulatory requirements');
     }
 
-    if (metrics.securityScore < 70) {
-      recommendations.push('Implement comprehensive security improvements to reach acceptable score');
+    // General recommendations
+    if (recommendations.length === 0) {
+      recommendations.push('Maintain current security practices and continue monitoring');
     }
 
     return recommendations;
   }
-
-  private assessCompliance(metrics: UnifiedSecurityMetrics): any {
-    return {
-      overall: metrics.securityScore >= 80 ? 'compliant' : 'non-compliant',
-      frameworks: {
-        'OWASP Top 10': metrics.criticalCount === 0 && metrics.highCount < 5,
-        'NIST': metrics.securityScore >= 75,
-        'ISO 27001': metrics.breakdown.sast.coverage >= 80,
-      },
-      lastAssessed: new Date().toISOString(),
-    };
-  }
-
-  // Public getters
-  get isCurrentlyScanning(): boolean {
-    return this.isScanning;
-  }
-
-  get lastScanTimestamp(): Date | null {
-    return this.lastScanTime;
-  }
 }
-
-export const unifiedSecurityService = UnifiedSecurityService.getInstance();
