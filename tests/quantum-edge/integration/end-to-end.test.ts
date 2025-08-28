@@ -82,8 +82,12 @@ describe('End-to-End Integration Tests', () => {
         // Try multiple times due to probabilistic nature of quantum connections
         let connectionStatus = false;
         for (let attempt = 0; attempt < 5; attempt++) {
-            connectionStatus = await quantumInternet.establishConnection('QN-US-001', 'QN-EU-001');
-            if (connectionStatus) break;
+            try {
+                connectionStatus = await quantumInternet.establishConnection('QN-US-001', 'QN-EU-001');
+                if (connectionStatus) break;
+            } catch (error) {
+                console.log(`Connection attempt ${attempt + 1} failed:`, error.message);
+            }
             // Small delay between attempts
             await new Promise(resolve => setTimeout(resolve, 10));
         }
