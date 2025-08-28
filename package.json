@@ -1,14 +1,14 @@
 {
   "name": "secureflow-automaton",
-  "version": "4.1.0",
-  "description": "Enterprise-grade DevSecOps pipeline automation platform with comprehensive multi-tool security integration (SonarQube, Snyk, Container Security)",
+  "version": "1.0.0",
+  "description": "Production-ready enterprise DevSecOps platform for security automation, threat detection, compliance management, and vulnerability remediation",
   "private": true,
   "type": "module",
-  "author": "TechTyphoon",
+  "author": "SecureFlow Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TechTyphoon/secure-flow-automaton.git"
+    "url": "https://github.com/secureflow/secure-flow-automaton.git"
   },
   "keywords": [
     "devsecops",
