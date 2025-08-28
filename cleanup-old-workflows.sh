@@ -9,14 +9,14 @@ set -e
 REPO_OWNER="TechTyphoon"
 REPO_NAME="secure-flow-automaton"
 WORKFLOW_NAME="reliable-ci.yml"
-MAX_RUNS_TO_KEEP=10  # Keep only the 10 most recent runs
-DRY_RUN=false  # Set to true to preview what would be deleted
+DELETE_FIRST_N_RUNS=250  # Delete the first 250 workflow runs
+DRY_RUN=true  # Set to false to perform actual deletion
 
 echo "🧹 GitHub Actions Workflow Cleanup Script"
 echo "=========================================="
 echo "Repository: $REPO_OWNER/$REPO_NAME"
 echo "Workflow: $WORKFLOW_NAME"
-echo "Keep latest: $MAX_RUNS_TO_KEEP runs"
+echo "Delete first: $DELETE_FIRST_N_RUNS runs"
 echo "Dry run: $DRY_RUN"
 echo ""
 
@@ -24,146 +24,205 @@ echo ""
 check_gh_cli() {
     if ! command -v gh &> /dev/null; then
         echo "❌ Error: GitHub CLI (gh) is not installed."
-        echo "Please install it from: https://cli.github.com/"
-        echo "Or run: sudo apt install gh (Ubuntu/Debian)"
+        echo "Please install it first:"
+        echo "  Ubuntu/Debian: sudo apt install gh"
+        echo "  macOS: brew install gh"
+        echo "  Or visit: https://cli.github.com/"
         exit 1
     fi
-    
-    # Check if authenticated
+}
+
+# Function to check if jq is installed
+check_jq() {
+    if ! command -v jq &> /dev/null; then
+        echo "❌ Error: jq is not installed."
+        echo "Please install it first:"
+        echo "  Ubuntu/Debian: sudo apt install jq"
+        echo "  macOS: brew install jq"
+        exit 1
+    fi
+}
+
+# Function to check authentication
+check_auth() {
     if ! gh auth status &> /dev/null; then
         echo "❌ Error: Not authenticated with GitHub CLI."
-        echo "Please run: gh auth login"
+        echo "Please authenticate first:"
+        echo "  gh auth login"
         exit 1
     fi
-    
-    echo "✅ GitHub CLI is installed and authenticated"
 }
 
-# Function to get workflow runs
-get_workflow_runs() {
-    echo "📋 Fetching workflow runs..."
+# Function to get all workflow runs
+get_all_workflow_runs() {
+    echo "📋 Fetching all workflow runs..."
     
-    # Get workflow runs in JSON format
-    gh api repos/$REPO_OWNER/$REPO_NAME/actions/workflows/$WORKFLOW_NAME/runs \
-        --paginate \
-        --jq '.workflow_runs[] | {id: .id, run_number: .run_number, status: .status, conclusion: .conclusion, created_at: .created_at, head_branch: .head_branch, display_title: .display_title}' \
-        > /tmp/workflow_runs.json
+    local all_runs_file=$(mktemp)
+    local page=1
+    local per_page=100
     
-    echo "✅ Found workflow runs data"
-}
-
-# Function to analyze and delete old runs
-cleanup_old_runs() {
-    echo "🔍 Analyzing workflow runs..."
-    
-    # Count total runs
-    total_runs=$(jq length /tmp/workflow_runs.json 2>/dev/null || echo "0")
-    echo "📊 Total workflow runs found: $total_runs"
-    
-    if [ "$total_runs" -le "$MAX_RUNS_TO_KEEP" ]; then
-        echo "✅ No cleanup needed. Only $total_runs runs found (keeping up to $MAX_RUNS_TO_KEEP)"
-        return
-    fi
-    
-    # Sort by run number (descending) and get runs to delete
-    runs_to_delete=$(jq -r "sort_by(.run_number) | reverse | .[$MAX_RUNS_TO_KEEP:] | .[] | .id" /tmp/workflow_runs.json 2>/dev/null)
-    
-    if [ -z "$runs_to_delete" ]; then
-        echo "✅ No runs to delete"
-        return
-    fi
-    
-    echo "🗑️  Runs to delete:"
-    echo "$runs_to_delete" | while read run_id; do
-        if [ -n "$run_id" ]; then
-            run_info=$(jq -r ".[] | select(.id == $run_id) | \"Run #\(.run_number) (\(.head_branch)) - \(.display_title)\"" /tmp/workflow_runs.json 2>/dev/null)
-            echo "   - $run_info"
+    while true; do
+        echo "  Fetching page $page..."
+        
+        # Get workflow runs for current page
+        local response=$(gh api repos/$REPO_OWNER/$REPO_NAME/actions/workflows/$WORKFLOW_NAME/runs \
+            --paginate \
+            --page $page \
+            --limit $per_page \
+            --jq '.workflow_runs[] | {id: .id, run_number: .run_number, created_at: .created_at, status: .conclusion // .status, title: .display_title}' \
+            2>/dev/null)
+        
+        if [ -z "$response" ]; then
+            break
         fi
+        
+        echo "$response" >> "$all_runs_file"
+        
+        # Check if we got a full page (if not, we're done)
+        local count=$(echo "$response" | wc -l)
+        if [ "$count" -lt "$per_page" ]; then
+            break
+        fi
+        
+        ((page++))
+        sleep 0.1  # Rate limiting
     done
     
-    if [ "$DRY_RUN" = true ]; then
-        echo ""
-        echo "🔍 DRY RUN MODE: No runs were actually deleted"
-        echo "Set DRY_RUN=false to perform actual deletion"
-        return
-    fi
-    
-    echo ""
-    echo "🗑️  Deleting old workflow runs..."
-    
-    deleted_count=0
-    echo "$runs_to_delete" | while read run_id; do
-        if [ -n "$run_id" ]; then
-            echo "   Deleting run ID: $run_id"
-            
-            # Delete the workflow run
-            if gh api repos/$REPO_OWNER/$REPO_NAME/actions/runs/$run_id \
-                --method DELETE \
-                --silent; then
-                echo "   ✅ Deleted run ID: $run_id"
-                deleted_count=$((deleted_count + 1))
-            else
-                echo "   ❌ Failed to delete run ID: $run_id"
-            fi
-            
-            # Small delay to avoid rate limiting
-            sleep 1
-        fi
-    done
-    
-    echo ""
-    echo "✅ Cleanup completed! Deleted $deleted_count old workflow runs"
+    echo "$all_runs_file"
 }
 
-# Function to show current status
-show_status() {
-    echo ""
-    echo "📊 Current Workflow Status:"
-    echo "=========================="
+# Function to sort runs by creation date (oldest first)
+sort_runs_by_date() {
+    local input_file="$1"
+    local output_file="$2"
     
-    # Get current workflow runs count
-    current_runs=$(gh api repos/$REPO_OWNER/$REPO_NAME/actions/workflows/$WORKFLOW_NAME/runs \
-        --jq '.total_count' 2>/dev/null || echo "0")
+    # Sort by created_at field (oldest first)
+    jq -s 'sort_by(.created_at)' "$input_file" > "$output_file"
+}
+
+# Function to delete workflow run
+delete_workflow_run() {
+    local run_id="$1"
     
-    echo "Total workflow runs: $current_runs"
-    echo "Runs to keep: $MAX_RUNS_TO_KEEP"
-    echo "Runs that would be deleted: $((current_runs - MAX_RUNS_TO_KEEP))"
+    if [ "$DRY_RUN" = "true" ]; then
+        echo "  [DRY RUN] Would delete run ID: $run_id"
+        return 0
+    fi
     
-    # Show recent runs
-    echo ""
-    echo "📋 Recent workflow runs:"
-    gh api repos/$REPO_OWNER/$REPO_NAME/actions/workflows/$WORKFLOW_NAME/runs \
-        --jq '.workflow_runs[0:5][] | "  \(.run_number): \(.conclusion // .status) - \(.display_title)"' 2>/dev/null || echo "  Unable to fetch recent runs"
+    if gh api repos/$REPO_OWNER/$REPO_NAME/actions/runs/$run_id --method DELETE &>/dev/null; then
+        echo "  ✅ Deleted run ID: $run_id"
+        return 0
+    else
+        echo "  ❌ Failed to delete run ID: $run_id"
+        return 1
+    fi
 }
 
 # Main execution
 main() {
-    echo "🚀 Starting workflow cleanup process..."
-    echo ""
-    
     # Check prerequisites
     check_gh_cli
+    check_jq
+    check_auth
     
-    # Get workflow runs
-    get_workflow_runs
+    # Get all workflow runs
+    local all_runs_file=$(get_all_workflow_runs)
+    local sorted_runs_file=$(mktemp)
     
-    # Show current status
-    show_status
+    # Sort runs by creation date
+    sort_runs_by_date "$all_runs_file" "$sorted_runs_file"
     
-    # Perform cleanup
-    cleanup_old_runs
+    # Count total runs
+    local total_runs=$(jq length "$sorted_runs_file")
+    echo "✅ Found $total_runs total workflow runs"
+    
+    if [ "$total_runs" -eq 0 ]; then
+        echo "ℹ️ No workflow runs found to clean up"
+        rm -f "$all_runs_file" "$sorted_runs_file"
+        exit 0
+    fi
+    
+    # Get runs to delete (first N runs)
+    local runs_to_delete_file=$(mktemp)
+    jq ".[0:$DELETE_FIRST_N_RUNS]" "$sorted_runs_file" > "$runs_to_delete_file"
+    
+    # Get runs to keep (remaining runs)
+    local runs_to_keep_file=$(mktemp)
+    jq ".[$DELETE_FIRST_N_RUNS:]" "$sorted_runs_file" > "$runs_to_keep_file"
+    
+    local delete_count=$(jq length "$runs_to_delete_file")
+    local keep_count=$(jq length "$runs_to_keep_file")
+    
+    echo ""
+    echo "📊 Analysis:"
+    echo "   Total runs: $total_runs"
+    echo "   Runs to delete: $delete_count"
+    echo "   Runs to keep: $keep_count"
+    
+    if [ "$delete_count" -eq 0 ]; then
+        echo "ℹ️ No runs to delete"
+        rm -f "$all_runs_file" "$sorted_runs_file" "$runs_to_delete_file" "$runs_to_keep_file"
+        exit 0
+    fi
+    
+    # Show runs to be deleted
+    echo ""
+    echo "🗑️ Runs to be deleted (first $DELETE_FIRST_N_RUNS):"
+    jq -r '.[0:10][] | "   \(.run_number | tostring | lpad(3)): Run #\(.run_number) - \(.title | .[0:50])... (\(.status))"' "$runs_to_delete_file"
+    
+    if [ "$delete_count" -gt 10 ]; then
+        echo "   ... and $((delete_count - 10)) more runs"
+    fi
+    
+    # Show runs to keep
+    echo ""
+    echo "✅ Runs to keep (most recent $keep_count):"
+    jq -r '.[-5:][] | "   \(.run_number | tostring | lpad(3)): Run #\(.run_number) - \(.title | .[0:50])... (\(.status))"' "$runs_to_keep_file"
+    
+    if [ "$DRY_RUN" = "true" ]; then
+        echo ""
+        echo "🔍 DRY RUN MODE - No actual deletion will occur"
+        echo "To perform actual deletion, set DRY_RUN=false in the script"
+        rm -f "$all_runs_file" "$sorted_runs_file" "$runs_to_delete_file" "$runs_to_keep_file"
+        exit 0
+    fi
+    
+    # Confirm deletion
+    echo ""
+    echo "⚠️ WARNING: This will permanently delete $delete_count workflow runs!"
+    echo "This action cannot be undone."
+    echo ""
+    read -p "Type 'DELETE' to confirm: " confirm
+    
+    if [ "$confirm" != "DELETE" ]; then
+        echo "❌ Deletion cancelled"
+        rm -f "$all_runs_file" "$sorted_runs_file" "$runs_to_delete_file" "$runs_to_keep_file"
+        exit 0
+    fi
+    
+    # Perform deletion
+    echo ""
+    echo "🗑️ Deleting $delete_count workflow runs..."
+    local deleted_count=0
+    local failed_count=0
+    
+    jq -r '.[].id' "$runs_to_delete_file" | while read -r run_id; do
+        if delete_workflow_run "$run_id"; then
+            ((deleted_count++))
+        else
+            ((failed_count++))
+        fi
+        sleep 0.5  # Rate limiting
+    done
+    
+    echo ""
+    echo "🎉 Cleanup completed!"
+    echo "   ✅ Successfully deleted: $deleted_count runs"
+    echo "   ❌ Failed to delete: $failed_count runs"
+    echo "   📊 Remaining runs: $keep_count"
     
     # Cleanup temporary files
-    rm -f /tmp/workflow_runs.json
-    
-    echo ""
-    echo "🎉 Workflow cleanup process completed!"
-    echo ""
-    echo "💡 Tips:"
-    echo "  - Run this script periodically to keep your workflow history clean"
-    echo "  - Adjust MAX_RUNS_TO_KEEP to keep more or fewer runs"
-    echo "  - Set DRY_RUN=true to preview changes without deleting"
-    echo "  - Check GitHub Actions settings for automatic cleanup options"
+    rm -f "$all_runs_file" "$sorted_runs_file" "$runs_to_delete_file" "$runs_to_keep_file"
 }
 
 # Run main function
