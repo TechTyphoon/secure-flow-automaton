@@ -23,9 +23,9 @@
 
 - **🔍 Live SonarQube Integration**: Real code quality metrics and security hotspots
 - **🛡️ Real Snyk Scanning**: Live dependency vulnerability monitoring  
-- **📱 Portfolio Ready**: Zero-cost deployment using GitHub Student Pack
+- **📱 Production Ready**: Enterprise-grade deployment capabilities
 - **🏥 Health Monitoring**: Real-time service health with automatic fallbacks
-- **⚡ Browser Optimized**: All console errors resolved, portfolio-ready
+- **⚡ Browser Optimized**: Performance optimized for production use
 - **🔧 Developer Friendly**: Comprehensive setup guides and documentation
 - **🎯 Zero Downtime**: Graceful fallbacks ensure continuous operation
 
@@ -150,11 +150,11 @@ DOCKER_HUB_TOKEN=your_dockerhub_token
 GITHUB_TOKEN=your_github_personal_access_token
 ```
 
-**⚡ Quick Demo Mode (No API Keys Required)**
+**⚡ Quick Start (Development Mode)**
 ```bash
-# Run with mock security data for demonstration
+# Run in development mode
 npm run dev
-# Visit http://localhost:8080 - Full UI with sample security data
+# Visit http://localhost:8080
 ```
 
 ### 🐳 Docker Production Deployment
@@ -351,7 +351,7 @@ npm run setup:full       # Complete setup from scratch
 - Multi-tool security analysis coordination
 - Weighted security scoring algorithms
 - Cross-tool correlation and deduplication
-- Intelligent fallback to mock data for demos
+- Intelligent error handling and recovery
 ```
 
 ### Database Schema

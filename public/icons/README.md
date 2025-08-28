@@ -20,7 +20,7 @@ This directory contains the Progressive Web App icons in various sizes for diffe
 - Consider making icons "maskable" for adaptive icon support
 - Test icons on various devices and platforms
 
-For this demo, you can use the existing logo.svg converted to PNG format in these sizes, or generate appropriate app icons using tools like:
+For production deployment, use the existing logo.svg converted to PNG format in these sizes, or generate appropriate app icons using tools like:
 - https://realfavicongenerator.net/
 - https://www.pwabuilder.com/imageGenerator
 - https://maskable.app/ (for maskable icons)
