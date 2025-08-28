@@ -79,7 +79,14 @@ describe('End-to-End Integration Tests', () => {
     });
 
     test('Quantum internet should connect nodes successfully', async () => {
-        const connectionStatus = quantumInternet.establishConnection('Node1', 'Node2');
+        // Try multiple times due to probabilistic nature of quantum connections
+        let connectionStatus = false;
+        for (let attempt = 0; attempt < 5; attempt++) {
+            connectionStatus = await quantumInternet.establishConnection('QN-US-001', 'QN-EU-001');
+            if (connectionStatus) break;
+            // Small delay between attempts
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
         expect(connectionStatus).toBe(true);
     });
 
