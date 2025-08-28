@@ -1,11 +1,11 @@
 SecureFlow Automaton - System Report
-Generated: 2025-08-21T08:20:01.965Z
+Generated: 2025-08-28T10:19:47.872Z
 
 Environment:
-- Node.js: v24.2.0
+- Node.js: v22.16.0
 - Platform: linux
 - Architecture: x64
-- Working Directory: /home/reddy/clones/secure-flow-automaton
+- Working Directory: /workspace
 
 Verification Status: PASSED
 All checks passed successfully!
