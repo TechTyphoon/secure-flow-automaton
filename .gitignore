@@ -26,3 +26,12 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
+
+# Environment files - NEVER commit these!
+.env
+.env.*
+*.env
+config/environment/.env*
+!config/environment/.env.example
+!config/environment/.env.*.template
+infrastructure/.env*
