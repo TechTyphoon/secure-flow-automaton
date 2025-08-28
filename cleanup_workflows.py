@@ -14,8 +14,8 @@ from datetime import datetime
 REPO_OWNER = "TechTyphoon"
 REPO_NAME = "secure-flow-automaton"
 WORKFLOW_NAME = "reliable-ci.yml"
-DELETE_FIRST_N_RUNS = 250  # Delete the first 250 workflow runs
-DRY_RUN = True  # Set to False for actual deletion
+DELETE_FIRST_N_RUNS = 25  # Delete the first 25 workflow runs
+DRY_RUN = False  # Set to False for actual deletion
 
 # GitHub API base URL
 GITHUB_API_BASE = "https://api.github.com"
