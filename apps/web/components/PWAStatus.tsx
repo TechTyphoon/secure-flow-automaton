@@ -44,10 +44,10 @@ const PWAStatus: React.FC = () => {
     getAppInfo
   } = usePWA();
 
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'not-supported'>('default');
   const [isInstalling, setIsInstalling] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [appInfo, setAppInfo] = useState<any>(null);
+  const [appInfo, setAppInfo] = useState<Record<string, unknown> | null>(null);
   const [showPWAPrompt, setShowPWAPrompt] = useState(false);
 
   useEffect(() => {
@@ -295,11 +295,11 @@ const PWAStatus: React.FC = () => {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span>Name:</span>
-                          <span className="font-medium">{appInfo.name}</span>
+                          <span className="font-medium">{String(appInfo.name)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Version:</span>
-                          <span className="font-medium">{appInfo.version}</span>
+                          <span className="font-medium">{String(appInfo.version)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Installation:</span>
@@ -310,7 +310,7 @@ const PWAStatus: React.FC = () => {
                         <div className="flex justify-between">
                           <span>Service Worker:</span>
                           <Badge variant={appInfo.serviceWorkerState === 'activated' ? "default" : "secondary"}>
-                            {appInfo.serviceWorkerState}
+                            {String(appInfo.serviceWorkerState)}
                           </Badge>
                         </div>
                       </div>
@@ -321,11 +321,11 @@ const PWAStatus: React.FC = () => {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span>Cache Size:</span>
-                          <span className="font-medium">{formatBytes(appInfo.cacheSize)}</span>
+                          <span className="font-medium">{formatBytes(Number(appInfo.cacheSize))}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Offline Actions:</span>
-                          <span className="font-medium">{appInfo.offlineActionsCount}</span>
+                          <span className="font-medium">{String(appInfo.offlineActionsCount)}</span>
                         </div>
                       </div>
                     </div>

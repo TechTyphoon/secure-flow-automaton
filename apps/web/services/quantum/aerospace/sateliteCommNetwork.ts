@@ -435,9 +435,9 @@ export class QuantumSatelliteCommNetwork {
    */
   async monitorNetwork(): Promise<{
     status: string;
-    satellites: any;
-    links: any;
-    performance: any;
+    satellites: SatelliteStatus;
+    links: LinkStatus;
+    performance: NetworkPerformance;
     alerts: string[];
   }> {
     const satelliteHealth = Array.from(this.satellites.values()).map(sat => ({
@@ -489,7 +489,7 @@ export class QuantumSatelliteCommNetwork {
     event: 'satellite_failure' | 'ground_station_down' | 'traffic_surge' | 'jamming_detected'
   ): Promise<{
     action: string;
-    parameters: any;
+    parameters: ReconfigurationParameters;
     impact: string;
     success: boolean;
   }> {
@@ -569,7 +569,7 @@ export class QuantumSatelliteCommNetwork {
     return distance < maxRange && sat1.status === 'active' && sat2.status === 'active';
   }
 
-  private calculateDistance(pos1: any, pos2: any): number {
+  private calculateDistance(pos1: Position, pos2: Position): number {
     // Simplified 3D distance calculation
     const dx = pos1.latitude - pos2.latitude;
     const dy = pos1.longitude - pos2.longitude;
@@ -583,7 +583,7 @@ export class QuantumSatelliteCommNetwork {
     return elevation > groundStation.coverage.minElevation;
   }
 
-  private calculateElevation(satPos: any, gsPos: any): number {
+  private calculateElevation(satPos: Position, gsPos: Position): number {
     // Simplified elevation calculation
     return Math.abs(satPos.latitude - gsPos.latitude) < 10 ? 45 : 5; // degrees
   }
@@ -621,6 +621,44 @@ export class QuantumSatelliteCommNetwork {
     this.activeLinks.set(link.id, link);
     return link;
   }
+}
+
+// Type definitions for satellite communication network
+interface SatelliteStatus {
+  total: number;
+  active: number;
+  avgPower: number;
+  avgTemp: number;
+}
+
+interface LinkStatus {
+  total: number;
+  active: number;
+  avgQuality: number;
+  totalBandwidth: number;
+}
+
+interface NetworkPerformance {
+  globalCoverage: number;
+  avgLatency: number;
+  reliability: number;
+  throughput: number;
+}
+
+interface ReconfigurationParameters {
+  alternativePaths?: number;
+  rerouting_time?: number;
+  capacity_reduction?: number;
+  bandwidth_increase?: number;
+  priority_adjustment?: string;
+  load_balancing?: string;
+  [key: string]: unknown;
+}
+
+interface Position {
+  latitude: number;
+  longitude: number;
+  altitude: number;
 }
 
 // Export for use in aerospace quantum applications

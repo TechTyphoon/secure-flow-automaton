@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -64,23 +64,23 @@ const PerformanceMonitor: React.FC = () => {
   const [performanceScore, setPerformanceScore] = useState(0);
 
   // Core Web Vitals thresholds
-  const thresholds = {
+  const thresholds = useMemo(() => ({
     lcp: { good: 2500, poor: 4000 },
     fid: { good: 100, poor: 300 },
     cls: { good: 0.1, poor: 0.25 },
     ttfb: { good: 800, poor: 1800 },
     fcp: { good: 1800, poor: 3000 },
     tti: { good: 3800, poor: 7300 }
-  };
+  }), []);
 
-  const getPerformanceRating = (metric: string, value: number): 'good' | 'needs-improvement' | 'poor' => {
+  const getPerformanceRating = useCallback((metric: string, value: number): 'good' | 'needs-improvement' | 'poor' => {
     const threshold = thresholds[metric as keyof typeof thresholds];
     if (!threshold) return 'good';
     
     if (value <= threshold.good) return 'good';
     if (value <= threshold.poor) return 'needs-improvement';
     return 'poor';
-  };
+  }, [thresholds]);
 
   const calculatePerformanceScore = useCallback((metrics: PerformanceMetrics): number => {
     const weights = {
@@ -111,7 +111,7 @@ const PerformanceMonitor: React.FC = () => {
     });
 
     return Math.round(totalScore / totalWeight);
-  }, []);
+  }, [getPerformanceRating]);
 
   const collectPerformanceMetrics = useCallback((): PerformanceMetrics => {
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
@@ -207,7 +207,7 @@ const PerformanceMonitor: React.FC = () => {
     }
 
     setAlerts(prev => [...newAlerts, ...prev.slice(0, 4)]); // Keep only latest 5 alerts
-  }, []);
+  }, [thresholds, getPerformanceRating]);
 
   useEffect(() => {
     const updateMetrics = () => {

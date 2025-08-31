@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
 // Health monitoring context for application-wide health tracking
 
@@ -43,7 +43,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     responseTime: 0,
     memoryUsage: 0,
     bundleLoadTime: 0,
-    apiConnectivity: 'unknown' as any,
+  apiConnectivity: 'disconnected',
     errorCount: 0,
     userSession: {
       sessionId: generateSessionId(),
@@ -61,7 +61,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }
 
   // Record application errors
-  const recordError = (error: Error, context = 'unknown') => {
+  const recordError = useCallback((error: Error, context = 'unknown') => {
     const errorMessage = `${context}: ${error.message}`;
     
     setMetrics(prev => ({
@@ -82,7 +82,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Update health status based on error count
     updateHealthStatus();
-  };
+  }, [metrics.userSession.sessionId]);
 
   // Record page view
   const recordPageView = (page: string) => {
@@ -105,7 +105,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Performance monitoring
   const measurePerformance = () => {
     // Memory usage (if available)
-    const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
+    const memoryUsage = (performance as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
     
     // Bundle load time from navigation timing
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
@@ -142,7 +142,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   // Comprehensive health check
-  const checkHealth = async () => {
+  const checkHealth = useCallback(async () => {
     const startTime = performance.now();
     
     try {
@@ -163,7 +163,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       recordError(error as Error, 'health-check');
     }
-  };
+  }, [recordError]);
 
   // Update overall health status
   const updateHealthStatus = () => {
@@ -213,7 +213,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => {
       healthInterval && clearInterval(healthInterval);
     };
-  }, []);
+  }, [checkHealth]);
 
   // Global error handling
   useEffect(() => {
@@ -232,7 +232,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       window.removeEventListener('error', handleUnhandledError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
     };
-  }, []);
+  }, [recordError]);
 
   const value: HealthContextType = {
     metrics,

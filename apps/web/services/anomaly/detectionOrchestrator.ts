@@ -9,21 +9,22 @@ import EnsembleDetectionService from './ensembleDetection';
 import TimeSeriesAnalysisService from './timeSeriesAnalysis';
 import MultivariateDetectionService from './multivariateDetection';
 import PatternRecognitionEngine from './patternRecognition';
+import { AnomalyResult } from './index';
 
 // Interfaces for orchestration
 interface DetectionRequest {
   id: string;
-  data: any;
+  data: DetectionData;
   dataType: 'univariate' | 'multivariate' | 'timeseries' | 'graph' | 'mixed';
   priority: 'low' | 'medium' | 'high' | 'critical';
   methods?: string[];
-  configuration?: any;
-  metadata?: any;
+  configuration?: DetectionConfiguration;
+  metadata?: DetectionMetadata;
 }
 
 interface DetectionResult {
   requestId: string;
-  results: any[];
+  results: MethodResult[];
   fusedResult: FusedAnomalyResult;
   performance: PerformanceMetrics;
   timestamp: number;
@@ -63,6 +64,66 @@ interface PipelineConfig {
   };
 }
 
+type DetectionData = unknown;
+
+interface DetectionConfiguration {
+  [key: string]: unknown;
+}
+
+interface DetectionMetadata {
+  [key: string]: unknown;
+}
+
+interface DataCharacteristics {
+  length?: number;
+  mean?: number;
+  variance?: number;
+  standardDeviation?: number;
+  trend?: number;
+  seasonality?: number;
+  hasOutliers?: boolean;
+  stationarity?: boolean;
+  nodeCount?: number;
+  edgeCount?: number;
+  density?: number;
+  isConnected?: boolean;
+  isSparse?: boolean;
+  featureCount?: number;
+  features?: string[];
+  correlations?: number[];
+  maxCorrelation?: number;
+  highlyCorrelated?: boolean;
+  sparsity?: number;
+  isRegular?: boolean;
+  averageInterval?: number;
+  hasGaps?: boolean;
+  volatility?: number;
+  complex?: boolean;
+}
+
+interface AnalysisResult {
+  type: 'univariate' | 'multivariate' | 'timeseries' | 'graph' | 'mixed';
+  characteristics: DataCharacteristics;
+  recommendedMethods: string[];
+}
+
+interface MethodResult {
+  method?: string;
+  algorithm?: string;
+  isAnomaly?: boolean;
+  finalDecision?: boolean;
+  score?: number;
+  finalScore?: number;
+  confidence?: number;
+  explanation?: string[];
+  performance?: {
+    accuracy?: number;
+  };
+  executionTime?: number;
+  error?: string;
+  results?: unknown[];
+}
+
 interface ModelPerformanceHistory {
   method: string;
   accuracy: number[];
@@ -72,13 +133,25 @@ interface ModelPerformanceHistory {
   timestamp: number[];
 }
 
+interface OrchestrationStatistics {
+  config: PipelineConfig;
+  isInitialized: boolean;
+  servicesStatus: {
+    deepLearning: boolean;
+    ensemble: boolean;
+    timeSeries: boolean;
+    multivariate: boolean;
+    patternRecognition: boolean;
+  };
+  performanceHistory: Record<string, ModelPerformanceHistory>;
+  queueSize: number;
+  isProcessing: boolean;
+  timestamp: number;
+}
+
 // Data characteristics analyzer
 class DataCharacteristicsAnalyzer {
-  static analyzeData(data: any): {
-    type: 'univariate' | 'multivariate' | 'timeseries' | 'graph' | 'mixed';
-    characteristics: any;
-    recommendedMethods: string[];
-  } {
+  static analyzeData(data: DetectionData): AnalysisResult {
     // Determine data type and characteristics
     if (Array.isArray(data)) {
       if (data.length === 0) {
@@ -90,28 +163,28 @@ class DataCharacteristicsAnalyzer {
       }
 
       const firstElement = data[0];
-      
+
       // Check if it's a simple array of numbers (univariate)
       if (typeof firstElement === 'number') {
         return this.analyzeUnivariateData(data);
       }
-      
+
       // Check if it's time series data
       if (firstElement && typeof firstElement === 'object' && 'timestamp' in firstElement) {
         return this.analyzeTimeSeriesData(data);
       }
-      
+
       // Check if it's multivariate data
       if (firstElement && typeof firstElement === 'object' && 'features' in firstElement) {
         return this.analyzeMultivariateData(data);
       }
-      
+
       // Check if it's graph data
       if (firstElement && typeof firstElement === 'object' && ('nodes' in firstElement || 'id' in firstElement)) {
         return this.analyzeGraphData(data);
       }
     }
-    
+
     // Default case
     return {
       type: 'mixed',
@@ -120,17 +193,17 @@ class DataCharacteristicsAnalyzer {
     };
   }
 
-  private static analyzeUnivariateData(data: number[]): any {
+  private static analyzeUnivariateData(data: number[]): AnalysisResult {
     const length = data.length;
     const mean = data.reduce((sum, val) => sum + val, 0) / length;
     const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / length;
-    
+
     // Check for trends
     const trend = this.calculateTrend(data);
-    
+
     // Check for seasonality
     const seasonality = this.detectSeasonality(data);
-    
+
     const characteristics = {
       length,
       mean,
@@ -151,17 +224,17 @@ class DataCharacteristicsAnalyzer {
     };
   }
 
-  private static analyzeTimeSeriesData(data: any[]): any {
+  private static analyzeTimeSeriesData(data: unknown[]): AnalysisResult {
     const length = data.length;
-    const values = data.map(d => d.value || 0);
-    const timestamps = data.map(d => d.timestamp);
-    
+    const values = data.map((d: unknown) => (d as { value?: number }).value || 0);
+    const timestamps = data.map((d: unknown) => (d as { timestamp?: number }).timestamp);
+
     // Calculate time intervals
     const intervals = [];
     for (let i = 1; i < timestamps.length; i++) {
       intervals.push(timestamps[i] - timestamps[i - 1]);
     }
-    
+
     const avgInterval = intervals.reduce((sum, val) => sum + val, 0) / intervals.length;
     const isRegular = intervals.every(interval => Math.abs(interval - avgInterval) < avgInterval * 0.1);
 
@@ -187,15 +260,15 @@ class DataCharacteristicsAnalyzer {
     };
   }
 
-  private static analyzeMultivariateData(data: any[]): any {
+  private static analyzeMultivariateData(data: unknown[]): AnalysisResult {
     const length = data.length;
-    const features = Object.keys(data[0].features || {});
+    const features = Object.keys((data[0] as any).features || {});
     const featureCount = features.length;
-    
+
     // Calculate correlations between features
     const correlations = this.calculateFeatureCorrelations(data, features);
     const maxCorrelation = Math.max(...correlations);
-    
+
     const characteristics = {
       length,
       featureCount,
@@ -218,13 +291,13 @@ class DataCharacteristicsAnalyzer {
     };
   }
 
-  private static analyzeGraphData(data: any[]): any {
+  private static analyzeGraphData(data: unknown[]): AnalysisResult {
     // Assume data contains nodes and edges
-    const nodeCount = data.filter(item => item.id).length;
-    const edgeCount = data.filter(item => item.source && item.target).length;
-    
+    const nodeCount = data.filter((item: unknown) => (item as { id?: string }).id).length;
+    const edgeCount = data.filter((item: unknown) => (item as { source?: string; target?: string }).source && (item as { source?: string; target?: string }).target).length;
+
     const density = nodeCount > 1 ? (2 * edgeCount) / (nodeCount * (nodeCount - 1)) : 0;
-    
+
     const characteristics = {
       nodeCount,
       edgeCount,
@@ -243,19 +316,19 @@ class DataCharacteristicsAnalyzer {
   private static calculateTrend(data: number[]): number {
     const n = data.length;
     if (n < 2) return 0;
-    
-    const x = Array.from({length: n}, (_, i) => i);
+
+    const x = Array.from({ length: n }, (_, i) => i);
     const xMean = x.reduce((sum, val) => sum + val, 0) / n;
     const yMean = data.reduce((sum, val) => sum + val, 0) / n;
-    
+
     let numerator = 0;
     let denominator = 0;
-    
+
     for (let i = 0; i < n; i++) {
       numerator += (x[i] - xMean) * (data[i] - yMean);
       denominator += (x[i] - xMean) ** 2;
     }
-    
+
     return denominator === 0 ? 0 : numerator / denominator;
   }
 
@@ -263,31 +336,31 @@ class DataCharacteristicsAnalyzer {
     // Simple seasonality detection using autocorrelation
     const maxLag = Math.min(Math.floor(data.length / 3), 50);
     let maxAutocorr = 0;
-    
+
     for (let lag = 1; lag < maxLag; lag++) {
       const autocorr = this.autocorrelation(data, lag);
       maxAutocorr = Math.max(maxAutocorr, Math.abs(autocorr));
     }
-    
+
     return maxAutocorr;
   }
 
   private static autocorrelation(data: number[], lag: number): number {
     const n = data.length;
     if (lag >= n) return 0;
-    
+
     const mean = data.reduce((sum, val) => sum + val, 0) / n;
     let numerator = 0;
     let denominator = 0;
-    
+
     for (let i = 0; i < n - lag; i++) {
       numerator += (data[i] - mean) * (data[i + lag] - mean);
     }
-    
+
     for (let i = 0; i < n; i++) {
       denominator += (data[i] - mean) ** 2;
     }
-    
+
     return denominator === 0 ? 0 : numerator / denominator;
   }
 
@@ -298,7 +371,7 @@ class DataCharacteristicsAnalyzer {
     const iqr = q3 - q1;
     const lowerBound = q1 - 1.5 * iqr;
     const upperBound = q3 + 1.5 * iqr;
-    
+
     return data.some(val => val < lowerBound || val > upperBound);
   }
 
@@ -306,7 +379,7 @@ class DataCharacteristicsAnalyzer {
     // Simple stationarity check using variance in windows
     const windowSize = Math.floor(data.length / 4);
     if (windowSize < 10) return true;
-    
+
     const variances = [];
     for (let i = 0; i <= data.length - windowSize; i += windowSize) {
       const window = data.slice(i, i + windowSize);
@@ -314,10 +387,10 @@ class DataCharacteristicsAnalyzer {
       const variance = window.reduce((sum, val) => sum + (val - mean) ** 2, 0) / window.length;
       variances.push(variance);
     }
-    
+
     const varianceOfVariances = this.variance(variances);
     const meanVariance = variances.reduce((sum, val) => sum + val, 0) / variances.length;
-    
+
     return varianceOfVariances / meanVariance < 0.5; // Threshold for stationarity
   }
 
@@ -328,12 +401,12 @@ class DataCharacteristicsAnalyzer {
 
   private static detectGaps(timestamps: number[]): boolean {
     if (timestamps.length < 2) return false;
-    
+
     const intervals = [];
     for (let i = 1; i < timestamps.length; i++) {
       intervals.push(timestamps[i] - timestamps[i - 1]);
     }
-    
+
     const avgInterval = intervals.reduce((sum, val) => sum + val, 0) / intervals.length;
     return intervals.some(interval => interval > avgInterval * 3);
   }
@@ -345,26 +418,26 @@ class DataCharacteristicsAnalyzer {
         returns.push((data[i] - data[i - 1]) / data[i - 1]);
       }
     }
-    
+
     const mean = returns.reduce((sum, val) => sum + val, 0) / returns.length;
     const variance = returns.reduce((sum, val) => sum + (val - mean) ** 2, 0) / returns.length;
-    
+
     return Math.sqrt(variance);
   }
 
-  private static calculateFeatureCorrelations(data: any[], features: string[]): number[] {
+  private static calculateFeatureCorrelations(data: unknown[], features: string[]): number[] {
     const correlations = [];
-    
+
     for (let i = 0; i < features.length; i++) {
       for (let j = i + 1; j < features.length; j++) {
-        const values1 = data.map(d => d.features[features[i]] || 0);
-        const values2 = data.map(d => d.features[features[j]] || 0);
-        
+        const values1 = data.map((d: DataPoint) => d.features[features[i]] || 0);
+        const values2 = data.map((d: DataPoint) => d.features[features[j]] || 0);
+
         const correlation = this.correlation(values1, values2);
         correlations.push(Math.abs(correlation));
       }
     }
-    
+
     return correlations;
   }
 
@@ -372,62 +445,62 @@ class DataCharacteristicsAnalyzer {
     const n = Math.min(x.length, y.length);
     const xMean = x.slice(0, n).reduce((sum, val) => sum + val, 0) / n;
     const yMean = y.slice(0, n).reduce((sum, val) => sum + val, 0) / n;
-    
+
     let numerator = 0;
     let xVariance = 0;
     let yVariance = 0;
-    
+
     for (let i = 0; i < n; i++) {
       const xDiff = x[i] - xMean;
       const yDiff = y[i] - yMean;
-      
+
       numerator += xDiff * yDiff;
       xVariance += xDiff ** 2;
       yVariance += yDiff ** 2;
     }
-    
+
     const denominator = Math.sqrt(xVariance * yVariance);
     return denominator === 0 ? 0 : numerator / denominator;
   }
 
-  private static calculateSparsity(data: any[], features: string[]): number {
+  private static calculateSparsity(data: unknown[], features: string[]): number {
     let zeroCount = 0;
     let totalCount = 0;
-    
+
     for (const item of data) {
       for (const feature of features) {
         totalCount++;
-        if ((item.features[feature] || 0) === 0) {
+        if (((item as any).features[feature] || 0) === 0) {
           zeroCount++;
         }
       }
     }
-    
+
     return totalCount === 0 ? 0 : zeroCount / totalCount;
   }
 
-  private static recommendMethodsForUnivariate(characteristics: any): string[] {
+  private static recommendMethodsForUnivariate(characteristics: DataCharacteristics): string[] {
     const methods = ['ensemble'];
-    
+
     if (characteristics.length > 100) {
       methods.push('deep_learning');
     }
-    
+
     if (characteristics.trend !== 0 || characteristics.seasonality > 0.3) {
       methods.push('time_series');
     }
-    
+
     if (characteristics.hasOutliers) {
       methods.push('pattern_recognition');
     }
-    
+
     return methods;
   }
 }
 
 // Result fusion engine
 class ResultFusionEngine {
-  static fuseResults(results: any[], strategy: string = 'weighted'): FusedAnomalyResult {
+  static fuseResults(results: MethodResult[], strategy: string = 'weighted'): FusedAnomalyResult {
     if (results.length === 0) {
       return this.createEmptyResult();
     }
@@ -446,15 +519,15 @@ class ResultFusionEngine {
     }
   }
 
-  private static votingFusion(results: any[]): FusedAnomalyResult {
+  private static votingFusion(results: MethodResult[]): FusedAnomalyResult {
     const anomalyVotes = results.filter(r => r.isAnomaly || r.finalDecision).length;
     const totalVotes = results.length;
-    
+
     const consensusScore = anomalyVotes / totalVotes;
     const isAnomaly = consensusScore > 0.5;
-    
+
     const avgConfidence = results.reduce((sum, r) => sum + (r.confidence || 0.5), 0) / results.length;
-    
+
     return {
       isAnomaly,
       confidenceScore: avgConfidence,
@@ -467,27 +540,27 @@ class ResultFusionEngine {
     };
   }
 
-  private static weightedFusion(results: any[]): FusedAnomalyResult {
+  private static weightedFusion(results: MethodResult[]): FusedAnomalyResult {
     // Define weights based on method reliability
     const weights = this.calculateMethodWeights(results);
-    
+
     let weightedScore = 0;
     let weightedConfidence = 0;
     let totalWeight = 0;
-    
+
     results.forEach((result, index) => {
       const weight = weights[index] || 1;
       const score = result.score || result.finalScore || (result.isAnomaly ? 1 : 0);
       const confidence = result.confidence || 0.5;
-      
+
       weightedScore += score * weight;
       weightedConfidence += confidence * weight;
       totalWeight += weight;
     });
-    
+
     const finalScore = totalWeight > 0 ? weightedScore / totalWeight : 0;
     const finalConfidence = totalWeight > 0 ? weightedConfidence / totalWeight : 0;
-    
+
     return {
       isAnomaly: finalScore > 0.6,
       confidenceScore: finalConfidence,
@@ -500,23 +573,23 @@ class ResultFusionEngine {
     };
   }
 
-  private static stackingFusion(results: any[]): FusedAnomalyResult {
+  private static stackingFusion(results: MethodResult[]): FusedAnomalyResult {
     // Simplified stacking - use weighted average with performance-based weights
     const performanceWeights = results.map(r => r.performance?.accuracy || 0.8);
     const totalPerformanceWeight = performanceWeights.reduce((sum, w) => sum + w, 0);
-    
+
     let stackedScore = 0;
     let stackedConfidence = 0;
-    
+
     results.forEach((result, index) => {
       const weight = performanceWeights[index] / totalPerformanceWeight;
       const score = result.score || result.finalScore || (result.isAnomaly ? 1 : 0);
       const confidence = result.confidence || 0.5;
-      
+
       stackedScore += score * weight;
       stackedConfidence += confidence * weight;
     });
-    
+
     return {
       isAnomaly: stackedScore > 0.7,
       confidenceScore: stackedConfidence,
@@ -529,10 +602,10 @@ class ResultFusionEngine {
     };
   }
 
-  private static adaptiveFusion(results: any[]): FusedAnomalyResult {
+  private static adaptiveFusion(results: MethodResult[]): FusedAnomalyResult {
     // Adaptive fusion based on result confidence and consensus
     const highConfidenceResults = results.filter(r => (r.confidence || 0.5) > 0.8);
-    
+
     if (highConfidenceResults.length > 0) {
       // Use high-confidence results with higher weight
       return this.weightedFusion(highConfidenceResults);
@@ -542,7 +615,7 @@ class ResultFusionEngine {
     }
   }
 
-  private static calculateMethodWeights(results: any[]): number[] {
+  private static calculateMethodWeights(results: MethodResult[]): number[] {
     return results.map((result, index) => {
       // Weight based on confidence and method type
       const confidence = result.confidence || 0.5;
@@ -551,13 +624,13 @@ class ResultFusionEngine {
     });
   }
 
-  private static calculateConsensus(results: any[]): number {
+  private static calculateConsensus(results: MethodResult[]): number {
     if (results.length === 0) return 0;
-    
+
     const decisions = results.map(r => r.isAnomaly || r.finalDecision ? 1 : 0);
     const mean = decisions.reduce((sum, val) => sum + val, 0) / decisions.length;
     const variance = decisions.reduce((sum, val) => sum + (val - mean) ** 2, 0) / decisions.length;
-    
+
     return 1 - Math.sqrt(variance); // Higher consensus = lower variance
   }
 
@@ -568,58 +641,58 @@ class ResultFusionEngine {
     return 'CRITICAL';
   }
 
-  private static extractMethodScores(results: any[]): { [method: string]: number } {
+  private static extractMethodScores(results: MethodResult[]): { [method: string]: number } {
     const scores: { [method: string]: number } = {};
-    
+
     results.forEach((result, index) => {
       const methodName = result.method || result.algorithm || `method_${index}`;
       scores[methodName] = result.score || result.finalScore || (result.isAnomaly ? 1 : 0);
     });
-    
+
     return scores;
   }
 
-  private static generateFusedExplanation(results: any[], strategy: string): string[] {
+  private static generateFusedExplanation(results: MethodResult[], strategy: string): string[] {
     const explanations = [`Fusion strategy: ${strategy}`];
-    
+
     const anomalyCount = results.filter(r => r.isAnomaly || r.finalDecision).length;
     explanations.push(`${anomalyCount}/${results.length} methods detected anomaly`);
-    
+
     // Extract key explanations from individual methods
     const allExplanations = results.flatMap(r => r.explanation || []);
     const uniqueExplanations = [...new Set(allExplanations)];
-    
+
     if (uniqueExplanations.length > 0) {
       explanations.push(`Key findings: ${uniqueExplanations.slice(0, 3).join(', ')}`);
     }
-    
+
     return explanations;
   }
 
-  private static generateRecommendations(results: any[], isAnomaly: boolean): string[] {
+  private static generateRecommendations(results: MethodResult[], isAnomaly: boolean): string[] {
     const recommendations = [];
-    
+
     if (isAnomaly) {
       recommendations.push('Immediate investigation recommended');
       recommendations.push('Review data sources and context');
-      
+
       const highConfidenceResults = results.filter(r => (r.confidence || 0.5) > 0.8);
       if (highConfidenceResults.length > 0) {
         recommendations.push('High confidence detection - prioritize response');
       }
     } else {
       recommendations.push('Continue normal monitoring');
-      
+
       const borderlineResults = results.filter(r => {
         const score = r.score || r.finalScore || 0;
         return score > 0.4 && score < 0.6;
       });
-      
+
       if (borderlineResults.length > 0) {
         recommendations.push('Monitor closely for pattern changes');
       }
     }
-    
+
     return recommendations;
   }
 
@@ -644,7 +717,7 @@ export class DetectionOrchestrator extends EventEmitter {
   private timeSeriesService: TimeSeriesAnalysisService;
   private multivariateService: MultivariateDetectionService;
   private patternRecognitionEngine: PatternRecognitionEngine;
-  
+
   private config: PipelineConfig;
   private performanceHistory: Map<string, ModelPerformanceHistory> = new Map();
   private requestQueue: DetectionRequest[] = [];
@@ -653,7 +726,7 @@ export class DetectionOrchestrator extends EventEmitter {
 
   constructor(config?: Partial<PipelineConfig>) {
     super();
-    
+
     this.config = {
       defaultMethods: ['ensemble', 'deep_learning'],
       fusionStrategy: 'adaptive',
@@ -718,10 +791,10 @@ export class DetectionOrchestrator extends EventEmitter {
     try {
       // Analyze data characteristics
       const analysis = DataCharacteristicsAnalyzer.analyzeData(request.data);
-      
+
       // Select appropriate methods
       const selectedMethods = this.selectMethods(request, analysis);
-      
+
       // Execute detection methods
       const methodResults = await this.executeDetectionMethods(
         request.data,
@@ -732,10 +805,10 @@ export class DetectionOrchestrator extends EventEmitter {
 
       // Fuse results
       const fusedResult = ResultFusionEngine.fuseResults(methodResults, this.config.fusionStrategy);
-      
+
       // Calculate performance metrics
       const performance = this.calculatePerformanceMetrics(methodResults, startTime);
-      
+
       // Update performance history
       if (this.config.adaptiveLearning) {
         this.updatePerformanceHistory(selectedMethods, performance);
@@ -767,14 +840,14 @@ export class DetectionOrchestrator extends EventEmitter {
     }
   }
 
-  private selectMethods(request: DetectionRequest, analysis: any): string[] {
+  private selectMethods(request: DetectionRequest, analysis: AnalysisResult): string[] {
     if (request.methods && request.methods.length > 0) {
       return request.methods;
     }
 
     // Use recommended methods from data analysis
     let methods = [...analysis.recommendedMethods];
-    
+
     // Add default methods if not present
     for (const defaultMethod of this.config.defaultMethods) {
       if (!methods.includes(defaultMethod)) {
@@ -793,11 +866,11 @@ export class DetectionOrchestrator extends EventEmitter {
   }
 
   private async executeDetectionMethods(
-    data: any,
+    data: DetectionData,
     methods: string[],
-    analysis: any,
-    configuration?: any
-  ): Promise<any[]> {
+    analysis: AnalysisResult,
+    configuration?: DetectionConfiguration
+  ): Promise<MethodResult[]> {
     const results = [];
     const executionPromises = [];
 
@@ -807,22 +880,22 @@ export class DetectionOrchestrator extends EventEmitter {
           console.warn(`⚠️ Method ${method} failed:`, error);
           return { error: error.message, method };
         });
-      
+
       executionPromises.push(promise);
     }
 
     const methodResults = await Promise.all(executionPromises);
-    
+
     // Filter out failed methods
     return methodResults.filter(result => !result.error);
   }
 
-  private async executeMethod(method: string, data: any, analysis: any, configuration?: any): Promise<any> {
+  private async executeMethod(method: string, data: DetectionData, analysis: AnalysisResult, configuration?: DetectionConfiguration): Promise<MethodResult> {
     const startTime = Date.now();
-    
+
     try {
       let result;
-      
+
       switch (method) {
         case 'deep_learning':
           result = await this.executeDeepLearning(data, analysis);
@@ -846,7 +919,7 @@ export class DetectionOrchestrator extends EventEmitter {
       // Add method metadata
       result.method = method;
       result.executionTime = Date.now() - startTime;
-      
+
       return result;
     } catch (error) {
       console.error(`❌ Method ${method} execution failed:`, error);
@@ -854,11 +927,11 @@ export class DetectionOrchestrator extends EventEmitter {
     }
   }
 
-  private async executeDeepLearning(data: any, analysis: any): Promise<any> {
+  private async executeDeepLearning(data: DetectionData, analysis: AnalysisResult): Promise<unknown> {
     if (analysis.type === 'univariate' && Array.isArray(data)) {
       return await this.deepLearningService.detectAnomalies(data, 'autoencoder');
     } else if (analysis.type === 'timeseries') {
-      const values = data.map((d: any) => d.value || 0);
+      const values = (data as TimeSeriesData[]).map((d: TimeSeriesData) => d.value || 0);
       return await this.deepLearningService.detectSequenceAnomaly([values]);
     } else {
       // Convert to numeric array for processing
@@ -867,27 +940,27 @@ export class DetectionOrchestrator extends EventEmitter {
     }
   }
 
-  private async executeEnsemble(data: any, analysis: any): Promise<any> {
+  private async executeEnsemble(data: DetectionData, analysis: AnalysisResult): Promise<unknown> {
     const numericData = this.convertToNumericArray(data);
     return await this.ensembleService.detectAnomalies(numericData);
   }
 
-  private async executeTimeSeries(data: any, analysis: any): Promise<any> {
+  private async executeTimeSeries(data: DetectionData, analysis: AnalysisResult): Promise<unknown> {
     let timeSeriesData;
-    
+
     if (analysis.type === 'timeseries') {
       timeSeriesData = data;
     } else {
       // Convert to time series format
-      timeSeriesData = Array.isArray(data) ? 
+      timeSeriesData = Array.isArray(data) ?
         data.map((value, index) => ({
           timestamp: Date.now() + index * 3600000, // Hourly intervals
           value: typeof value === 'number' ? value : 0
         })) : [];
     }
-    
+
     const results = await this.timeSeriesService.analyzeTimeSeries(timeSeriesData);
-    
+
     // Convert to consistent format
     return {
       results,
@@ -897,28 +970,28 @@ export class DetectionOrchestrator extends EventEmitter {
     };
   }
 
-  private async executeMultivariate(data: any, analysis: any): Promise<any> {
+  private async executeMultivariate(data: DetectionData, analysis: AnalysisResult): Promise<unknown> {
     let multivariateData;
-    
+
     if (analysis.type === 'multivariate') {
       multivariateData = data;
     } else {
       // Convert to multivariate format
-      multivariateData = Array.isArray(data) ? 
+      multivariateData = Array.isArray(data) ?
         data.map((value, index) => ({
           features: typeof value === 'object' ? value : { value: value },
           timestamp: Date.now() + index * 1000
         })) : [];
     }
-    
+
     // Train if not already trained
     if (multivariateData.length > 10) {
       const trainingData = multivariateData.slice(0, Math.floor(multivariateData.length * 0.7));
       await this.multivariateService.trainModels(trainingData);
     }
-    
+
     const results = await this.multivariateService.detectAnomalies(multivariateData);
-    
+
     return {
       results,
       isAnomaly: results.some(r => r.isAnomaly),
@@ -927,13 +1000,13 @@ export class DetectionOrchestrator extends EventEmitter {
     };
   }
 
-  private async executePatternRecognition(data: any, analysis: any): Promise<any> {
+  private async executePatternRecognition(data: DetectionData, analysis: AnalysisResult): Promise<unknown> {
     if (analysis.type === 'graph') {
-      const nodes = data.filter((item: any) => item.id);
-      const edges = data.filter((item: any) => item.source && item.target);
-      
+      const nodes = (data as GraphNode[]).filter((item: GraphNode) => item.id);
+      const edges = (data as GraphEdge[]).filter((item: GraphEdge) => item.source && item.target);
+
       const results = await this.patternRecognitionEngine.analyzeGraphPatterns(nodes, edges);
-      
+
       return {
         results,
         isAnomaly: results.some(r => r.isAnomaly),
@@ -943,7 +1016,7 @@ export class DetectionOrchestrator extends EventEmitter {
     } else {
       const numericData = this.convertToNumericArray(data);
       const results = await this.patternRecognitionEngine.analyzeSequencePatterns(numericData);
-      
+
       return {
         results,
         isAnomaly: results.some(r => r.isAnomaly),
@@ -953,26 +1026,26 @@ export class DetectionOrchestrator extends EventEmitter {
     }
   }
 
-  private convertToNumericArray(data: any): number[] {
+  private convertToNumericArray(data: DetectionData): number[] {
     if (Array.isArray(data)) {
       return data.map(item => {
         if (typeof item === 'number') return item;
         if (typeof item === 'object' && item.value) return item.value;
         if (typeof item === 'object' && item.features) {
           const values = Object.values(item.features);
-          return values.reduce((sum: number, val: any) => sum + (typeof val === 'number' ? val : 0), 0);
+          return values.reduce((sum: number, val: FeatureValue) => sum + (typeof val === 'number' ? val : 0), 0);
         }
         return 0;
       });
     }
-    
+
     return [0]; // Fallback
   }
 
-  private calculatePerformanceMetrics(results: any[], startTime: number): PerformanceMetrics {
+  private calculatePerformanceMetrics(results: MethodResult[], startTime: number): PerformanceMetrics {
     const totalProcessingTime = Date.now() - startTime;
     const methodExecutionTimes: { [method: string]: number } = {};
-    
+
     for (const result of results) {
       if (result.method && result.executionTime) {
         methodExecutionTimes[result.method] = result.executionTime;
@@ -981,7 +1054,7 @@ export class DetectionOrchestrator extends EventEmitter {
 
     // Estimate memory usage (simplified)
     const memoryUsage = results.length * 1024 * 100; // Rough estimate
-    
+
     // Performance metrics (would be calculated from validation data in practice)
     return {
       totalProcessingTime,
@@ -1025,7 +1098,7 @@ export class DetectionOrchestrator extends EventEmitter {
     }
   }
 
-  getOrchestrationStatistics(): any {
+  getOrchestrationStatistics(): OrchestrationStatistics {
     return {
       config: this.config,
       isInitialized: this.isInitialized,
@@ -1043,7 +1116,7 @@ export class DetectionOrchestrator extends EventEmitter {
     };
   }
 
-  private async waitForServiceInitialization(service: EventEmitter): Promise<void> {
+  private async waitForServiceInitialization(service: EventEmitter & { isInitialized?: boolean }): Promise<void> {
     return new Promise((resolve) => {
       if ((service as any).isInitialized) {
         resolve();
@@ -1063,5 +1136,29 @@ export class DetectionOrchestrator extends EventEmitter {
     });
   }
 }
+
+// Type definitions for anomaly detection orchestrator
+interface DataPoint {
+  features: Record<string, number>;
+  [key: string]: unknown;
+}
+
+interface TimeSeriesData {
+  value: number;
+  [key: string]: unknown;
+}
+
+interface GraphNode {
+  id: string;
+  [key: string]: unknown;
+}
+
+interface GraphEdge {
+  source: string;
+  target: string;
+  [key: string]: unknown;
+}
+
+type FeatureValue = string | number | boolean;
 
 export default DetectionOrchestrator;

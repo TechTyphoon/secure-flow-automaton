@@ -46,9 +46,72 @@ export interface IdentityProviderConfig {
   continuousAuthInterval: number; // minutes
 }
 
+export interface AuthenticationCredentials {
+  email: string;
+  password?: string;
+  token?: string;
+  deviceId: string;
+  ipAddress: string;
+  userAgent: string;
+}
+
+export interface RiskAssessment {
+  level: 'low' | 'medium' | 'high';
+  factors: string[];
+  score: number;
+}
+
+export interface Auth0UserData {
+  sub: string;
+  email: string;
+  name: string;
+  'https://secureflow.app/roles'?: string[];
+  'https://secureflow.app/permissions'?: string[];
+  email_verified?: boolean;
+  phone_verified?: boolean;
+}
+
+export interface OktaUserData {
+  id: string;
+  profile?: {
+    email?: string;
+    displayName?: string;
+    firstName?: string;
+    lastName?: string;
+    groups?: string[];
+    mfaEnabled?: boolean;
+  };
+  login?: string;
+  status?: string;
+}
+
+export interface AzureUserData {
+  id: string;
+  mail?: string;
+  userPrincipalName?: string;
+  displayName: string;
+  accountEnabled?: boolean;
+}
+
+export interface OIDCUserData {
+  sub: string;
+  email: string;
+  name: string;
+  roles?: string[];
+  permissions?: string[];
+  email_verified?: boolean;
+}
+
+export interface AuthenticationContext {
+  user: IdentityUser;
+  deviceId: string;
+  ipAddress: string;
+  userAgent: string;
+}
+
 export class ZeroTrustIdentityProvider {
   private config: IdentityProviderConfig;
-  private tokenCache = new Map<string, any>();
+  private tokenCache = new Map<string, { token: string; expiresAt: Date }>();
   private riskEngine: RiskAssessmentEngine;
 
   constructor(config: IdentityProviderConfig) {
@@ -59,14 +122,7 @@ export class ZeroTrustIdentityProvider {
   /**
    * Authenticate user with Zero Trust principles
    */
-  async authenticate(credentials: {
-    email: string;
-    password?: string;
-    token?: string;
-    deviceId: string;
-    ipAddress: string;
-    userAgent: string;
-  }): Promise<AuthenticationResult> {
+  async authenticate(credentials: AuthenticationCredentials): Promise<AuthenticationResult> {
     try {
       // Step 1: Basic authentication
       const authResult = await this.performBasicAuth(credentials);
@@ -152,7 +208,7 @@ export class ZeroTrustIdentityProvider {
   /**
    * Provider-specific authentication implementations
    */
-  private async performBasicAuth(credentials: any): Promise<AuthenticationResult> {
+  private async performBasicAuth(credentials: AuthenticationCredentials): Promise<AuthenticationResult> {
     switch (this.config.provider) {
       case 'auth0':
         return this.authenticateAuth0(credentials);
@@ -167,7 +223,7 @@ export class ZeroTrustIdentityProvider {
     }
   }
 
-  private async authenticateAuth0(credentials: any): Promise<AuthenticationResult> {
+  private async authenticateAuth0(credentials: AuthenticationCredentials): Promise<AuthenticationResult> {
     // Auth0 integration with real API calls
     const response = await fetch(`https://${this.config.domain}/oauth/token`, {
       method: 'POST',
@@ -206,7 +262,7 @@ export class ZeroTrustIdentityProvider {
     };
   }
 
-  private async authenticateOkta(credentials: any): Promise<AuthenticationResult> {
+  private async authenticateOkta(credentials: AuthenticationCredentials): Promise<AuthenticationResult> {
     // Okta integration implementation
     const response = await fetch(`https://${this.config.domain}/api/v1/authn`, {
       method: 'POST',
@@ -239,7 +295,7 @@ export class ZeroTrustIdentityProvider {
     };
   }
 
-  private async authenticateAzureAD(credentials: any): Promise<AuthenticationResult> {
+  private async authenticateAzureAD(credentials: AuthenticationCredentials): Promise<AuthenticationResult> {
     // Azure AD integration implementation
     const tenantId = this.config.domain;
     const response = await fetch(
@@ -282,7 +338,7 @@ export class ZeroTrustIdentityProvider {
     };
   }
 
-  private async authenticateOIDC(credentials: any): Promise<AuthenticationResult> {
+  private async authenticateOIDC(credentials: AuthenticationCredentials): Promise<AuthenticationResult> {
     // Generic OIDC implementation
     const response = await fetch(`${this.config.domain}/token`, {
       method: 'POST',
@@ -321,7 +377,7 @@ export class ZeroTrustIdentityProvider {
     };
   }
 
-  private shouldRequireMfa(user: IdentityUser, riskAssessment: any): boolean {
+  private shouldRequireMfa(user: IdentityUser, riskAssessment: RiskAssessment): boolean {
     // Zero Trust MFA policy
     return (
       !user.mfaEnabled ||
@@ -331,7 +387,7 @@ export class ZeroTrustIdentityProvider {
     );
   }
 
-  private hasContextChanged(user: IdentityUser, context: any): boolean {
+  private hasContextChanged(user: IdentityUser, context: AuthenticationContext): boolean {
     // Check for context changes that require re-authentication
     return false; // Implementation depends on stored context
   }
@@ -407,7 +463,7 @@ export class ZeroTrustIdentityProvider {
     return this.mapOIDCUser(data);
   }
 
-  private mapAuth0User(data: any): IdentityUser {
+  private mapAuth0User(data: Auth0UserData): IdentityUser {
     return {
       id: data.sub,
       email: data.email,
@@ -421,7 +477,7 @@ export class ZeroTrustIdentityProvider {
     };
   }
 
-  private mapOktaUser(data: any): IdentityUser {
+  private mapOktaUser(data: OktaUserData): IdentityUser {
     return {
       id: data.id,
       email: data.profile?.email || data.login,
@@ -435,7 +491,7 @@ export class ZeroTrustIdentityProvider {
     };
   }
 
-  private mapAzureUser(data: any): IdentityUser {
+  private mapAzureUser(data: AzureUserData): IdentityUser {
     return {
       id: data.id,
       email: data.mail || data.userPrincipalName,
@@ -449,7 +505,7 @@ export class ZeroTrustIdentityProvider {
     };
   }
 
-  private mapOIDCUser(data: any): IdentityUser {
+  private mapOIDCUser(data: OIDCUserData): IdentityUser {
     return {
       id: data.sub,
       email: data.email,
@@ -463,7 +519,7 @@ export class ZeroTrustIdentityProvider {
     };
   }
 
-  private async logAuthenticationEvent(result: AuthenticationResult, credentials: any): Promise<void> {
+  private async logAuthenticationEvent(result: AuthenticationResult, credentials: AuthenticationCredentials): Promise<void> {
     // Log authentication events for audit trail
     const event = {
       timestamp: new Date().toISOString(),
@@ -488,12 +544,7 @@ export class ZeroTrustIdentityProvider {
  * Risk Assessment Engine for Zero Trust decisions
  */
 class RiskAssessmentEngine {
-  async assessAuthenticationRisk(context: {
-    user: IdentityUser;
-    deviceId: string;
-    ipAddress: string;
-    userAgent: string;
-  }): Promise<{ level: 'low' | 'medium' | 'high'; factors: string[]; score: number }> {
+  async assessAuthenticationRisk(context: AuthenticationContext): Promise<RiskAssessment> {
     const factors: string[] = [];
     let score = 0;
 
@@ -560,7 +611,7 @@ class RiskAssessmentEngine {
     return false;
   }
 
-  private async isUserBehaviorAnomalous(user: IdentityUser, context: any): Promise<boolean> {
+  private async isUserBehaviorAnomalous(user: IdentityUser, context: AuthenticationContext): Promise<boolean> {
     // Behavioral analysis (implement with ML models)
     return false;
   }

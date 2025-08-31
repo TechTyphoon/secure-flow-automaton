@@ -21,7 +21,7 @@ interface AlgorithmResult {
   confidence: number;
   isAnomaly: boolean;
   processingTime: number;
-  features?: any;
+  features?: AlgorithmFeatures;
 }
 
 interface EnsembleResult {
@@ -76,7 +76,7 @@ abstract class BaseAnomalyAlgorithm {
 
 // Isolation Forest implementation
 class IsolationForest extends BaseAnomalyAlgorithm {
-  private trees: any[] = [];
+  private trees: IsolationTree[] = [];
   private numTrees: number = 100;
   private subSampleSize: number = 256;
 
@@ -137,7 +137,7 @@ class IsolationForest extends BaseAnomalyAlgorithm {
     };
   }
 
-  private calculatePathLength(data: number[], tree: any): number {
+  private calculatePathLength(data: number[], tree: IsolationTree): number {
     let depth = 0;
     let currentNode = 0;
     
@@ -691,7 +691,7 @@ export class EnsembleDetectionService extends EventEmitter {
     console.log('✅ Ensemble rebalancing completed');
   }
 
-  getEnsembleStatistics(): any {
+  getEnsembleStatistics(): EnsembleStatistics {
     return {
       totalAlgorithms: this.algorithms.size,
       activeAlgorithms: this.config.algorithms.length,
@@ -704,7 +704,7 @@ export class EnsembleDetectionService extends EventEmitter {
     };
   }
 
-  private calculateAveragePerformance(): any {
+  private calculateAveragePerformance(): AveragePerformance {
     const performances = Array.from(this.algorithms.values()).map(alg => alg.getPerformance());
     
     if (performances.length === 0) return null;
@@ -780,6 +780,37 @@ export class EnsembleDetectionService extends EventEmitter {
       }
     });
   }
+}
+
+// Type definitions for ensemble detection
+interface AlgorithmFeatures {
+  [key: string]: number | string | boolean;
+}
+
+interface IsolationTree {
+  depth: number;
+  splitFeatures: number[];
+  splitValues: number[];
+  [key: string]: unknown;
+}
+
+interface EnsembleStatistics {
+  totalAlgorithms: number;
+  activeAlgorithms: number;
+  currentWeights: Record<string, number>;
+  votingStrategy: string;
+  threshold: number;
+  averagePerformance: AveragePerformance | null;
+  isInitialized: boolean;
+  timestamp: number;
+}
+
+interface AveragePerformance {
+  accuracy: number;
+  precision: number;
+  recall: number;
+  f1Score: number;
+  diversity: number;
 }
 
 export default EnsembleDetectionService;

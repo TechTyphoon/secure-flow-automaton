@@ -33,7 +33,7 @@ export class FreeSecurityScanner {
     return FreeSecurityScanner.instance;
   }
 
-  async scanDependencies(packageJson: any): Promise<SecurityScanResult> {
+  async scanDependencies(packageJson: { dependencies?: Record<string, string>; devDependencies?: Record<string, string> }): Promise<SecurityScanResult> {
     logger.info('Scanning dependencies for vulnerabilities...');
     
     const vulnerabilities: Vulnerability[] = [];

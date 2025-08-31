@@ -5,12 +5,12 @@ export interface PolicyCondition {
   type: 'identity' | 'device' | 'network' | 'application' | 'data' | 'time' | 'location' | 'risk';
   field: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'in' | 'not_in' | 'regex';
-  value: any;
+  value: PolicyValue;
 }
 
 export interface PolicyAction {
   type: 'allow' | 'deny' | 'challenge';
-  parameters: Record<string, any>;
+  parameters: Record<string, PolicyParameter>;
   severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
@@ -35,7 +35,7 @@ export interface SecurityContext {
     id: string;
     roles: string[];
     groups: string[];
-    attributes: Record<string, any>;
+    attributes: Record<string, UserAttribute>;
     riskScore: number;
     authenticationMethods: string[];
     lastAuthentication: Date;
@@ -70,7 +70,7 @@ export interface SecurityContext {
     startTime: Date;
     duration: number;
     activities: string[];
-    anomalies: any[];
+    anomalies: SessionAnomaly[];
     riskScore: number;
   };
 }
@@ -111,7 +111,7 @@ export interface SecurityEvent {
   severity: 'low' | 'medium' | 'high' | 'critical';
   source: string;
   description: string;
-  context: any;
+  context: SecurityEventContext;
   metadata?: Record<string, any>;
 }
 
@@ -130,7 +130,7 @@ export interface ThreatIntelligence {
     hashes: ThreatIndicator[];
     signatures: ThreatIndicator[];
   };
-  campaigns: any[];
+  campaigns: ThreatCampaign[];
   riskScores: Map<string, number>;
   lastUpdated: Date;
 }
@@ -180,7 +180,7 @@ export interface ComplianceFramework {
   id: string;
   name: string;
   version: string;
-  controls: Map<string, any>;
+  controls: Map<string, ComplianceControl>;
   mappings: Map<string, string[]>;
 }
 
@@ -360,7 +360,7 @@ export class ZeroTrustOrchestratorService extends EventEmitter {
   }
 
   private async evaluateCondition(condition: PolicyCondition, request: AccessRequest): Promise<boolean> {
-    let contextValue: any;
+    let contextValue: ContextValue;
 
     switch (condition.type) {
       case 'identity':
@@ -394,11 +394,11 @@ export class ZeroTrustOrchestratorService extends EventEmitter {
     return this.evaluateOperator(contextValue, condition.operator, condition.value);
   }
 
-  private getNestedValue(obj: any, path: string): any {
+  private getNestedValue(obj: Record<string, unknown>, path: string): unknown {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
-  private evaluateOperator(contextValue: any, operator: string, expectedValue: any): boolean {
+  private evaluateOperator(contextValue: unknown, operator: string, expectedValue: PolicyValue): boolean {
     switch (operator) {
       case 'equals': return contextValue === expectedValue;
       case 'not_equals': return contextValue !== expectedValue;
@@ -424,7 +424,7 @@ export class ZeroTrustOrchestratorService extends EventEmitter {
     );
   }
 
-  private async evaluatePolicy(policy: ZeroTrustPolicy, request: AccessRequest): Promise<any> {
+  private async evaluatePolicy(policy: ZeroTrustPolicy, request: AccessRequest): Promise<PolicyEvaluationResult> {
     const conditionResults = await Promise.all(
       policy.conditions.map(condition => this.evaluateCondition(condition, request))
     );
@@ -432,7 +432,7 @@ export class ZeroTrustOrchestratorService extends EventEmitter {
     return { policy, conditionsMet: allConditionsMet, action: allConditionsMet ? policy.actions[0] : null };
   }
 
-  private makeFinalDecision(evaluationResults: any[], riskScore: number): any {
+  private makeFinalDecision(evaluationResults: PolicyEvaluationResult[], riskScore: number): AccessDecisionResult {
     for (const result of evaluationResults) {
       if (result.conditionsMet && result.action) {
         const decision = {
@@ -521,7 +521,7 @@ export class ZeroTrustOrchestratorService extends EventEmitter {
     this.emit('metrics_updated', this.metrics);
   }
 
-  private updateAuthorizationMetrics(decision: any): void {
+  private updateAuthorizationMetrics(decision: AccessDecisionResult): void {
     this.metrics.authorization.totalRequests++;
     switch (decision.action) {
       case 'allow': this.metrics.authorization.allowedRequests++; break;
@@ -611,7 +611,7 @@ export class ZeroTrustOrchestratorService extends EventEmitter {
     };
   }
 
-  getStatus(): any {
+  getStatus(): OrchestratorStatus {
     return {
       initialized: this.isInitialized,
       policies: this.policies.size,
@@ -628,6 +628,85 @@ export class ZeroTrustOrchestratorService extends EventEmitter {
     this.isInitialized = false;
     this.emit('shutdown');
   }
+}
+
+// Type definitions for zero trust orchestrator
+interface PolicyValue {
+  value: string | number | boolean | string[];
+  [key: string]: unknown;
+}
+
+interface PolicyParameter {
+  value: string | number | boolean;
+  [key: string]: unknown;
+}
+
+interface UserAttribute {
+  value: string | number | boolean;
+  [key: string]: unknown;
+}
+
+interface SessionAnomaly {
+  id: string;
+  type: string;
+  severity: string;
+  description: string;
+  timestamp: Date;
+}
+
+interface SecurityEventContext {
+  user?: string;
+  device?: string;
+  network?: string;
+  application?: string;
+  [key: string]: unknown;
+}
+
+interface ThreatCampaign {
+  id: string;
+  name: string;
+  description: string;
+  indicators: string[];
+  [key: string]: unknown;
+}
+
+interface ComplianceControl {
+  id: string;
+  name: string;
+  description: string;
+  requirements: string[];
+  [key: string]: unknown;
+}
+
+interface ContextValue {
+  value: string | number | boolean | string[];
+  [key: string]: unknown;
+}
+
+interface PolicyEvaluationResult {
+  policy: ZeroTrustPolicy;
+  conditionsMet: boolean;
+  action: PolicyAction | null;
+}
+
+interface AccessDecisionResult {
+  action: 'allow' | 'deny' | 'challenge';
+  reason: string;
+  conditions: Record<string, PolicyParameter>;
+  riskFactors: string[];
+  confidence: number;
+  expiresAt: Date | null;
+}
+
+interface OrchestratorStatus {
+  initialized: boolean;
+  policies: number;
+  securityEvents: number;
+  threatIndicators: {
+    ips: number;
+    domains: number;
+  };
+  lastThreatUpdate: Date;
 }
 
 export default ZeroTrustOrchestratorService;

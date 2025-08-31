@@ -244,7 +244,7 @@ export class ContinuousAuthenticationSystem {
   async verifyStepUpAuth(
     sessionId: string,
     challengeId: string,
-    response: any
+    response: StepUpResponse
   ): Promise<boolean> {
     const session = this.sessions.get(sessionId);
     if (!session) {
@@ -459,7 +459,7 @@ export class ContinuousAuthenticationSystem {
     return methodMap[requiredLevel] || 'totp';
   }
 
-  private async verifyStepUpResponse(challengeId: string, response: any): Promise<boolean> {
+  private async verifyStepUpResponse(challengeId: string, response: StepUpResponse): Promise<boolean> {
     // Implement actual step-up verification
     return true; // Simplified for demo
   }
@@ -477,7 +477,7 @@ export class ContinuousAuthenticationSystem {
   private async logSessionEvent(
     session: AuthenticationSession,
     eventType: string,
-    details: any
+    details: EventDetails
   ): Promise<void> {
     const logEntry = {
       timestamp: new Date().toISOString(),
@@ -502,7 +502,7 @@ export class ContinuousAuthenticationSystem {
 class BehaviorAnalyzer {
   async analyzeBehavior(
     userId: string,
-    activity: any,
+    activity: UserActivity,
     history: VerificationEvent[]
   ): Promise<{ anomalyScore: number; patterns: string[] }> {
     // Implement behavior analysis using ML models
@@ -625,6 +625,24 @@ class RiskEngine {
     // Implement device trust checking
     return true;
   }
+}
+
+// Type definitions for continuous authentication
+interface StepUpResponse {
+  method: string;
+  code?: string;
+  biometricData?: string;
+  [key: string]: unknown;
+}
+
+interface EventDetails {
+  [key: string]: unknown;
+}
+
+interface UserActivity {
+  type: string;
+  timestamp: Date;
+  [key: string]: unknown;
 }
 
 export default ContinuousAuthenticationSystem;

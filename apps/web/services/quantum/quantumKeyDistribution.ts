@@ -851,7 +851,7 @@ export class QuantumKeyDistribution extends EventEmitter {
     console.log(`✅ Channel calibration complete: efficiency=${(channel.detectionEfficiency * 100).toFixed(1)}%, noise=${(channel.noiseLevel * 100).toFixed(1)}%`);
   }
 
-  getSystemStatistics(): any {
+  getSystemStatistics(): SystemStatistics {
     const sessions = Array.from(this.sessions.values());
     const completedSessions = sessions.filter(s => s.status === 'COMPLETE');
     const failedSessions = sessions.filter(s => s.status === 'FAILED');
@@ -897,5 +897,23 @@ export type {
   QuantumRandomGenerator,
   KeyDistillationParams
 };
+
+// Type definitions for quantum key distribution
+interface SystemStatistics {
+  totalSessions: number;
+  completedSessions: number;
+  failedSessions: number;
+  successRate: number;
+  totalKeyBits: number;
+  averageErrorRate: number;
+  activeChannels: number;
+  quantumRandomGenerator: {
+    entropy: number;
+    uniformity: number;
+    independence: number;
+    lastTested: number;
+  };
+  timestamp: number;
+}
 
 export default QuantumKeyDistribution;

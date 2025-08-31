@@ -108,7 +108,7 @@ export class SecurityHealthMonitor {
         responseTime,
         message: success ? 'Service operational' : 'Service responding but may have issues'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       const responseTime = Date.now() - startTime;
       
       return {
@@ -120,7 +120,7 @@ export class SecurityHealthMonitor {
     }
   }
 
-  private async performHealthCheck(service: string, config: any): Promise<boolean> {
+  private async performHealthCheck(service: string, config: ServiceConfig): Promise<boolean> {
     switch (service) {
       case 'sonarqube':
         return this.checkSonarQubeHealth(config);
@@ -133,7 +133,7 @@ export class SecurityHealthMonitor {
     }
   }
 
-  private async checkSonarQubeHealth(config: any): Promise<boolean> {
+  private async checkSonarQubeHealth(config: ServiceConfig): Promise<boolean> {
     try {
       const response = await fetch(`${config.url}/api/system/ping`, {
         headers: { 'Authorization': `Bearer ${config.token}` },
@@ -145,7 +145,7 @@ export class SecurityHealthMonitor {
     }
   }
 
-  private async checkSnykHealth(config: any): Promise<boolean> {
+  private async checkSnykHealth(config: ServiceConfig): Promise<boolean> {
     try {
       const response = await fetch('https://snyk.io/api/v1/user/me', {
         headers: { 'Authorization': `token ${config.token}` },
@@ -157,7 +157,7 @@ export class SecurityHealthMonitor {
     }
   }
 
-  private async checkGitHubHealth(config: any): Promise<boolean> {
+  private async checkGitHubHealth(config: ServiceConfig): Promise<boolean> {
     try {
       const response = await fetch('https://api.github.com/user', {
         headers: { 'Authorization': `token ${config.token}` },
@@ -169,7 +169,7 @@ export class SecurityHealthMonitor {
     }
   }
 
-  private getServiceEndpoint(service: string, config: any): string {
+  private getServiceEndpoint(service: string, config: ServiceConfig): string {
     switch (service) {
       case 'sonarqube': return config.url || 'https://sonarcloud.io';
       case 'snyk': return 'https://snyk.io';
@@ -252,4 +252,12 @@ export class SecurityHealthMonitor {
       message
     };
   }
+}
+
+// Type definitions for security health monitor
+interface ServiceConfig {
+  enabled: boolean;
+  token?: string;
+  url?: string;
+  [key: string]: unknown;
 }

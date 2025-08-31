@@ -48,10 +48,28 @@ interface ConversationContext {
   };
 }
 
+interface SecurityData {
+  count?: number;
+  riskLevel?: string;
+  status?: string;
+  anomalies?: Array<{ description?: string; type?: string }>;
+  threats?: Array<{ id: string; severity: string; description: string }>;
+  vulnerabilities?: Array<{ id: string; severity: string; description: string }>;
+  recommendations?: Array<{ id: string; priority: string; description: string }>;
+  actions?: Array<{ urgency: string; description: string }>;
+  metrics?: {
+    systemHealth?: number;
+    threatLevel?: string;
+    activeAlerts?: number;
+  };
+  changes?: Array<{ type: string; description: string }>;
+  [key: string]: unknown;
+}
+
 interface SecurityResponse {
   queryId: string;
   text: string;
-  data?: any;
+  data?: SecurityData;
   visualizations?: Visualization[];
   actions?: RecommendedAction[];
   confidence: number;
@@ -61,11 +79,30 @@ interface SecurityResponse {
   timestamp: number;
 }
 
+interface VisualizationData {
+  labels?: string[];
+  values?: number[];
+  categories?: string[];
+  series?: Array<{ name: string; data: number[] }>;
+  coordinates?: Array<{ lat: number; lng: number; value: number }>;
+  rows?: Array<Record<string, string | number>>;
+  [key: string]: unknown;
+}
+
+interface VisualizationConfig {
+  chartType?: 'line' | 'bar' | 'pie' | 'scatter';
+  colors?: string[];
+  axisLabels?: { x?: string; y?: string };
+  legend?: boolean;
+  animation?: boolean;
+  [key: string]: unknown;
+}
+
 interface Visualization {
   type: 'CHART' | 'GRAPH' | 'TIMELINE' | 'MAP' | 'TABLE' | 'HEATMAP';
   title: string;
-  data: any;
-  config: any;
+  data: VisualizationData;
+  config: VisualizationConfig;
   description: string;
 }
 
@@ -78,10 +115,18 @@ interface RecommendedAction {
   risks: string[];
 }
 
+interface ConversationContext {
+  currentTopic?: string;
+  collectedData?: Record<string, unknown>;
+  userPreferences?: Record<string, unknown>;
+  sessionState?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 interface ConversationFlow {
   currentStep: string;
   steps: FlowStep[];
-  context: any;
+  context: ConversationContext;
   isComplete: boolean;
 }
 
@@ -373,7 +418,7 @@ class SecurityResponseGenerator {
 
   generateResponse(
     query: SecurityQuery,
-    data: any,
+    data: SecurityData,
     context: ConversationContext
   ): SecurityResponse {
     const template = this.responseTemplates.get(query.intent.primary);
@@ -401,7 +446,7 @@ class SecurityResponseGenerator {
     };
   }
 
-  private populateTemplate(template: string, data: any, query: SecurityQuery): string {
+  private populateTemplate(template: string, data: SecurityData, query: SecurityQuery): string {
     let response = template;
 
     // Replace placeholders with actual data
@@ -430,7 +475,7 @@ class SecurityResponseGenerator {
     return timeEntity ? timeEntity.value : 'specified period';
   }
 
-  private generateDetails(data: any, query: SecurityQuery): string {
+  private generateDetails(data: SecurityData, query: SecurityQuery): string {
     if (!data) return 'No additional details available.';
     
     if (data.anomalies && Array.isArray(data.anomalies)) {
@@ -441,7 +486,7 @@ class SecurityResponseGenerator {
     return 'Additional analysis available in detailed view.';
   }
 
-  private generateFindings(data: any, query: SecurityQuery): string {
+  private generateFindings(data: SecurityData, query: SecurityQuery): string {
     if (!data) return 'Analysis in progress.';
     
     const findings = [];
@@ -461,10 +506,10 @@ class SecurityResponseGenerator {
     return findings.join(', ') || 'No significant findings.';
   }
 
-  private generateActionSummary(data: any, query: SecurityQuery): string {
+  private generateActionSummary(data: SecurityData, query: SecurityQuery): string {
     if (!data?.actions) return 'No actions required at this time.';
     
-    const urgentActions = data.actions.filter((a: any) => 
+    const urgentActions = data.actions.filter((a: { urgency: string; description: string }) => 
       a.urgency === 'HIGH' || a.urgency === 'CRITICAL'
     );
     
@@ -475,7 +520,7 @@ class SecurityResponseGenerator {
     return `${data.actions.length} actions recommended.`;
   }
 
-  private generateMetricsSummary(data: any, query: SecurityQuery): string {
+  private generateMetricsSummary(data: SecurityData, query: SecurityQuery): string {
     if (!data?.metrics) return 'Metrics unavailable.';
     
     const metrics = [];
@@ -495,13 +540,13 @@ class SecurityResponseGenerator {
     return metrics.join(', ') || 'All systems nominal.';
   }
 
-  private generateSummary(data: any, query: SecurityQuery): string {
+  private generateSummary(data: SecurityData, query: SecurityQuery): string {
     if (!data) return 'Report generated with available data.';
     
     return `Report includes ${data.sections || 'multiple'} sections with ${data.dataPoints || 'comprehensive'} data points.`;
   }
 
-  private generateChangesSummary(data: any, query: SecurityQuery): string {
+  private generateChangesSummary(data: SecurityData, query: SecurityQuery): string {
     if (!data?.changes) return 'Settings updated successfully.';
     
     return `${data.changes.length} configuration changes applied.`;
@@ -509,7 +554,7 @@ class SecurityResponseGenerator {
 
   private generateVisualizations(
     type: string | null, 
-    data: any, 
+    data: SecurityData, 
     query: SecurityQuery
   ): Visualization[] {
     if (!type || !data) return [];
@@ -561,7 +606,7 @@ class SecurityResponseGenerator {
     return visualizations;
   }
 
-  private generateRecommendedActions(query: SecurityQuery, data: any): RecommendedAction[] {
+  private generateRecommendedActions(query: SecurityQuery, data: SecurityData): RecommendedAction[] {
     const actions: RecommendedAction[] = [];
 
     // Generate actions based on intent and data
@@ -605,7 +650,7 @@ class SecurityResponseGenerator {
     return actions;
   }
 
-  private generateFollowUpSuggestions(query: SecurityQuery, data: any): string[] {
+  private generateFollowUpSuggestions(query: SecurityQuery, data: SecurityData): string[] {
     const suggestions: string[] = [];
 
     // Generate contextual follow-up questions
@@ -638,7 +683,7 @@ class SecurityResponseGenerator {
     return suggestions.slice(0, 3); // Limit to 3 suggestions
   }
 
-  private calculateResponseConfidence(query: SecurityQuery, data: any): number {
+  private calculateResponseConfidence(query: SecurityQuery, data: SecurityData): number {
     let confidence = query.intent.confidence;
 
     // Boost confidence if we have good data
@@ -654,7 +699,7 @@ class SecurityResponseGenerator {
     return Math.min(0.99, confidence);
   }
 
-  private identifySources(query: SecurityQuery, data: any): string[] {
+  private identifySources(query: SecurityQuery, data: SecurityData): string[] {
     const sources = ['Security Analytics Engine'];
     
     if (data?.sourceTypes) {
@@ -694,7 +739,7 @@ class SecurityResponseGenerator {
   }
 
   // Sample data generators for visualizations
-  private generateSampleTimelineData(): any {
+  private generateSampleTimelineData(): VisualizationData {
     return {
       events: [
         { time: Date.now() - 3600000, type: 'anomaly', severity: 'medium' },
@@ -704,7 +749,7 @@ class SecurityResponseGenerator {
     };
   }
 
-  private generateSampleHeatmapData(): any {
+  private generateSampleHeatmapData(): VisualizationData {
     return {
       matrix: [
         [0.1, 0.3, 0.8],
@@ -715,7 +760,7 @@ class SecurityResponseGenerator {
     };
   }
 
-  private generateSampleChartData(): any {
+  private generateSampleChartData(): VisualizationData {
     return {
       series: [{
         name: 'Threat Level',
@@ -725,7 +770,7 @@ class SecurityResponseGenerator {
     };
   }
 
-  private generateSampleTableData(): any {
+  private generateSampleTableData(): VisualizationData {
     return {
       headers: ['Time', 'Event', 'Severity', 'Status'],
       rows: [
@@ -871,7 +916,7 @@ export class SecurityAssistant extends EventEmitter {
   async continueConversationFlow(
     flowId: string,
     response: string
-  ): Promise<{ question?: string; result?: any; isComplete: boolean }> {
+  ): Promise<{ question?: string; result?: SecurityData; isComplete: boolean }> {
     const flow = this.conversationFlows.get(flowId);
     if (!flow) {
       throw new Error('Conversation flow not found');
@@ -930,7 +975,7 @@ export class SecurityAssistant extends EventEmitter {
     }
   }
 
-  getCapabilities(): any {
+  getCapabilities(): Record<string, unknown> {
     return {
       naturalLanguageProcessing: true,
       intentClassification: true,
@@ -947,7 +992,7 @@ export class SecurityAssistant extends EventEmitter {
     };
   }
 
-  getStatistics(): any {
+  getStatistics(): Record<string, unknown> {
     return {
       activeConversations: this.conversations.size,
       activeFlows: this.conversationFlows.size,
@@ -957,10 +1002,16 @@ export class SecurityAssistant extends EventEmitter {
       timestamp: Date.now()
     };
   }
+}
+
+interface ContextOptions {
+  userId?: string;
+  context?: Partial<ConversationContext>;
+}
 
   private getOrCreateContext(
     sessionId: string, 
-    options?: any
+    options?: ContextOptions
   ): ConversationContext {
     let context = this.conversations.get(sessionId);
     
@@ -1003,8 +1054,14 @@ export class SecurityAssistant extends EventEmitter {
     }
   }
 
+interface TextAnalysis {
+  sentiment: {
+    urgency: number;
+  };
+}
+
   private determineUrgency(
-    textAnalysis: any, 
+    textAnalysis: TextAnalysis, 
     intent: QueryIntent
   ): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
     if (textAnalysis.sentiment.urgency > 0.7) return 'CRITICAL';
@@ -1014,7 +1071,7 @@ export class SecurityAssistant extends EventEmitter {
     return 'LOW';
   }
 
-  private async fetchResponseData(query: SecurityQuery): Promise<any> {
+  private async fetchResponseData(query: SecurityQuery): Promise<SecurityData> {
     // This would integrate with actual security systems
     // For now, return mock data based on intent
     
@@ -1094,7 +1151,7 @@ export class SecurityAssistant extends EventEmitter {
     };
   }
 
-  private async processFlowResult(flow: ConversationFlow): Promise<any> {
+  private async processFlowResult(flow: ConversationFlow): Promise<FlowResult> {
     // Process the completed flow context to generate results
     return {
       summary: 'Flow completed successfully',
@@ -1102,6 +1159,13 @@ export class SecurityAssistant extends EventEmitter {
       recommendations: ['Review findings', 'Take appropriate action']
     };
   }
+}
+
+// Type definitions for security assistant
+interface FlowResult {
+  summary: string;
+  data: Record<string, unknown>;
+  recommendations: string[];
 }
 
 export default SecurityAssistant;

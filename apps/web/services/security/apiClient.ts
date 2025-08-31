@@ -3,7 +3,7 @@ import { SecurityConfigManager } from './config';
 
 export class SecurityAPIClient {
   private config = SecurityConfigManager.getInstance();
-  private cache = new Map<string, { data: any; timestamp: number }>();
+  private cache = new Map<string, { data: unknown; timestamp: number }>();
 
   async makeSecureRequest<T>(
     url: string,
@@ -21,7 +21,7 @@ export class SecurityAPIClient {
     // Check cache first
     if (cacheKey && this.isCacheValid(cacheKey)) {
       console.log(`📦 Using cached data for ${service}:${cacheKey}`);
-      return this.cache.get(cacheKey)!.data;
+      return this.cache.get(cacheKey)!.data as T;
     }
 
     // Retry logic
@@ -52,13 +52,14 @@ export class SecurityAPIClient {
         console.log(`✅ ${service} API call successful`);
         return response.data;
 
-      } catch (error: any) {
-        lastError = error;
+      } catch (error: unknown) {
+        const axiosError = error as { response?: { status?: number }; message?: string };
+        lastError = axiosError as Error;
         console.warn(`⚠️ ${service} API call failed (attempt ${attempt}/${maxRetries}):`, 
-          error.response?.status, error.message);
+          axiosError.response?.status, axiosError.message);
 
         // Don't retry on authentication errors
-        if (error.response?.status === 401 || error.response?.status === 403) {
+        if (axiosError.response?.status === 401 || axiosError.response?.status === 403) {
           console.error(`🚫 ${service} authentication failed. Check API token.`);
           break;
         }

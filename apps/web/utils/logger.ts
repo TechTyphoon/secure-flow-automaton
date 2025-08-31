@@ -18,25 +18,25 @@ export class Logger {
     this.logLevel = level;
   }
 
-  debug(message: string, ...args: any[]) {
+  debug(message: string, ...args: unknown[]) {
     if (isDevelopment && isDebugEnabled && this.shouldLog('debug')) {
       console.log(`🔍 [DEBUG] ${message}`, ...args);
     }
   }
 
-  info(message: string, ...args: any[]) {
+  info(message: string, ...args: unknown[]) {
     if (this.shouldLog('info')) {
       console.log(`ℹ️ [INFO] ${message}`, ...args);
     }
   }
 
-  warn(message: string, ...args: any[]) {
+  warn(message: string, ...args: unknown[]) {
     if (this.shouldLog('warn')) {
       console.warn(`⚠️ [WARN] ${message}`, ...args);
     }
   }
 
-  error(message: string, ...args: any[]) {
+  error(message: string, ...args: unknown[]) {
     if (this.shouldLog('error')) {
       console.error(`❌ [ERROR] ${message}`, ...args);
     }
@@ -52,14 +52,14 @@ export class Logger {
 export const logger = Logger.getInstance();
 
 // Convenience functions for common logging patterns
-export const logSecurity = (message: string, ...args: any[]) => {
+export const logSecurity = (message: string, ...args: unknown[]) => {
   logger.info(`🔒 [SECURITY] ${message}`, ...args);
 };
 
-export const logPerformance = (message: string, ...args: any[]) => {
+export const logPerformance = (message: string, ...args: unknown[]) => {
   logger.debug(`⚡ [PERF] ${message}`, ...args);
 };
 
-export const logQuantum = (message: string, ...args: any[]) => {
+export const logQuantum = (message: string, ...args: unknown[]) => {
   logger.debug(`🌌 [QUANTUM] ${message}`, ...args);
 }; 

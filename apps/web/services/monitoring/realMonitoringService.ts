@@ -38,7 +38,7 @@ export class RealMonitoringService {
   /**
    * Capture Error
    */
-  async captureError(error: Error, context?: any): Promise<void> {
+  async captureError(error: Error, context?: ErrorContext): Promise<void> {
     if (this.sentryInitialized) {
       try {
         // In a real implementation: Sentry.captureException(error, { extra: context });
@@ -80,7 +80,7 @@ export class RealMonitoringService {
   async captureSecurityEvent(
     eventType: string,
     severity: 'low' | 'medium' | 'high' | 'critical',
-    details: any
+    details: SecurityEventDetails
   ): Promise<void> {
     if (this.sentryInitialized) {
       try {
@@ -211,11 +211,11 @@ export class RealMonitoringService {
   startTransaction(name: string, operation: string): {
     finish: () => void;
     setTag: (key: string, value: string) => void;
-    setData: (key: string, value: any) => void;
+    setData: (key: string, value: TransactionData) => void;
   } {
     const startTime = performance.now();
     const tags: Record<string, string> = {};
-    const data: Record<string, any> = {};
+    const data: Record<string, TransactionData> = {};
 
     return {
       finish: () => {
@@ -225,7 +225,7 @@ export class RealMonitoringService {
       setTag: (key: string, value: string) => {
         tags[key] = value;
       },
-      setData: (key: string, value: any) => {
+      setData: (key: string, value: TransactionData) => {
         data[key] = value;
       }
     };
@@ -272,4 +272,15 @@ export class RealMonitoringService {
       };
     }
   }
-} 
+}
+
+// Type definitions for real monitoring service
+interface ErrorContext {
+  [key: string]: unknown;
+}
+
+interface SecurityEventDetails {
+  [key: string]: unknown;
+}
+
+type TransactionData = string | number | boolean | Record<string, unknown>;

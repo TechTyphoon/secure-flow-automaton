@@ -519,12 +519,12 @@ export class QuantumEnergyForecaster {
     };
   }
 
-  private async calculateCarbonIntensity(params: any): Promise<CarbonIntensityForecast[]> {
+  private async calculateCarbonIntensity(params: CarbonIntensityParams): Promise<CarbonIntensityForecast[]> {
     // Implementation for carbon intensity calculation
     return [];
   }
 
-  private async recalculateForecasts(forecastId: string, liveData: any): Promise<any> {
+  private async recalculateForecasts(forecastId: string, liveData: LiveData): Promise<RecalculatedForecasts> {
     // Implementation for forecast recalculation
     return {};
   }
@@ -534,12 +534,12 @@ export class QuantumEnergyForecaster {
     return 5.2; // 5.2% improvement
   }
 
-  private generateForecastAlerts(forecastId: string): any[] {
+  private generateForecastAlerts(forecastId: string): ForecastAlert[] {
     // Implementation for forecast alert generation
     return [];
   }
 
-  private generateForecastRecommendations(forecastId: string): any[] {
+  private generateForecastRecommendations(forecastId: string): ForecastRecommendation[] {
     // Implementation for forecast recommendation generation
     return [];
   }
@@ -553,29 +553,29 @@ class WeatherEnergyAnalyzer {
 }
 
 class DemandPredictor {
-  async predictEnergyDemand(config: any): Promise<DemandForecast[]> {
+  async predictEnergyDemand(config: DemandConfig): Promise<DemandForecast[]> {
     return [];
   }
 }
 
 class EnergyPriceOptimizer {
-  async forecastEnergyPrices(config: any): Promise<PriceForecast[]> {
+  async forecastEnergyPrices(config: PriceConfig): Promise<PriceForecast[]> {
     return [];
   }
   
-  async getLiveMarketData(): Promise<any> {
+  async getLiveMarketData(): Promise<LiveMarketData> {
     return {};
   }
 }
 
 class RenewableEnergyPredictor {
-  async predictRenewableGeneration(config: any): Promise<RenewableForecast[]> {
+  async predictRenewableGeneration(config: RenewableConfig): Promise<RenewableForecast[]> {
     return [];
   }
 }
 
 class GridStabilityAnalyzer {
-  async forecastGridStability(config: any): Promise<GridStabilityForecast> {
+  async forecastGridStability(config: GridStabilityConfig): Promise<GridStabilityForecast> {
     return {
       timestamp: new Date(),
       stabilityIndex: 96.3,
@@ -585,17 +585,89 @@ class GridStabilityAnalyzer {
     };
   }
   
-  async getLiveGridData(): Promise<any> {
+  async getLiveGridData(): Promise<LiveGridData> {
     return {};
   }
 }
 
 // Additional Interfaces
 interface ForecastUpdateResult {
-  updatedForecasts: any;
+  updatedForecasts: RecalculatedForecasts;
   accuracyImprovement: number;
-  alerts: any[];
-  recommendations: any[];
+  alerts: ForecastAlert[];
+  recommendations: ForecastRecommendation[];
+}
+
+// Type definitions for energy forecaster
+interface CarbonIntensityParams {
+  region: string;
+  timeRange: string;
+  [key: string]: unknown;
+}
+
+interface LiveData {
+  weather: Record<string, unknown>;
+  market: Record<string, unknown>;
+  grid: Record<string, unknown>;
+}
+
+interface RecalculatedForecasts {
+  demand: DemandForecast[];
+  prices: PriceForecast[];
+  renewable: RenewableForecast[];
+  [key: string]: unknown;
+}
+
+interface ForecastAlert {
+  id: string;
+  type: string;
+  severity: string;
+  message: string;
+  timestamp: Date;
+}
+
+interface ForecastRecommendation {
+  id: string;
+  type: string;
+  description: string;
+  impact: string;
+  priority: string;
+}
+
+interface DemandConfig {
+  region: string;
+  timeRange: string;
+  [key: string]: unknown;
+}
+
+interface PriceConfig {
+  region: string;
+  timeRange: string;
+  [key: string]: unknown;
+}
+
+interface LiveMarketData {
+  prices: Record<string, number>;
+  demand: Record<string, number>;
+  [key: string]: unknown;
+}
+
+interface RenewableConfig {
+  region: string;
+  timeRange: string;
+  [key: string]: unknown;
+}
+
+interface GridStabilityConfig {
+  region: string;
+  timeRange: string;
+  [key: string]: unknown;
+}
+
+interface LiveGridData {
+  frequency: number;
+  voltage: Record<string, number>;
+  [key: string]: unknown;
 }
 
 export { QuantumEnergyForecaster };

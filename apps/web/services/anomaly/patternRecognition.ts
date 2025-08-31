@@ -19,7 +19,7 @@ interface GraphEdge {
   target: string;
   weight: number;
   type: string;
-  properties?: { [key: string]: any };
+  properties?: { [key: string]: unknown };
 }
 
 interface Graph {
@@ -935,7 +935,7 @@ export class PatternRecognitionEngine extends EventEmitter {
     return 'CRITICAL';
   }
 
-  getPatternStatistics(): any {
+  getPatternStatistics(): PatternStatistics {
     return {
       config: this.config,
       graphsAnalyzed: this.graphs.size,
@@ -955,6 +955,16 @@ export class PatternRecognitionEngine extends EventEmitter {
       }
     });
   }
+}
+
+// Type definitions for pattern recognition
+interface PatternStatistics {
+  config: PatternConfig;
+  graphsAnalyzed: number;
+  historicalDataPoints: number;
+  isInitialized: boolean;
+  supportedMethods: string[];
+  timestamp: number;
 }
 
 export default PatternRecognitionEngine;

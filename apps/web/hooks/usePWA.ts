@@ -5,14 +5,14 @@ interface PWAState {
   isInstalled: boolean;
   isOffline: boolean;
   isUpdateAvailable: boolean;
-  installPrompt: any;
+  installPrompt: BeforeInstallPromptEvent | null;
   swRegistration: ServiceWorkerRegistration | null;
 }
 
 interface OfflineAction {
   id: string;
   type: 'security-scan' | 'vulnerability-report' | 'performance-metrics' | 'error-report';
-  data: any;
+  data: OfflineActionData;
   timestamp: number;
   retryCount: number;
 }
@@ -45,6 +45,124 @@ export const usePWA = () => {
     canShareFiles: false,
     hasServiceWorker: 'serviceWorker' in navigator
   });
+
+  // Install PWA
+  const installPWA = useCallback(async () => {
+    if (!pwaState.installPrompt) {
+      return false;
+    }
+
+    try {
+      pwaState.installPrompt.prompt();
+      const result = await pwaState.installPrompt.userChoice;
+      
+      if (result.outcome === 'accepted') {
+        console.log('PWA installation accepted');
+        setPwaState(prev => ({
+          ...prev,
+          isInstallable: false,
+          installPrompt: null
+        }));
+        return true;
+      } else {
+        console.log('PWA installation declined');
+        return false;
+      }
+    } catch (error) {
+      console.error('PWA installation failed:', error);
+      return false;
+    }
+  }, [pwaState.installPrompt]);
+
+  // Update PWA
+  const updatePWA = useCallback(async () => {
+    if (!pwaState.swRegistration) {
+      return false;
+    }
+
+    try {
+      // Send skip waiting message to service worker
+      if (pwaState.swRegistration.waiting) {
+        pwaState.swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        
+        // Wait for the new service worker to take control
+        await new Promise<void>((resolve) => {
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            resolve();
+          }, { once: true });
+        });
+
+        // Reload the page
+        window.location.reload();
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('PWA update failed:', error);
+      return false;
+    }
+  }, [pwaState.swRegistration]);
+
+  // Request notification permission
+  const requestNotificationPermission = useCallback(async () => {
+    if (!('Notification' in window)) {
+      return 'not-supported';
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      return permission;
+    } catch (error) {
+      console.error('Notification permission request failed:', error);
+      return 'denied';
+    }
+  }, []);
+
+  // Subscribe to push notifications
+  const subscribeToPushNotifications = useCallback(async () => {
+    if (!pwaState.swRegistration || !('PushManager' in window)) {
+      return null;
+    }
+
+    try {
+      const subscription = await pwaState.swRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.VITE_VAPID_PUBLIC_KEY // You'll need to add this
+      });
+
+      console.log('Push subscription successful:', subscription);
+      return subscription;
+    } catch (error) {
+      console.error('Push subscription failed:', error);
+      return null;
+    }
+  }, [pwaState.swRegistration]);
+
+  // Add offline action
+  const addOfflineAction = useCallback((action: Omit<OfflineAction, 'id' | 'timestamp' | 'retryCount'>) => {
+    const newAction: OfflineAction = {
+      ...action,
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: Date.now(),
+      retryCount: 0
+    };
+
+    setOfflineActions(prev => [...prev, newAction]);
+    
+    // Store in IndexedDB via service worker
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'QUEUE_OFFLINE_ACTION',
+        action: newAction
+      });
+    }
+  }, []);
+
+  // Remove offline action
+  const removeOfflineAction = useCallback((actionId: string) => {
+    setOfflineActions(prev => prev.filter(action => action.id !== actionId));
+  }, []);
 
   // Initialize PWA features
   useEffect(() => {
@@ -170,125 +288,7 @@ export const usePWA = () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
-
-  // Install PWA
-  const installPWA = useCallback(async () => {
-    if (!pwaState.installPrompt) {
-      return false;
-    }
-
-    try {
-      pwaState.installPrompt.prompt();
-      const result = await pwaState.installPrompt.userChoice;
-      
-      if (result.outcome === 'accepted') {
-        console.log('PWA installation accepted');
-        setPwaState(prev => ({
-          ...prev,
-          isInstallable: false,
-          installPrompt: null
-        }));
-        return true;
-      } else {
-        console.log('PWA installation declined');
-        return false;
-      }
-    } catch (error) {
-      console.error('PWA installation failed:', error);
-      return false;
-    }
-  }, [pwaState.installPrompt]);
-
-  // Update PWA
-  const updatePWA = useCallback(async () => {
-    if (!pwaState.swRegistration) {
-      return false;
-    }
-
-    try {
-      // Send skip waiting message to service worker
-      if (pwaState.swRegistration.waiting) {
-        pwaState.swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        
-        // Wait for the new service worker to take control
-        await new Promise<void>((resolve) => {
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            resolve();
-          }, { once: true });
-        });
-
-        // Reload the page
-        window.location.reload();
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('PWA update failed:', error);
-      return false;
-    }
-  }, [pwaState.swRegistration]);
-
-  // Request notification permission
-  const requestNotificationPermission = useCallback(async () => {
-    if (!('Notification' in window)) {
-      return 'not-supported';
-    }
-
-    try {
-      const permission = await Notification.requestPermission();
-      return permission;
-    } catch (error) {
-      console.error('Notification permission request failed:', error);
-      return 'denied';
-    }
-  }, []);
-
-  // Subscribe to push notifications
-  const subscribeToPushNotifications = useCallback(async () => {
-    if (!pwaState.swRegistration || !('PushManager' in window)) {
-      return null;
-    }
-
-    try {
-      const subscription = await pwaState.swRegistration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: process.env.VITE_VAPID_PUBLIC_KEY // You'll need to add this
-      });
-
-      console.log('Push subscription successful:', subscription);
-      return subscription;
-    } catch (error) {
-      console.error('Push subscription failed:', error);
-      return null;
-    }
-  }, [pwaState.swRegistration]);
-
-  // Add offline action
-  const addOfflineAction = useCallback((action: Omit<OfflineAction, 'id' | 'timestamp' | 'retryCount'>) => {
-    const newAction: OfflineAction = {
-      ...action,
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: Date.now(),
-      retryCount: 0
-    };
-
-    setOfflineActions(prev => [...prev, newAction]);
-    
-    // Store in IndexedDB via service worker
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: 'QUEUE_OFFLINE_ACTION',
-        action: newAction
-      });
-    }
-  }, []);
-
-  // Remove offline action
-  const removeOfflineAction = useCallback((actionId: string) => {
-    setOfflineActions(prev => prev.filter(action => action.id !== actionId));
-  }, []);
+  }, [addOfflineAction, removeOfflineAction]);
 
   // Clear all offline actions
   const clearOfflineActions = useCallback(() => {
@@ -347,8 +347,8 @@ export const usePWA = () => {
   }, [pwaState, offlineActions]);
 
   // Performance monitoring
-  const measurePerformance = useCallback((name: string, fn: () => Promise<any>) => {
-    return async (...args: any[]) => {
+  const measurePerformance = useCallback((name: string, fn: () => Promise<unknown>) => {
+    return async (...args: unknown[]) => {
       const startTime = performance.now();
       
       try {
@@ -409,5 +409,19 @@ export const usePWA = () => {
     measurePerformance
   };
 };
+
+// Type definitions for PWA hook
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
+interface OfflineActionData {
+  [key: string]: unknown;
+}
 
 export default usePWA;

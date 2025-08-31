@@ -1,7 +1,59 @@
 /**
- * Comprehensive Security Configuration and Utilities
- * Enhanced security hardening for production deployment
+ * Enhanced Security Utilities
+ * Provides comprehensive security functions for the application
  */
+
+// Type definitions for better type safety
+export interface SecurityLogEntry {
+  event: string;
+  details: Record<string, unknown>;
+  timestamp: string;
+  sessionId?: string;
+  url?: string;
+  userId?: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export interface MonitoringConfig {
+  datadog: {
+    apiKey?: string;
+    appKey?: string;
+    endpoint: string;
+  };
+  newrelic: {
+    licenseKey?: string;
+    accountId?: string;
+    endpoint: string;
+  };
+  sentry: {
+    dsn?: string;
+  };
+}
+
+export interface DatadogPayload {
+  title: string;
+  text: string;
+  tags: string[];
+  alert_type: string;
+  source_type_name: string;
+}
+
+export interface NewRelicPayload {
+  eventType: string;
+  timestamp: number;
+  event: string;
+  details: Record<string, unknown>;
+  sessionId?: string;
+  url?: string;
+}
+
+declare global {
+  interface Window {
+    Sentry?: {
+      captureMessage: (message: string, options: { level: string; extra: Record<string, unknown> }) => void;
+    };
+  }
+}
 
 // Session management configuration
 export const SESSION_CONFIG = {
@@ -15,130 +67,68 @@ export const SESSION_CONFIG = {
   STORAGE_KEY: 'sfa_session',
 } as const;
 
-// Rate limiting configuration
-export const RATE_LIMITS = {
-  // API requests per minute
-  API_REQUESTS: 100,
-  // Authentication attempts per hour
-  AUTH_ATTEMPTS: 5,
-  // File uploads per minute
-  FILE_UPLOADS: 10,
-  // Search queries per minute
-  SEARCH_QUERIES: 50,
-} as const;
-
-// Password strength requirements
-export const PASSWORD_REQUIREMENTS = {
-  MIN_LENGTH: 12,
-  REQUIRE_UPPERCASE: true,
-  REQUIRE_LOWERCASE: true,
-  REQUIRE_NUMBERS: true,
-  REQUIRE_SYMBOLS: true,
-  BANNED_PATTERNS: [
-    'password',
-    '123456',
-    'qwerty',
-    'admin',
-    'letmein',
-    'welcome',
-    'monkey',
-    'dragon',
-  ],
-} as const;
-
-// MFA configuration
-export const MFA_CONFIG = {
-  ENABLED: true,
-  BACKUP_CODES_COUNT: 8,
-  TOTP_WINDOW: 1,
-  SMS_ENABLED: false, // Disabled for security - TOTP only
-  EMAIL_ENABLED: true,
-} as const;
-
 /**
- * Enhanced password validation with comprehensive security checks
+ * Rate limiting utility for preventing abuse
  */
-export function validatePassword(password: string): {
-  isValid: boolean;
-  errors: string[];
-  strength: 'weak' | 'medium' | 'strong' | 'very-strong';
-} {
-  const errors: string[] = [];
-  let score = 0;
+export class RateLimiter {
+  private attempts: Map<string, { count: number; resetTime: number }> = new Map();
 
-  // Length check
-  if (password.length < PASSWORD_REQUIREMENTS.MIN_LENGTH) {
-    errors.push(`Password must be at least ${PASSWORD_REQUIREMENTS.MIN_LENGTH} characters long`);
-  } else {
-    score += 1;
+  /**
+   * Check if a request is allowed based on rate limiting rules
+   * @param identifier - Unique identifier for the client (IP, user ID, etc.)
+   * @param maxAttempts - Maximum number of attempts allowed
+   * @param windowMs - Time window in milliseconds
+   * @returns true if request is allowed, false if rate limited
+   */
+  isAllowed(identifier: string, maxAttempts: number, windowMs: number): boolean {
+    const now = Date.now();
+    const record = this.attempts.get(identifier);
+
+    // If no record exists or window has expired, create new record
+    if (!record || now > record.resetTime) {
+      this.attempts.set(identifier, {
+        count: 1,
+        resetTime: now + windowMs
+      });
+      return true;
+    }
+
+    // If within window and under limit, increment and allow
+    if (record.count < maxAttempts) {
+      record.count++;
+      return true;
+    }
+
+    // Rate limited
+    return false;
   }
 
-  // Character requirements
-  if (PASSWORD_REQUIREMENTS.REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
-  } else {
-    score += 1;
+  /**
+   * Reset rate limiting for a specific identifier
+   */
+  reset(identifier: string): void {
+    this.attempts.delete(identifier);
   }
 
-  if (PASSWORD_REQUIREMENTS.REQUIRE_LOWERCASE && !/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
-  } else {
-    score += 1;
+  /**
+   * Get current attempt count for an identifier
+   */
+  getAttempts(identifier: string): number {
+    const record = this.attempts.get(identifier);
+    return record ? record.count : 0;
   }
 
-  if (PASSWORD_REQUIREMENTS.REQUIRE_NUMBERS && !/\d/.test(password)) {
-    errors.push('Password must contain at least one number');
-  } else {
-    score += 1;
-  }
-
-  if (PASSWORD_REQUIREMENTS.REQUIRE_SYMBOLS && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
-    errors.push('Password must contain at least one special character');
-  } else {
-    score += 1;
-  }
-
-  // Check for banned patterns
-  const lowerPassword = password.toLowerCase();
-  for (const pattern of PASSWORD_REQUIREMENTS.BANNED_PATTERNS) {
-    if (lowerPassword.includes(pattern)) {
-      errors.push(`Password cannot contain common patterns like "${pattern}"`);
-      score -= 1;
+  /**
+   * Clean up expired records
+   */
+  cleanup(): void {
+    const now = Date.now();
+    for (const [identifier, record] of this.attempts.entries()) {
+      if (now > record.resetTime) {
+        this.attempts.delete(identifier);
+      }
     }
   }
-
-  // Determine strength
-  let strength: 'weak' | 'medium' | 'strong' | 'very-strong' = 'weak';
-  if (score >= 5) strength = 'very-strong';
-  else if (score >= 4) strength = 'strong';
-  else if (score >= 3) strength = 'medium';
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    strength,
-  };
-}
-
-/**
- * Input sanitization to prevent XSS attacks
- */
-export function sanitizeInput(input: string): string {
-  return input
-    .replace(/[<>]/g, '') // Remove angle brackets
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+\s*=/gi, '') // Remove event handlers
-    .trim();
-}
-
-/**
- * SQL injection prevention - parameterized query helper
- */
-export function sanitizeSqlInput(input: string): string {
-  return input
-    .replace(/['"\\;]/g, '') // Remove dangerous SQL characters
-    .replace(/(\b(union|select|insert|update|delete|drop|exec|script)\b)/gi, '') // Remove SQL keywords
-    .trim();
 }
 
 /**
@@ -198,188 +188,151 @@ export class SessionManager {
 }
 
 /**
- * Content Security Policy headers
+ * Sanitize input to prevent XSS attacks
  */
-export const generateSecureCSP = (): string => {
-  const directives = [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: https: blob:",
-    "connect-src 'self' wss: https:",
-    "frame-ancestors 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "upgrade-insecure-requests"
-  ];
-  
-  return directives.join('; ');
-};
-
-/**
- * Security headers for production
- */
-export const SECURITY_HEADERS = {
-  'Content-Security-Policy': generateSecureCSP(),
-  'X-Frame-Options': 'DENY',
-  'X-Content-Type-Options': 'nosniff',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-} as const;
-
-/**
- * API request rate limiter
- */
-export class RateLimiter {
-  private requests: Map<string, number[]> = new Map();
-
-  public isAllowed(key: string, limit: number, windowMs: number): boolean {
-    const now = Date.now();
-    const windowStart = now - windowMs;
-    
-    // Get existing requests for this key
-    const keyRequests = this.requests.get(key) || [];
-    
-    // Filter out requests outside the window
-    const validRequests = keyRequests.filter(time => time > windowStart);
-    
-    // Check if limit exceeded
-    if (validRequests.length >= limit) {
-      return false;
-    }
-    
-    // Add current request
-    validRequests.push(now);
-    this.requests.set(key, validRequests);
-    
-    return true;
-  }
-
-  public getRemainingRequests(key: string, limit: number, windowMs: number): number {
-    const now = Date.now();
-    const windowStart = now - windowMs;
-    const keyRequests = this.requests.get(key) || [];
-    const validRequests = keyRequests.filter(time => time > windowStart);
-    
-    return Math.max(0, limit - validRequests.length);
-  }
+export function sanitizeInput(input: string): string {
+  return input
+    .replace(/[<>]/g, '') // Remove < and >
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+=/gi, '') // Remove event handlers
+    .trim();
 }
 
 /**
- * Secure local storage wrapper with encryption
+ * Sanitize SQL input to prevent injection attacks
  */
-export class SecureStorage {
-  private static encoder = new TextEncoder();
-  private static decoder = new TextDecoder();
+export function sanitizeSqlInput(input: string): string {
+  // Remove SQL injection patterns
+  const sqlPatterns = [
+    /(\b(union|select|insert|update|delete|drop|create|alter|exec|execute|script)\b)/gi,
+    /(['";])/g,
+    /(--)/g,
+    /(\/\*|\*\/)/g,
+    /(xp_|sp_)/gi
+  ];
 
-  public static async setItem(key: string, value: string): Promise<void> {
-    try {
-      // Simple encryption using Web Crypto API
-      const data = this.encoder.encode(value);
-      const cryptoKey = await window.crypto.subtle.generateKey(
-        { name: 'AES-GCM', length: 256 },
-        false,
-        ['encrypt']
-      );
-      
-      const iv = window.crypto.getRandomValues(new Uint8Array(12));
-      const encrypted = await window.crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv },
-        cryptoKey,
-        data
-      );
-      
-      const combined = new Uint8Array(iv.length + encrypted.byteLength);
-      combined.set(iv);
-      combined.set(new Uint8Array(encrypted), iv.length);
-      
-      localStorage.setItem(key, btoa(String.fromCharCode(...combined)));
-    } catch (error) {
-      console.error('SecureStorage: Failed to encrypt data', error);
-      // Fallback to regular storage
-      localStorage.setItem(key, value);
-    }
-  }
+  let sanitized = input;
+  sqlPatterns.forEach(pattern => {
+    sanitized = sanitized.replace(pattern, '');
+  });
 
-  public static getItem(key: string): string | null {
-    return localStorage.getItem(key);
-  }
-
-  public static removeItem(key: string): void {
-    localStorage.removeItem(key);
-  }
+  return sanitized.trim();
 }
 
 /**
- * Environment variable validator
+ * Validate email format
  */
-export function validateEnvironment(): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  const required = [
-    'VITE_SUPABASE_URL',
-    'VITE_SUPABASE_ANON_KEY',
-  ];
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
 
-  for (const variable of required) {
-    if (!import.meta.env[variable]) {
-      errors.push(`Missing required environment variable: ${variable}`);
-    }
+/**
+ * Validate password strength
+ */
+export function validatePassword(password: string): {
+  isValid: boolean;
+  score: number;
+  feedback: string[];
+} {
+  const feedback: string[] = [];
+  let score = 0;
+
+  // Length check
+  if (password.length >= 8) {
+    score += 1;
+  } else {
+    feedback.push('Password must be at least 8 characters long');
   }
 
-  // Validate URL formats
-  if (import.meta.env.VITE_SUPABASE_URL && !isValidUrl(import.meta.env.VITE_SUPABASE_URL)) {
-    errors.push('Invalid SUPABASE_URL format');
+  // Uppercase check
+  if (/[A-Z]/.test(password)) {
+    score += 1;
+  } else {
+    feedback.push('Password must contain at least one uppercase letter');
+  }
+
+  // Lowercase check
+  if (/[a-z]/.test(password)) {
+    score += 1;
+  } else {
+    feedback.push('Password must contain at least one lowercase letter');
+  }
+
+  // Number check
+  if (/\d/.test(password)) {
+    score += 1;
+  } else {
+    feedback.push('Password must contain at least one number');
+  }
+
+  // Special character check
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    score += 1;
+  } else {
+    feedback.push('Password must contain at least one special character');
   }
 
   return {
-    isValid: errors.length === 0,
-    errors,
+    isValid: score >= 4,
+    score,
+    feedback
   };
-}
-
-function isValidUrl(string: string): boolean {
-  try {
-    new URL(string);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /**
- * Security event logger
+ * Generate a secure random token
+ */
+export function generateSecureToken(length: number = 32): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const randomArray = new Uint8Array(length);
+  crypto.getRandomValues(randomArray);
+  
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(randomArray[i] % chars.length);
+  }
+  
+  return result;
+}
+
+/**
+ * Hash a string using SHA-256
+ */
+export async function hashString(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Security Logger for tracking security events
  */
 export class SecurityLogger {
-  private static monitoringConfig = {
+  private static monitoringConfig: MonitoringConfig = {
     datadog: {
-      apiKey: import.meta.env.VITE_DATADOG_API_KEY,
-      appKey: import.meta.env.VITE_DATADOG_APP_KEY,
       endpoint: 'https://api.datadoghq.com/api/v1/events'
     },
     newrelic: {
-      licenseKey: import.meta.env.VITE_NEWRELIC_LICENSE_KEY,
-      accountId: import.meta.env.VITE_NEWRELIC_ACCOUNT_ID,
       endpoint: 'https://insights-collector.newrelic.com/v1/accounts'
     },
-    sentry: {
-      dsn: import.meta.env.VITE_SENTRY_DSN
-    },
-    logrocket: {
-      publicKey: import.meta.env.VITE_LOGROCKET_PUBLIC_KEY
-    }
+    sentry: {}
   };
 
-  public static logEvent(event: string, details: Record<string, unknown> = {}): void {
-    const logEntry = {
-      timestamp: new Date().toISOString(),
+  /**
+   * Log a security event
+   */
+  static logEvent(event: string, details: Record<string, unknown> = {}, severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'): void {
+    const logEntry: SecurityLogEntry = {
       event,
       details,
-      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString(),
+      sessionId: this.getSessionId(),
       url: window.location.href,
-      sessionId: SessionManager.prototype.constructor.name,
+      userId: this.getCurrentUserId(),
+      severity
     };
 
     // Log to console in development
@@ -393,7 +346,7 @@ export class SecurityLogger {
     }
   }
 
-  private static async sendToMonitoringService(logEntry: any): Promise<void> {
+  private static async sendToMonitoringService(logEntry: SecurityLogEntry): Promise<void> {
     try {
       // Try Datadog first
       if (this.monitoringConfig.datadog.apiKey) {
@@ -425,7 +378,15 @@ export class SecurityLogger {
     }
   }
 
-  private static async sendToDatadog(logEntry: any): Promise<void> {
+  private static async sendToDatadog(logEntry: SecurityLogEntry): Promise<void> {
+    const payload: DatadogPayload = {
+      title: `Security Event: ${logEntry.event}`,
+      text: JSON.stringify(logEntry.details),
+      tags: ['security', 'automaton', logEntry.event],
+      alert_type: 'info',
+      source_type_name: 'secure-flow-automaton'
+    };
+
     const response = await fetch(this.monitoringConfig.datadog.endpoint, {
       method: 'POST',
       headers: {
@@ -433,13 +394,7 @@ export class SecurityLogger {
         'DD-API-KEY': this.monitoringConfig.datadog.apiKey!,
         'DD-APPLICATION-KEY': this.monitoringConfig.datadog.appKey!
       },
-      body: JSON.stringify({
-        title: `Security Event: ${logEntry.event}`,
-        text: JSON.stringify(logEntry.details),
-        tags: ['security', 'automaton', logEntry.event],
-        alert_type: 'info',
-        source_type_name: 'secure-flow-automaton'
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -447,21 +402,23 @@ export class SecurityLogger {
     }
   }
 
-  private static async sendToNewRelic(logEntry: any): Promise<void> {
+  private static async sendToNewRelic(logEntry: SecurityLogEntry): Promise<void> {
+    const payload: NewRelicPayload = {
+      eventType: 'SecurityEvent',
+      timestamp: Date.now(),
+      event: logEntry.event,
+      details: logEntry.details,
+      sessionId: logEntry.sessionId,
+      url: logEntry.url
+    };
+
     const response = await fetch(`${this.monitoringConfig.newrelic.endpoint}/${this.monitoringConfig.newrelic.accountId}/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Insert-Key': this.monitoringConfig.newrelic.licenseKey!
       },
-      body: JSON.stringify([{
-        eventType: 'SecurityEvent',
-        timestamp: Date.now(),
-        event: logEntry.event,
-        details: logEntry.details,
-        sessionId: logEntry.sessionId,
-        url: logEntry.url
-      }])
+      body: JSON.stringify([payload])
     });
 
     if (!response.ok) {
@@ -469,7 +426,7 @@ export class SecurityLogger {
     }
   }
 
-  private static async sendToSentry(logEntry: any): Promise<void> {
+  private static async sendToSentry(logEntry: SecurityLogEntry): Promise<void> {
     // Sentry is typically initialized globally, so we just capture the message
     if (window.Sentry) {
       window.Sentry.captureMessage(`Security Event: ${logEntry.event}`, {
@@ -478,4 +435,16 @@ export class SecurityLogger {
       });
     }
   }
+
+  private static getSessionId(): string | undefined {
+    // Get session ID from localStorage or sessionStorage
+    return localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId') || undefined;
+  }
+
+  private static getCurrentUserId(): string | undefined {
+    // Get current user ID from auth context or localStorage
+    return localStorage.getItem('userId') || undefined;
+  }
 }
+
+export default SecurityLogger;

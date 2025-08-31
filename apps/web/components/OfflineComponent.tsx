@@ -202,7 +202,7 @@ export const useOfflineStatus = () => {
 
     // Get connection info if available
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+      const connection = (navigator as { connection?: { effectiveType?: string; addEventListener: (type: string, listener: () => void) => void; removeEventListener: (type: string, listener: () => void) => void } }).connection;
       setConnectionType(connection.effectiveType || 'unknown');
       
       const handleConnectionChange = () => {

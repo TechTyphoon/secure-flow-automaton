@@ -1233,14 +1233,14 @@ export class ApplicationSecurityGatewayService {
   }
 
   /**
-   * Evaluate individual condition
+   * Evaluate a single condition
    */
   private evaluateCondition(
-    condition: SecurityRule['condition'][0],
+    condition: AccessCondition,
     request: ApplicationAccessRequest,
     application: ApplicationDefinition
   ): boolean {
-    let actualValue: any;
+    let actualValue: string | number | boolean | string[] | number[] | null;
 
     // Extract the actual value based on condition type and field
     switch (condition.type) {
@@ -1270,7 +1270,7 @@ export class ApplicationSecurityGatewayService {
     return this.evaluateOperator(condition.operator, actualValue, condition.value);
   }
 
-  private getUserFieldValue(field: string, request: ApplicationAccessRequest): any {
+  private getUserFieldValue(field: string, request: ApplicationAccessRequest): string | number | boolean | string[] | number[] | null {
     // Simplified - would integrate with user service
     switch (field) {
       case 'id': return request.userId;
@@ -1279,7 +1279,7 @@ export class ApplicationSecurityGatewayService {
     }
   }
 
-  private getDeviceFieldValue(field: string, request: ApplicationAccessRequest): any {
+  private getDeviceFieldValue(field: string, request: ApplicationAccessRequest): string | number | boolean | string[] | number[] | null {
     switch (field) {
       case 'id': return request.deviceId;
       case 'trustScore': return 100 - request.riskFactors.deviceRisk; // Inverse of risk
@@ -1287,15 +1287,15 @@ export class ApplicationSecurityGatewayService {
     }
   }
 
-  private getNetworkFieldValue(field: string, request: ApplicationAccessRequest): any {
+  private getNetworkFieldValue(field: string, request: ApplicationAccessRequest): string | number | boolean | string[] | number[] | null {
     switch (field) {
       case 'sourceIP': return request.context.sourceIP;
-      case 'location.country': return request.context.location?.country;
+      case 'location.country': return request.context.location?.country || null;
       default: return null;
     }
   }
 
-  private getApplicationFieldValue(field: string, application: ApplicationDefinition): any {
+  private getApplicationFieldValue(field: string, application: ApplicationDefinition): string | number | boolean | string[] | number[] | null {
     switch (field) {
       case 'endpoint.path': return application.network.endpoints.map(e => e.path);
       case 'criticality': return application.criticality;
@@ -1303,7 +1303,7 @@ export class ApplicationSecurityGatewayService {
     }
   }
 
-  private getTimeFieldValue(field: string, request: ApplicationAccessRequest): any {
+  private getTimeFieldValue(field: string, request: ApplicationAccessRequest): string | number | boolean | string[] | number[] | null {
     switch (field) {
       case 'hour': return request.context.time.getHours();
       case 'dayOfWeek': return request.context.time.getDay();
@@ -1311,7 +1311,7 @@ export class ApplicationSecurityGatewayService {
     }
   }
 
-  private getRiskFieldValue(field: string, request: ApplicationAccessRequest): any {
+  private getRiskFieldValue(field: string, request: ApplicationAccessRequest): string | number | boolean | string[] | number[] | null {
     switch (field) {
       case 'overall': return this.calculateRiskScore(request);
       case 'user': return request.riskFactors.userRisk;
@@ -1323,7 +1323,11 @@ export class ApplicationSecurityGatewayService {
     }
   }
 
-  private evaluateOperator(operator: string, actualValue: any, expectedValue: any): boolean {
+  private evaluateOperator(
+    operator: string, 
+    actualValue: string | number | boolean | string[] | number[] | null, 
+    expectedValue: string | number | boolean | string[] | number[]
+  ): boolean {
     switch (operator) {
       case 'equals':
         return actualValue === expectedValue;

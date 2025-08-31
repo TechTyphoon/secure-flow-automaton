@@ -652,9 +652,9 @@ export class ApplicationSecurityIntegrationService {
   /**
    * Correlate security events to identify attack patterns
    */
-  private correlateSecurityEvents(runtimeEvents: any[], scanResults: any[]): void {
+  private correlateSecurityEvents(runtimeEvents: RuntimeEvent[], scanResults: ScanResult[]): void {
     // Example correlation logic - in practice, this would be much more sophisticated
-    const ipGroups = new Map<string, any[]>();
+    const ipGroups = new Map<string, EventGroup[]>();
     
     // Group events by IP address
     runtimeEvents.forEach(event => {
@@ -799,7 +799,7 @@ export class ApplicationSecurityIntegrationService {
   /**
    * Calculate gateway security score
    */
-  private calculateGatewayScore(application: any): number {
+  private calculateGatewayScore(application: ApplicationConfig): number {
     let score = 100;
     
     // Deduct points for missing security features
@@ -815,7 +815,7 @@ export class ApplicationSecurityIntegrationService {
   /**
    * Calculate API security score
    */
-  private calculateAPISecurityScore(endpoints: any[]): number {
+  private calculateAPISecurityScore(endpoints: APIEndpoint[]): number {
     if (endpoints.length === 0) return 0;
 
     let totalScore = 0;
@@ -844,7 +844,7 @@ export class ApplicationSecurityIntegrationService {
   /**
    * Calculate runtime protection score
    */
-  private calculateRuntimeProtectionScore(events: any[]): number {
+  private calculateRuntimeProtectionScore(events: RuntimeEvent[]): number {
     if (events.length === 0) return 95; // High score if no events (no threats)
 
     const recentEvents = events.filter(event => 
@@ -1059,6 +1059,69 @@ export class ApplicationSecurityIntegrationService {
   getRuntimeProtectionService(): ApplicationRuntimeProtectionService {
     return this.runtimeProtectionService;
   }
+}
+
+// Type definitions for application security integration
+interface RuntimeEvent {
+  id: string;
+  timestamp: Date;
+  type: string;
+  status: string;
+  severity: string;
+  source: {
+    ipAddress: string;
+    userId?: string;
+  };
+  applicationId: string;
+  details: {
+    endpoint?: string;
+    risk: {
+      score: number;
+    };
+  };
+}
+
+interface ScanResult {
+  id: string;
+  timestamp: Date;
+  type: string;
+  severity: string;
+  [key: string]: unknown;
+}
+
+interface EventGroup {
+  source: string;
+  event: RuntimeEvent;
+}
+
+interface ApplicationConfig {
+  security: {
+    authentication: { enabled: boolean };
+    authorization: { enabled: boolean };
+    encryption: { inTransit: boolean };
+    inputValidation: { enabled: boolean };
+  };
+  monitoring: {
+    securityEvents: { enabled: boolean };
+  };
+}
+
+interface APIEndpoint {
+  security: {
+    inputValidation: boolean;
+    outputEncoding: boolean;
+    sqlInjectionProtection: boolean;
+    xssProtection: boolean;
+  };
+  rateLimit: {
+    enabled: boolean;
+  };
+  authentication: {
+    required: boolean;
+  };
+  metadata: {
+    criticality: string;
+  };
 }
 
 export default ApplicationSecurityIntegrationService;

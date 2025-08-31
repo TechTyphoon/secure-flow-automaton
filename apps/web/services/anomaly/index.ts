@@ -147,7 +147,7 @@ export const DEFAULT_CONFIGS = {
 
 // Utility functions
 export class AnomalyDetectionUtils {
-  static validateDataFormat(data: any): { isValid: boolean; errors: string[] } {
+  static validateDataFormat(data: DetectionData): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
     
     if (!data) {
@@ -164,7 +164,7 @@ export class AnomalyDetectionUtils {
     };
   }
 
-  static formatDetectionRequest(data: any, options?: any): any {
+  static formatDetectionRequest(data: DetectionData, options?: DetectionOptions): DetectionRequest {
     return {
       id: options?.id || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       data,
@@ -180,7 +180,7 @@ export class AnomalyDetectionUtils {
     };
   }
 
-  static inferDataType(data: any): 'univariate' | 'multivariate' | 'timeseries' | 'graph' | 'mixed' {
+  static inferDataType(data: DetectionData): 'univariate' | 'multivariate' | 'timeseries' | 'graph' | 'mixed' {
     if (!Array.isArray(data)) {
       return 'mixed';
     }
@@ -253,7 +253,7 @@ export class AnomalyDetectionUtils {
 
 // Quick start helper
 export async function quickDetect(
-  data: any, 
+  data: DetectionData, 
   config: 'LIGHTWEIGHT' | 'STANDARD' | 'COMPREHENSIVE' | 'HIGH_PRECISION' = 'STANDARD'
 ): Promise<AnomalyResult> {
   const orchestrator = AnomalyDetectionFactory.createOrchestrator(DEFAULT_CONFIGS[config]);
@@ -276,6 +276,32 @@ export async function quickDetect(
     console.error('Quick detection failed:', error);
     throw error;
   }
+}
+
+// Type definitions for anomaly detection
+type DetectionData = number[] | Record<string, unknown>[] | unknown;
+
+interface DetectionOptions {
+  id?: string;
+  priority?: string;
+  methods?: string[];
+  configuration?: Record<string, unknown>;
+  source?: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface DetectionRequest {
+  id: string;
+  data: DetectionData;
+  dataType: 'univariate' | 'multivariate' | 'timeseries' | 'graph' | 'mixed';
+  priority: string;
+  methods?: string[];
+  configuration?: Record<string, unknown>;
+  metadata: {
+    timestamp: number;
+    source: string;
+    [key: string]: unknown;
+  };
 }
 
 // Export everything for easy imports

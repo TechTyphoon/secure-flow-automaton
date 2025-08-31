@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/106</span>
+                <span class='fraction'>0/107</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/106</span>
+                <span class='fraction'>0/107</span>
             </div>
         
             
@@ -199,7 +199,8 @@
 <a name='L134'></a><a href='#L134'>134</a>
 <a name='L135'></a><a href='#L135'>135</a>
 <a name='L136'></a><a href='#L136'>136</a>
-<a name='L137'></a><a href='#L137'>137</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -253,6 +254,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -340,7 +342,7 @@
 &nbsp;
 <span class="cstat-no" title="statement not covered" >export class SecurityAPIClient {</span>
 <span class="cstat-no" title="statement not covered" >  private config = SecurityConfigManager.getInstance();</span>
-<span class="cstat-no" title="statement not covered" >  private cache = new Map&lt;string, { data: any; timestamp: number }&gt;();</span>
+<span class="cstat-no" title="statement not covered" >  private cache = new Map&lt;string, { data: unknown; timestamp: number }&gt;();</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  async makeSecureRequest&lt;T&gt;(</span>
 <span class="cstat-no" title="statement not covered" >    url: string,</span>
@@ -358,7 +360,7 @@
 <span class="cstat-no" title="statement not covered" >    // Check cache first</span>
 <span class="cstat-no" title="statement not covered" >    if (cacheKey &amp;&amp; this.isCacheValid(cacheKey)) {</span>
 <span class="cstat-no" title="statement not covered" >      console.log(`📦 Using cached data for ${service}:${cacheKey}`);</span>
-<span class="cstat-no" title="statement not covered" >      return this.cache.get(cacheKey)!.data;</span>
+<span class="cstat-no" title="statement not covered" >      return this.cache.get(cacheKey)!.data as T;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    // Retry logic</span>
@@ -389,13 +391,14 @@
 <span class="cstat-no" title="statement not covered" >        console.log(`✅ ${service} API call successful`);</span>
 <span class="cstat-no" title="statement not covered" >        return response.data;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      } catch (error: any) {</span>
-<span class="cstat-no" title="statement not covered" >        lastError = error;</span>
+<span class="cstat-no" title="statement not covered" >      } catch (error: unknown) {</span>
+<span class="cstat-no" title="statement not covered" >        const axiosError = error as { response?: { status?: number }; message?: string };</span>
+<span class="cstat-no" title="statement not covered" >        lastError = axiosError as Error;</span>
 <span class="cstat-no" title="statement not covered" >        console.warn(`⚠️ ${service} API call failed (attempt ${attempt}/${maxRetries}):`, </span>
-<span class="cstat-no" title="statement not covered" >          error.response?.status, error.message);</span>
+<span class="cstat-no" title="statement not covered" >          axiosError.response?.status, axiosError.message);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        // Don't retry on authentication errors</span>
-<span class="cstat-no" title="statement not covered" >        if (error.response?.status === 401 || error.response?.status === 403) {</span>
+<span class="cstat-no" title="statement not covered" >        if (axiosError.response?.status === 401 || axiosError.response?.status === 403) {</span>
 <span class="cstat-no" title="statement not covered" >          console.error(`🚫 ${service} authentication failed. Check API token.`);</span>
 <span class="cstat-no" title="statement not covered" >          break;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
@@ -478,7 +481,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-28T09:40:00.524Z
+                at 2025-08-31T09:41:55.058Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

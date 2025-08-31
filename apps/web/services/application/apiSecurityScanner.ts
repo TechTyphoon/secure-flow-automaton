@@ -81,7 +81,7 @@ export interface APIResponse {
   statusCode: number;
   description: string;
   contentType: string;
-  schema?: any;
+  schema?: ResponseSchema;
   headers?: Record<string, string>;
   security: {
     dataExposure: 'none' | 'minimal' | 'standard' | 'extensive';
@@ -196,8 +196,8 @@ export interface APISecurityTest {
   description: string;
   severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
   enabled: boolean;
-  configuration: Record<string, any>;
-  testFunction: (endpoint: APIEndpoint, config: any) => Promise<APITestResult>;
+  configuration: Record<string, TestConfig>;
+  testFunction: (endpoint: APIEndpoint, config: TestConfig) => Promise<APITestResult>;
 }
 
 export interface APITestResult {
@@ -207,7 +207,7 @@ export interface APITestResult {
   findings: {
     severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
     message: string;
-    evidence: any;
+    evidence: TestEvidence;
   }[];
   recommendations: string[];
   executionTime: number; // milliseconds
@@ -1033,7 +1033,7 @@ export class APISecurityScannerService {
   /**
    * Security test implementations
    */
-  private async testAuthenticationBypass(endpoint: APIEndpoint, config: any): Promise<APITestResult> {
+  private async testAuthenticationBypass(endpoint: APIEndpoint, config: TestConfig): Promise<APITestResult> {
     const startTime = Date.now();
     const findings: APITestResult['findings'] = [];
     let passed = true;
@@ -1086,7 +1086,7 @@ export class APISecurityScannerService {
     };
   }
 
-  private async testExcessiveDataExposure(endpoint: APIEndpoint, config: any): Promise<APITestResult> {
+  private async testExcessiveDataExposure(endpoint: APIEndpoint, config: TestConfig): Promise<APITestResult> {
     const startTime = Date.now();
     const findings: APITestResult['findings'] = [];
     let passed = true;
@@ -1144,7 +1144,7 @@ export class APISecurityScannerService {
     };
   }
 
-  private async testSQLInjection(endpoint: APIEndpoint, config: any): Promise<APITestResult> {
+  private async testSQLInjection(endpoint: APIEndpoint, config: TestConfig): Promise<APITestResult> {
     const startTime = Date.now();
     const findings: APITestResult['findings'] = [];
     let passed = true;
@@ -1188,7 +1188,7 @@ export class APISecurityScannerService {
     };
   }
 
-  private async testMassAssignment(endpoint: APIEndpoint, config: any): Promise<APITestResult> {
+  private async testMassAssignment(endpoint: APIEndpoint, config: TestConfig): Promise<APITestResult> {
     const startTime = Date.now();
     const findings: APITestResult['findings'] = [];
     let passed = true;
@@ -1244,7 +1244,7 @@ export class APISecurityScannerService {
     };
   }
 
-  private async testRateLimiting(endpoint: APIEndpoint, config: any): Promise<APITestResult> {
+  private async testRateLimiting(endpoint: APIEndpoint, config: TestConfig): Promise<APITestResult> {
     const startTime = Date.now();
     const findings: APITestResult['findings'] = [];
     let passed = true;
@@ -1590,6 +1590,22 @@ export class APISecurityScannerService {
   getSecurityTests(): APISecurityTest[] {
     return Array.from(this.securityTests.values());
   }
+}
+
+// Type definitions for API security scanner
+interface ResponseSchema {
+  type: string;
+  properties: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface TestConfig {
+  sensitiveFields: string[];
+  [key: string]: unknown;
+}
+
+interface TestEvidence {
+  [key: string]: unknown;
 }
 
 export default APISecurityScannerService;

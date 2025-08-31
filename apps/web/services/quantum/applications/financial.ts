@@ -485,7 +485,7 @@ export class QuantumFinancialServices {
   async processQuantumSafePayment(
     transaction: Transaction,
     securityLevel: 'standard' | 'high' | 'quantum_safe' = 'quantum_safe'
-  ): Promise<{success: boolean, transactionId: string, securityVerification: any}> {
+  ): Promise<{success: boolean, transactionId: string, securityVerification: SecurityVerification}> {
     console.log(`🔄 Processing quantum-safe payment ${transaction.transactionId}...`);
 
     try {
@@ -579,7 +579,7 @@ export class QuantumFinancialServices {
     return recommendations;
   }
 
-  private async processPaymentSecurely(encryptedTransaction: any): Promise<{success: boolean}> {
+  private async processPaymentSecurely(encryptedTransaction: EncryptedTransaction): Promise<{success: boolean}> {
     // Simulate secure payment processing
     await new Promise(resolve => setTimeout(resolve, 50)); // 50ms processing time
     return { success: true };
@@ -592,11 +592,11 @@ class QuantumTradingEngine {
     console.log('✅ Quantum Trading Engine initialized');
   }
 
-  async optimizeExecution(order: TradingOrder, marketAnalysis: any): Promise<any> {
+  async optimizeExecution(order: TradingOrder, marketAnalysis: MarketAnalysis): Promise<ExecutionStrategy> {
     return { strategy: 'quantum_optimized' };
   }
 
-  async executeTrade(order: TradingOrder, strategy: any): Promise<any> {
+  async executeTrade(order: TradingOrder, strategy: ExecutionStrategy): Promise<TradeExecutionResult> {
     return {
       success: true,
       price: 100.50,
@@ -639,7 +639,7 @@ class QuantumFraudEngine {
     return 0.1; // Low anomaly score
   }
 
-  async calculateQuantumRiskScore(params: any): Promise<number> {
+  async calculateQuantumRiskScore(params: RiskScoreParams): Promise<number> {
     return 25; // Low to moderate risk
   }
 
@@ -647,7 +647,7 @@ class QuantumFraudEngine {
     return 35; // Classical baseline
   }
 
-  async generateFraudAssessment(transaction: Transaction, riskScore: number, analysis: any): Promise<FraudAssessment> {
+  async generateFraudAssessment(transaction: Transaction, riskScore: number, analysis: FraudAnalysis): Promise<FraudAssessment> {
     return {
       riskScore,
       riskLevel: riskScore < 30 ? 'low' : riskScore < 70 ? 'medium' : 'high',
@@ -671,7 +671,7 @@ class QuantumPortfolioOptimizer {
     console.log('✅ Quantum Portfolio Optimizer initialized');
   }
 
-  async optimize(portfolio: Portfolio, returns: any, correlations: any, risk: any): Promise<any> {
+  async optimize(portfolio: Portfolio, returns: ReturnData, correlations: CorrelationData, risk: RiskData): Promise<OptimizationResult> {
     return {
       optimizedPortfolio: portfolio,
       optimalWeights: {},
@@ -681,4 +681,76 @@ class QuantumPortfolioOptimizer {
       quantumAdvantage: 2.5
     };
   }
+}
+
+// Type definitions for quantum financial applications
+interface SecurityVerification {
+  cryptoVerification?: CryptoVerification;
+  fraudAssessment?: FraudAssessment;
+  paymentResult?: PaymentResult;
+  securityLevel?: string;
+  error?: string;
+  [key: string]: unknown;
+}
+
+interface EncryptedTransaction {
+  data: string;
+  encryptionType: string;
+  [key: string]: unknown;
+}
+
+interface MarketAnalysis {
+  volatility: number;
+  liquidity: number;
+  [key: string]: unknown;
+}
+
+interface ExecutionStrategy {
+  strategy: string;
+  [key: string]: unknown;
+}
+
+interface TradeExecutionResult {
+  success: boolean;
+  price: number;
+  quantity: number;
+  slippage: number;
+  commissions: number;
+  marketImpact: number;
+}
+
+interface RiskScoreParams {
+  transaction: Transaction;
+  [key: string]: unknown;
+}
+
+interface FraudAnalysis {
+  anomalyScore: number;
+  quantumAdvantage: number;
+  [key: string]: unknown;
+}
+
+interface ReturnData {
+  historical: number[];
+  expected: number;
+  [key: string]: unknown;
+}
+
+interface CorrelationData {
+  matrix: number[][];
+  [key: string]: unknown;
+}
+
+interface RiskData {
+  volatility: number;
+  [key: string]: unknown;
+}
+
+interface OptimizationResult {
+  optimizedPortfolio: Portfolio;
+  optimalWeights: Record<string, number>;
+  expectedReturn: number;
+  expectedRisk: number;
+  sharpeRatio: number;
+  quantumAdvantage: number;
 }

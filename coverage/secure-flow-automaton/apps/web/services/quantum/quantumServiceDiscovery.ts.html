@@ -1062,12 +1062,74 @@
 <a name='L997'></a><a href='#L997'>997</a>
 <a name='L998'></a><a href='#L998'>998</a>
 <a name='L999'></a><a href='#L999'>999</a>
-<a name='L1000'></a><a href='#L1000'>1000</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L1000'></a><a href='#L1000'>1000</a>
+<a name='L1001'></a><a href='#L1001'>1001</a>
+<a name='L1002'></a><a href='#L1002'>1002</a>
+<a name='L1003'></a><a href='#L1003'>1003</a>
+<a name='L1004'></a><a href='#L1004'>1004</a>
+<a name='L1005'></a><a href='#L1005'>1005</a>
+<a name='L1006'></a><a href='#L1006'>1006</a>
+<a name='L1007'></a><a href='#L1007'>1007</a>
+<a name='L1008'></a><a href='#L1008'>1008</a>
+<a name='L1009'></a><a href='#L1009'>1009</a>
+<a name='L1010'></a><a href='#L1010'>1010</a>
+<a name='L1011'></a><a href='#L1011'>1011</a>
+<a name='L1012'></a><a href='#L1012'>1012</a>
+<a name='L1013'></a><a href='#L1013'>1013</a>
+<a name='L1014'></a><a href='#L1014'>1014</a>
+<a name='L1015'></a><a href='#L1015'>1015</a>
+<a name='L1016'></a><a href='#L1016'>1016</a>
+<a name='L1017'></a><a href='#L1017'>1017</a>
+<a name='L1018'></a><a href='#L1018'>1018</a>
+<a name='L1019'></a><a href='#L1019'>1019</a>
+<a name='L1020'></a><a href='#L1020'>1020</a>
+<a name='L1021'></a><a href='#L1021'>1021</a>
+<a name='L1022'></a><a href='#L1022'>1022</a>
+<a name='L1023'></a><a href='#L1023'>1023</a>
+<a name='L1024'></a><a href='#L1024'>1024</a>
+<a name='L1025'></a><a href='#L1025'>1025</a>
+<a name='L1026'></a><a href='#L1026'>1026</a>
+<a name='L1027'></a><a href='#L1027'>1027</a>
+<a name='L1028'></a><a href='#L1028'>1028</a>
+<a name='L1029'></a><a href='#L1029'>1029</a>
+<a name='L1030'></a><a href='#L1030'>1030</a>
+<a name='L1031'></a><a href='#L1031'>1031</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2113,14 +2175,6 @@ interface ServiceBinding {
   quantumSecured: boolean;
 }
 &nbsp;
-interface LoadBalancingStrategy {
-  name: string;
-  algorithm: 'ROUND_ROBIN' | 'LEAST_CONNECTIONS' | 'WEIGHTED_ROUND_ROBIN' | 
-           'LEAST_RESPONSE_TIME' | 'QUANTUM_OPTIMIZED' | 'ADAPTIVE';
-  quantumAware: boolean;
-  selector: (instances: QuantumServiceInstance[], metrics: any) =&gt; QuantumServiceInstance | null;
-}
-&nbsp;
 interface QuantumHealthCheck {
   checkId: string;
   serviceId: string;
@@ -2134,6 +2188,45 @@ interface QuantumHealthCheck {
   maxFailures: number;
   lastCheck: number;
   status: 'HEALTHY' | 'UNHEALTHY' | 'UNKNOWN';
+}
+&nbsp;
+interface LoadBalancingStrategy {
+  name: string;
+  algorithm: 'ROUND_ROBIN' | 'LEAST_CONNECTIONS' | 'WEIGHTED_ROUND_ROBIN' |
+  'LEAST_RESPONSE_TIME' | 'QUANTUM_OPTIMIZED' | 'ADAPTIVE';
+  quantumAware: boolean;
+  selector: (instances: QuantumServiceInstance[], metrics: LoadBalancingMetrics) =&gt; QuantumServiceInstance | null;
+}
+&nbsp;
+interface LoadBalancingMetrics {
+  clientId: string;
+  serviceId: string;
+}
+&nbsp;
+interface LoadBalancingStats {
+  totalConnections: number;
+  activeAffinities: number;
+  instanceDistribution: Array&lt;{
+    instanceId: string;
+    connections: number;
+  }&gt;;
+  strategies: string[];
+  timestamp: number;
+}
+&nbsp;
+interface DiscoveryStatistics {
+  registry: {
+    totalServices: number;
+    healthyInstances: number;
+    totalRequests: number;
+    averageResponseTime: number;
+  };
+  loadBalancing: LoadBalancingStats;
+  activeBindings: number;
+  discoveryRequests: number;
+  networkNodes: number;
+  isInitialized: boolean;
+  timestamp: number;
 }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >// Quantum Service Registry</span>
@@ -2158,13 +2251,13 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >        averageResponseTime: 0</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.startHealthChecking();</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  async registerService(service: Omit&lt;QuantumService, 'serviceId'&gt;): Promise&lt;string&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const serviceId = `service_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const quantumService: QuantumService = {</span>
 <span class="cstat-no" title="statement not covered" >      serviceId,</span>
 <span class="cstat-no" title="statement not covered" >      ...service,</span>
@@ -2212,7 +2305,7 @@ interface QuantumHealthCheck {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  async registerServiceInstance(instance: Omit&lt;QuantumServiceInstance, 'instanceId'&gt;): Promise&lt;string&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const instanceId = `instance_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const quantumInstance: QuantumServiceInstance = {</span>
 <span class="cstat-no" title="statement not covered" >      instanceId,</span>
 <span class="cstat-no" title="statement not covered" >      ...instance,</span>
@@ -2262,11 +2355,11 @@ interface QuantumHealthCheck {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  async discoverServices(pattern: string, requesterNodeId: string): Promise&lt;QuantumService[]&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const matchedServices: QuantumService[] = [];</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    for (const [serviceId, service] of this.registry.services.entries()) {</span>
-<span class="cstat-no" title="statement not covered" >      if (this.matchesPattern(service.name, pattern) || </span>
-<span class="cstat-no" title="statement not covered" >          service.metadata.tags.some(tag =&gt; this.matchesPattern(tag, pattern))) {</span>
-        
+<span class="cstat-no" title="statement not covered" >      if (this.matchesPattern(service.name, pattern) ||</span>
+<span class="cstat-no" title="statement not covered" >        service.metadata.tags.some(tag =&gt; this.matchesPattern(tag, pattern))) {</span>
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        // Check if requester has access to this service</span>
 <span class="cstat-no" title="statement not covered" >        if (await this.checkServiceAccess(service, requesterNodeId)) {</span>
 <span class="cstat-no" title="statement not covered" >          matchedServices.push(service);</span>
@@ -2275,7 +2368,7 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    this.registry.metrics.totalRequests++;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    console.log(`🔍 Discovered ${matchedServices.length} services for pattern: ${pattern}`);</span>
 <span class="cstat-no" title="statement not covered" >    return matchedServices;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -2308,12 +2401,12 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  async subscribeToServices(</span>
-<span class="cstat-no" title="statement not covered" >    pattern: string, </span>
-<span class="cstat-no" title="statement not covered" >    nodeId: string, </span>
+<span class="cstat-no" title="statement not covered" >    pattern: string,</span>
+<span class="cstat-no" title="statement not covered" >    nodeId: string,</span>
 <span class="cstat-no" title="statement not covered" >    callback: (service: QuantumService) =&gt; void</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;string&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const subscription: ServiceSubscription = {</span>
 <span class="cstat-no" title="statement not covered" >      subscriptionId,</span>
 <span class="cstat-no" title="statement not covered" >      servicePattern: pattern,</span>
@@ -2324,7 +2417,7 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    this.registry.subscriptions.set(subscriptionId, subscription);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    // Send current matching services</span>
 <span class="cstat-no" title="statement not covered" >    const matchingServices = await this.discoverServices(pattern, nodeId);</span>
 <span class="cstat-no" title="statement not covered" >    for (const service of matchingServices) {</span>
@@ -2338,8 +2431,8 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >  private async notifySubscribers(service: QuantumService): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    for (const [subId, subscription] of this.registry.subscriptions.entries()) {</span>
 <span class="cstat-no" title="statement not covered" >      if (this.matchesPattern(service.name, subscription.servicePattern) ||</span>
-<span class="cstat-no" title="statement not covered" >          service.metadata.tags.some(tag =&gt; this.matchesPattern(tag, subscription.servicePattern))) {</span>
-        
+<span class="cstat-no" title="statement not covered" >        service.metadata.tags.some(tag =&gt; this.matchesPattern(tag, subscription.servicePattern))) {</span>
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        try {</span>
 <span class="cstat-no" title="statement not covered" >          subscription.callback(service);</span>
 <span class="cstat-no" title="statement not covered" >          subscription.lastNotified = Date.now();</span>
@@ -2354,28 +2447,28 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    this.healthCheckTimer = setInterval(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      this.performHealthChecks();</span>
 <span class="cstat-no" title="statement not covered" >    }, this.healthCheckInterval);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    console.log('❤️ Service health checking started');</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  private async performHealthChecks(): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const currentTime = Date.now();</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    for (const [checkId, healthCheck] of this.healthChecks.entries()) {</span>
 <span class="cstat-no" title="statement not covered" >      if (currentTime - healthCheck.lastCheck &gt;= healthCheck.interval) {</span>
 <span class="cstat-no" title="statement not covered" >        await this.executeHealthCheck(healthCheck);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.updateRegistryMetrics();</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  private async executeHealthCheck(healthCheck: QuantumHealthCheck): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    healthCheck.lastCheck = Date.now();</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      let isHealthy = false;</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      switch (healthCheck.type) {</span>
 <span class="cstat-no" title="statement not covered" >        case 'HTTP':</span>
 <span class="cstat-no" title="statement not covered" >          isHealthy = await this.performHttpHealthCheck(healthCheck);</span>
@@ -2390,7 +2483,7 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >          isHealthy = await this.performQuantumHandshakeCheck(healthCheck);</span>
 <span class="cstat-no" title="statement not covered" >          break;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      if (isHealthy) {</span>
 <span class="cstat-no" title="statement not covered" >        healthCheck.status = 'HEALTHY';</span>
 <span class="cstat-no" title="statement not covered" >        healthCheck.consecutiveFailures = 0;</span>
@@ -2427,10 +2520,10 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    // Check quantum channel health</span>
 <span class="cstat-no" title="statement not covered" >    const service = this.registry.services.get(healthCheck.serviceId);</span>
 <span class="cstat-no" title="statement not covered" >    if (!service) return false;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const node = this.networkManager.getTopology().nodes.get(service.endpoint.nodeId);</span>
 <span class="cstat-no" title="statement not covered" >    if (!node) return false;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return node.status.quantumReady &amp;&amp; node.status.qberRate &lt; 0.11;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -2450,7 +2543,7 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    if (instance) {</span>
 <span class="cstat-no" title="statement not covered" >      instance.health.healthy = healthy;</span>
 <span class="cstat-no" title="statement not covered" >      instance.health.lastCheck = Date.now();</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      if (!healthy) {</span>
 <span class="cstat-no" title="statement not covered" >        instance.health.consecutiveFailures++;</span>
 <span class="cstat-no" title="statement not covered" >        instance.status = 'FAILED';</span>
@@ -2464,9 +2557,9 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >  private updateRegistryMetrics(): void {</span>
 <span class="cstat-no" title="statement not covered" >    const healthyInstances = Array.from(this.registry.instances.values())</span>
 <span class="cstat-no" title="statement not covered" >      .filter(instance =&gt; instance.health.healthy).length;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.registry.metrics.healthyInstances = healthyInstances;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    // Calculate average response time</span>
 <span class="cstat-no" title="statement not covered" >    const instances = Array.from(this.registry.instances.values());</span>
 <span class="cstat-no" title="statement not covered" >    if (instances.length &gt; 0) {</span>
@@ -2491,19 +2584,19 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >  unregisterService(serviceId: string): boolean {</span>
 <span class="cstat-no" title="statement not covered" >    const service = this.registry.services.get(serviceId);</span>
 <span class="cstat-no" title="statement not covered" >    if (!service) return false;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    // Remove all instances</span>
 <span class="cstat-no" title="statement not covered" >    for (const instance of service.loadBalancing.instances) {</span>
 <span class="cstat-no" title="statement not covered" >      this.registry.instances.delete(instance.instanceId);</span>
 <span class="cstat-no" title="statement not covered" >      this.healthChecks.delete(instance.instanceId);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    // Remove service</span>
 <span class="cstat-no" title="statement not covered" >    this.registry.services.delete(serviceId);</span>
 <span class="cstat-no" title="statement not covered" >    this.healthChecks.delete(serviceId);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.registry.metrics.totalServices = this.registry.services.size;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    console.log(`🗑️ Service unregistered: ${serviceId}`);</span>
 <span class="cstat-no" title="statement not covered" >    return true;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -2512,7 +2605,7 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    if (this.healthCheckTimer) {</span>
 <span class="cstat-no" title="statement not covered" >      clearInterval(this.healthCheckTimer);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.registry.services.clear();</span>
 <span class="cstat-no" title="statement not covered" >    this.registry.instances.clear();</span>
 <span class="cstat-no" title="statement not covered" >    this.registry.subscriptions.clear();</span>
@@ -2542,7 +2635,7 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >      selector: (instances: QuantumServiceInstance[]) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        const healthyInstances = instances.filter(i =&gt; i.health.healthy &amp;&amp; i.status === 'RUNNING');</span>
 <span class="cstat-no" title="statement not covered" >        if (healthyInstances.length === 0) return null;</span>
-        
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        // Simple round-robin based on timestamp</span>
 <span class="cstat-no" title="statement not covered" >        const index = Date.now() % healthyInstances.length;</span>
 <span class="cstat-no" title="statement not covered" >        return healthyInstances[index];</span>
@@ -2557,7 +2650,7 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >      selector: (instances: QuantumServiceInstance[]) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        const healthyInstances = instances.filter(i =&gt; i.health.healthy &amp;&amp; i.status === 'RUNNING');</span>
 <span class="cstat-no" title="statement not covered" >        if (healthyInstances.length === 0) return null;</span>
-        
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        return healthyInstances.reduce((least, current) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >          const leastConnections = this.connectionMetrics.get(least.instanceId) || 0;</span>
 <span class="cstat-no" title="statement not covered" >          const currentConnections = this.connectionMetrics.get(current.instanceId) || 0;</span>
@@ -2574,8 +2667,8 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >      selector: (instances: QuantumServiceInstance[]) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        const healthyInstances = instances.filter(i =&gt; i.health.healthy &amp;&amp; i.status === 'RUNNING');</span>
 <span class="cstat-no" title="statement not covered" >        if (healthyInstances.length === 0) return null;</span>
-        
-<span class="cstat-no" title="statement not covered" >        return healthyInstances.reduce((fastest, current) =&gt; </span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return healthyInstances.reduce((fastest, current) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >          current.metrics.responseTime &lt; fastest.metrics.responseTime ? current : fastest</span>
         );
 <span class="cstat-no" title="statement not covered" >      }</span>
@@ -2586,37 +2679,37 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >      name: 'Quantum Optimized',</span>
 <span class="cstat-no" title="statement not covered" >      algorithm: 'QUANTUM_OPTIMIZED',</span>
 <span class="cstat-no" title="statement not covered" >      quantumAware: true,</span>
-<span class="cstat-no" title="statement not covered" >      selector: (instances: QuantumServiceInstance[], metrics: any) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      selector: (instances: QuantumServiceInstance[], metrics: LoadBalancingMetrics) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        const healthyInstances = instances.filter(i =&gt; i.health.healthy &amp;&amp; i.status === 'RUNNING');</span>
 <span class="cstat-no" title="statement not covered" >        if (healthyInstances.length === 0) return null;</span>
-        
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        // Score instances based on quantum capabilities and performance</span>
 <span class="cstat-no" title="statement not covered" >        const scoredInstances = healthyInstances.map(instance =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >          const node = this.networkManager.getTopology().nodes.get(instance.nodeId);</span>
 <span class="cstat-no" title="statement not covered" >          let score = 0;</span>
-          
+&nbsp;
 <span class="cstat-no" title="statement not covered" >          // Quantum readiness score</span>
 <span class="cstat-no" title="statement not covered" >          if (node?.status.quantumReady) score += 50;</span>
-          
+&nbsp;
 <span class="cstat-no" title="statement not covered" >          // QBER score (lower is better)</span>
 <span class="cstat-no" title="statement not covered" >          if (node?.status.qberRate) {</span>
 <span class="cstat-no" title="statement not covered" >            score += (0.11 - node.status.qberRate) * 100;</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
-          
+&nbsp;
 <span class="cstat-no" title="statement not covered" >          // Response time score (lower is better)</span>
 <span class="cstat-no" title="statement not covered" >          score += Math.max(0, 100 - instance.metrics.responseTime);</span>
-          
+&nbsp;
 <span class="cstat-no" title="statement not covered" >          // Quantum operations score</span>
 <span class="cstat-no" title="statement not covered" >          score += instance.metrics.quantumOperations * 0.1;</span>
-          
+&nbsp;
 <span class="cstat-no" title="statement not covered" >          return { instance, score };</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
-        
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        // Return instance with highest score</span>
-<span class="cstat-no" title="statement not covered" >        const best = scoredInstances.reduce((best, current) =&gt; </span>
+<span class="cstat-no" title="statement not covered" >        const best = scoredInstances.reduce((best, current) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >          current.score &gt; best.score ? current : best</span>
         );
-        
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        return best.instance;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
@@ -2625,8 +2718,8 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  async selectInstance(</span>
-<span class="cstat-no" title="statement not covered" >    serviceId: string, </span>
-<span class="cstat-no" title="statement not covered" >    clientId: string, </span>
+<span class="cstat-no" title="statement not covered" >    serviceId: string,</span>
+<span class="cstat-no" title="statement not covered" >    clientId: string,</span>
 <span class="cstat-no" title="statement not covered" >    strategy: string = 'QUANTUM_OPTIMIZED'</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;QuantumServiceInstance | null&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const service = this.registryManager.getService(serviceId);</span>
@@ -2643,7 +2736,7 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >      const affinityInstanceId = this.sessionAffinity.get(clientId)!;</span>
 <span class="cstat-no" title="statement not covered" >      const affinityInstance = service.loadBalancing.instances</span>
 <span class="cstat-no" title="statement not covered" >        .find(i =&gt; i.instanceId === affinityInstanceId);</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      if (affinityInstance &amp;&amp; affinityInstance.health.healthy &amp;&amp; affinityInstance.status === 'RUNNING') {</span>
 <span class="cstat-no" title="statement not covered" >        return affinityInstance;</span>
 <span class="cstat-no" title="statement not covered" >      } else {</span>
@@ -2662,12 +2755,12 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >      // Update connection metrics</span>
 <span class="cstat-no" title="statement not covered" >      const currentConnections = this.connectionMetrics.get(selectedInstance.instanceId) || 0;</span>
 <span class="cstat-no" title="statement not covered" >      this.connectionMetrics.set(selectedInstance.instanceId, currentConnections + 1);</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      // Set session affinity if sticky sessions enabled</span>
 <span class="cstat-no" title="statement not covered" >      if (service.loadBalancing.algorithm === 'ROUND_ROBIN') {</span>
 <span class="cstat-no" title="statement not covered" >        this.sessionAffinity.set(clientId, selectedInstance.instanceId);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      console.log(`⚖️ Selected instance ${selectedInstance.instanceId} for service ${serviceId} using ${strategy}`);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -2683,18 +2776,18 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    if (!selectedInstance) return null;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const bindingId = `binding_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    // Generate session key if quantum security required</span>
 <span class="cstat-no" title="statement not covered" >    let sessionKey = new Uint8Array(32);</span>
 <span class="cstat-no" title="statement not covered" >    let quantumSecured = false;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    if (requireQuantumSecurity) {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        const qkdSessionId = await this.networkManager.getQKD().startBB84Session('default', 256);</span>
 <span class="cstat-no" title="statement not covered" >        const qkdKey = this.networkManager.getQKD().getSessionKey(qkdSessionId);</span>
-        
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        if (qkdKey) {</span>
-<span class="cstat-no" title="statement not covered" >          sessionKey = qkdKey;</span>
+<span class="cstat-no" title="statement not covered" >          sessionKey = new Uint8Array(qkdKey);</span>
 <span class="cstat-no" title="statement not covered" >          quantumSecured = true;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      } catch (error) {</span>
@@ -2724,10 +2817,10 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  getLoadBalancingStats(): any {</span>
+<span class="cstat-no" title="statement not covered" >  getLoadBalancingStats(): LoadBalancingStats {</span>
 <span class="cstat-no" title="statement not covered" >    const totalConnections = Array.from(this.connectionMetrics.values())</span>
 <span class="cstat-no" title="statement not covered" >      .reduce((sum, connections) =&gt; sum + connections, 0);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const instanceDistribution = Array.from(this.connectionMetrics.entries())</span>
 <span class="cstat-no" title="statement not covered" >      .map(([instanceId, connections]) =&gt; ({ instanceId, connections }))</span>
 <span class="cstat-no" title="statement not covered" >      .sort((a, b) =&gt; b.connections - a.connections);</span>
@@ -2756,7 +2849,7 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >  private loadBalancer: QuantumLoadBalancer;</span>
 <span class="cstat-no" title="statement not covered" >  private serviceBindings: Map&lt;string, ServiceBinding&gt; = new Map();</span>
 <span class="cstat-no" title="statement not covered" >  private discoveryRequests: Map&lt;string, ServiceDiscoveryRequest&gt; = new Map();</span>
-  
+&nbsp;
 <span class="cstat-no" title="statement not covered" >  private isInitialized: boolean = false;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  constructor(</span>
@@ -2764,10 +2857,10 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    private cryptoEngine: PostQuantumCryptoEngine</span>
 <span class="cstat-no" title="statement not covered" >  ) {</span>
 <span class="cstat-no" title="statement not covered" >    super();</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.registryManager = new QuantumServiceRegistryManager(networkManager, cryptoEngine);</span>
 <span class="cstat-no" title="statement not covered" >    this.loadBalancer = new QuantumLoadBalancer(this.registryManager, networkManager);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.initialize();</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -2775,14 +2868,14 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      // Register default quantum services</span>
 <span class="cstat-no" title="statement not covered" >      await this.registerDefaultServices();</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      this.isInitialized = true;</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      this.emit('initialized', {</span>
 <span class="cstat-no" title="statement not covered" >        services: this.registryManager.getRegistry().services.size,</span>
 <span class="cstat-no" title="statement not covered" >        timestamp: Date.now()</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      console.log('🔍 Quantum Service Discovery Engine initialized');</span>
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >      console.error('❌ Failed to initialize service discovery engine:', error);</span>
@@ -2865,16 +2958,16 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    if (!this.isInitialized) {</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Service discovery engine not initialized');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const serviceId = await this.registryManager.registerService(service);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.emit('service_registered', {</span>
 <span class="cstat-no" title="statement not covered" >      serviceId,</span>
 <span class="cstat-no" title="statement not covered" >      name: service.name,</span>
 <span class="cstat-no" title="statement not covered" >      type: service.type,</span>
 <span class="cstat-no" title="statement not covered" >      timestamp: Date.now()</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return serviceId;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -2882,16 +2975,16 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    if (!this.isInitialized) {</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Service discovery engine not initialized');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const instanceId = await this.registryManager.registerServiceInstance(instance);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.emit('instance_registered', {</span>
 <span class="cstat-no" title="statement not covered" >      instanceId,</span>
 <span class="cstat-no" title="statement not covered" >      serviceId: instance.serviceId,</span>
 <span class="cstat-no" title="statement not covered" >      nodeId: instance.nodeId,</span>
 <span class="cstat-no" title="statement not covered" >      timestamp: Date.now()</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return instanceId;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -2899,17 +2992,17 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    if (!this.isInitialized) {</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Service discovery engine not initialized');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const requesterId = requesterNodeId || this.networkManager.getLocalNodeId();</span>
 <span class="cstat-no" title="statement not covered" >    const services = await this.registryManager.discoverServices(pattern, requesterId);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.emit('services_discovered', {</span>
 <span class="cstat-no" title="statement not covered" >      pattern,</span>
 <span class="cstat-no" title="statement not covered" >      count: services.length,</span>
 <span class="cstat-no" title="statement not covered" >      requesterNodeId: requesterId,</span>
 <span class="cstat-no" title="statement not covered" >      timestamp: Date.now()</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return services;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -2921,23 +3014,23 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    if (!this.isInitialized) {</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Service discovery engine not initialized');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    // Find service by name</span>
 <span class="cstat-no" title="statement not covered" >    const services = await this.discoverServices(serviceName, clientNodeId);</span>
 <span class="cstat-no" title="statement not covered" >    if (services.length === 0) return null;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const service = services[0]; // Use first matching service</span>
 <span class="cstat-no" title="statement not covered" >    const requesterId = clientNodeId || this.networkManager.getLocalNodeId();</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const binding = await this.loadBalancer.bindToService(</span>
 <span class="cstat-no" title="statement not covered" >      service.serviceId,</span>
 <span class="cstat-no" title="statement not covered" >      requesterId,</span>
 <span class="cstat-no" title="statement not covered" >      requireQuantumSecurity</span>
     );
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    if (binding) {</span>
 <span class="cstat-no" title="statement not covered" >      this.serviceBindings.set(binding.bindingId, binding);</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      this.emit('service_bound', {</span>
 <span class="cstat-no" title="statement not covered" >        bindingId: binding.bindingId,</span>
 <span class="cstat-no" title="statement not covered" >        serviceId: binding.serviceId,</span>
@@ -2946,7 +3039,7 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >        timestamp: Date.now()</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return binding;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -2958,17 +3051,17 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >    if (!this.isInitialized) {</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Service discovery engine not initialized');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const requesterId = nodeId || this.networkManager.getLocalNodeId();</span>
 <span class="cstat-no" title="statement not covered" >    const subscriptionId = await this.registryManager.subscribeToServices(pattern, requesterId, callback);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.emit('subscription_created', {</span>
 <span class="cstat-no" title="statement not covered" >      subscriptionId,</span>
 <span class="cstat-no" title="statement not covered" >      pattern,</span>
 <span class="cstat-no" title="statement not covered" >      nodeId: requesterId,</span>
 <span class="cstat-no" title="statement not covered" >      timestamp: Date.now()</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return subscriptionId;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -2992,23 +3085,23 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >  releaseServiceBinding(bindingId: string): boolean {</span>
 <span class="cstat-no" title="statement not covered" >    const binding = this.serviceBindings.get(bindingId);</span>
 <span class="cstat-no" title="statement not covered" >    if (!binding) return false;</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.loadBalancer.releaseConnection(binding.instanceId);</span>
 <span class="cstat-no" title="statement not covered" >    this.serviceBindings.delete(bindingId);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.emit('binding_released', {</span>
 <span class="cstat-no" title="statement not covered" >      bindingId,</span>
 <span class="cstat-no" title="statement not covered" >      serviceId: binding.serviceId,</span>
 <span class="cstat-no" title="statement not covered" >      instanceId: binding.instanceId,</span>
 <span class="cstat-no" title="statement not covered" >      timestamp: Date.now()</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return true;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  unregisterService(serviceId: string): boolean {</span>
 <span class="cstat-no" title="statement not covered" >    const success = this.registryManager.unregisterService(serviceId);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    if (success) {</span>
 <span class="cstat-no" title="statement not covered" >      // Remove related bindings</span>
 <span class="cstat-no" title="statement not covered" >      for (const [bindingId, binding] of this.serviceBindings.entries()) {</span>
@@ -3016,20 +3109,20 @@ interface QuantumHealthCheck {
 <span class="cstat-no" title="statement not covered" >          this.serviceBindings.delete(bindingId);</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      this.emit('service_unregistered', {</span>
 <span class="cstat-no" title="statement not covered" >        serviceId,</span>
 <span class="cstat-no" title="statement not covered" >        timestamp: Date.now()</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return success;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  getDiscoveryStatistics(): any {</span>
+<span class="cstat-no" title="statement not covered" >  getDiscoveryStatistics(): DiscoveryStatistics {</span>
 <span class="cstat-no" title="statement not covered" >    const registry = this.registryManager.getRegistry();</span>
 <span class="cstat-no" title="statement not covered" >    const loadBalancingStats = this.loadBalancer.getLoadBalancingStats();</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    return {</span>
 <span class="cstat-no" title="statement not covered" >      registry: registry.metrics,</span>
 <span class="cstat-no" title="statement not covered" >      loadBalancing: loadBalancingStats,</span>
@@ -3067,7 +3160,7 @@ export type {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-28T09:40:00.524Z
+                at 2025-08-31T09:41:55.058Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

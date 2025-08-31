@@ -506,7 +506,7 @@ export class PredictiveSecurityEngine {
   /**
    * Update model with new training data
    */
-  async updateModel(modelId: string, trainingData: any[]): Promise<boolean> {
+  async updateModel(modelId: string, trainingData: TrainingData[]): Promise<boolean> {
     const model = this.models.get(modelId);
     if (!model) {
       return false;
@@ -914,6 +914,14 @@ export class PredictiveSecurityEngine {
     
     return recommendations;
   }
+}
+
+// Type definitions for prediction engine
+interface TrainingData {
+  features: Record<string, number | string | boolean>;
+  label: string;
+  timestamp: Date;
+  metadata?: Record<string, unknown>;
 }
 
 export default PredictiveSecurityEngine;

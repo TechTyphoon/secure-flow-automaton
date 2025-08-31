@@ -85,7 +85,7 @@ export class NeuralNetwork {
   }
 
   // Phase 7: Consciousness Methods
-  processConscious(input: any): any {
+  processConscious(input: ConsciousInput): ConsciousOutput {
     // Simulate neural network conscious processing
     return {
       decision: 'neural_conscious_decision',
@@ -98,7 +98,7 @@ export class NeuralNetwork {
     };
   }
 
-  learnCrossDomain(domain: string, data: any[]): any {
+  learnCrossDomain(domain: string, data: CrossDomainData[]): CrossDomainLearningResult {
     // Simulate neural network cross-domain learning
     return {
       knowledgeTransfer: 0.87,
@@ -108,7 +108,7 @@ export class NeuralNetwork {
     };
   }
 
-  makeAutonomousDecision(context: any): any {
+  makeAutonomousDecision(context: AutonomousDecisionContext): AutonomousDecisionResult {
     // Simulate neural network autonomous decision
     return {
       action: 'neural_autonomous_action',
@@ -119,7 +119,7 @@ export class NeuralNetwork {
     };
   }
 
-  predictScenarios(currentState: any, timeHorizon: number): any {
+  predictScenarios(currentState: ScenarioState, timeHorizon: number): ScenarioPredictionResult {
     // Simulate neural network scenario prediction
     return {
       scenarios: ['neural_scenario1', 'neural_scenario2'],
@@ -132,15 +132,96 @@ export class NeuralNetwork {
     return 0.86;
   }
 
-  processEmpathy(context: any): number {
+  processEmpathy(context: EmpathyContext): number {
     // Simulate neural network empathy processing
     return 0.84;
   }
 
-  generateCreativeSolutions(problem: any): any {
+  generateCreativeSolutions(problem: CreativeProblem): CreativeSolutionsResult {
     // Simulate neural network creative solutions
     return {
       solutions: ['neural_creative_1', 'neural_creative_2']
     };
   }
+}
+
+// Type definitions
+export interface ConsciousInput {
+  stimulus: unknown;
+  neuralState: number[];
+  environmentalFactors: Record<string, unknown>;
+  learningHistory: unknown[];
+}
+
+export interface ConsciousOutput {
+  decision: string;
+  reasoning: string[];
+  confidence: number;
+  alternatives: string[];
+  immediate: number;
+  longTerm: number;
+  ethical: number;
+}
+
+export interface CrossDomainData {
+  domain: string;
+  patterns: number[][];
+  relationships: Record<string, number>;
+  context: string;
+}
+
+export interface CrossDomainLearningResult {
+  knowledgeTransfer: number;
+  patternRecognition: number;
+  adaptation: number;
+  innovation: number;
+}
+
+export interface AutonomousDecisionContext {
+  situation: string;
+  neuralActivation: number[];
+  constraints: string[];
+  goals: string[];
+  riskTolerance: number;
+  ethicalFramework: string;
+}
+
+export interface AutonomousDecisionResult {
+  action: string;
+  motivation: string;
+  outcome: string;
+  risk: number;
+  ethics: number;
+}
+
+export interface ScenarioState {
+  currentConditions: Record<string, unknown>;
+  neuralPatterns: number[][];
+  historicalData: number[][];
+  uncertaintyFactors: string[];
+}
+
+export interface ScenarioPredictionResult {
+  scenarios: string[];
+  probabilities: number[];
+}
+
+export interface EmpathyContext {
+  targetEntity: string;
+  neuralResponse: number[];
+  situationalContext: Record<string, unknown>;
+  relationshipFactors: string[];
+}
+
+export interface CreativeProblem {
+  description: string;
+  neuralRepresentation: number[];
+  constraints: string[];
+  objectives: string[];
+  domain: string;
+  complexity: number;
+}
+
+export interface CreativeSolutionsResult {
+  solutions: string[];
 } 

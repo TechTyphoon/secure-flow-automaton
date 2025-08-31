@@ -567,7 +567,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import React, { createContext, useContext, useEffect, useState } from 'react';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
 &nbsp;
 // Health monitoring context for application-wide health tracking
 &nbsp;
@@ -612,7 +612,7 @@ interface HealthContextType {
 <span class="cstat-no" title="statement not covered" >    responseTime: 0,</span>
 <span class="cstat-no" title="statement not covered" >    memoryUsage: 0,</span>
 <span class="cstat-no" title="statement not covered" >    bundleLoadTime: 0,</span>
-<span class="cstat-no" title="statement not covered" >    apiConnectivity: 'unknown' as any,</span>
+<span class="cstat-no" title="statement not covered" >  apiConnectivity: 'disconnected',</span>
 <span class="cstat-no" title="statement not covered" >    errorCount: 0,</span>
 <span class="cstat-no" title="statement not covered" >    userSession: {</span>
 <span class="cstat-no" title="statement not covered" >      sessionId: generateSessionId(),</span>
@@ -630,7 +630,7 @@ interface HealthContextType {
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  // Record application errors</span>
-<span class="cstat-no" title="statement not covered" >  const recordError = (error: Error, context = 'unknown') =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  const recordError = useCallback((error: Error, context = 'unknown') =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const errorMessage = `${context}: ${error.message}`;</span>
     
 <span class="cstat-no" title="statement not covered" >    setMetrics(prev =&gt; ({</span>
@@ -651,7 +651,7 @@ interface HealthContextType {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    // Update health status based on error count</span>
 <span class="cstat-no" title="statement not covered" >    updateHealthStatus();</span>
-<span class="cstat-no" title="statement not covered" >  };</span>
+<span class="cstat-no" title="statement not covered" >  }, [metrics.userSession.sessionId]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  // Record page view</span>
 <span class="cstat-no" title="statement not covered" >  const recordPageView = (page: string) =&gt; {</span>
@@ -674,7 +674,7 @@ interface HealthContextType {
 <span class="cstat-no" title="statement not covered" >  // Performance monitoring</span>
 <span class="cstat-no" title="statement not covered" >  const measurePerformance = () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    // Memory usage (if available)</span>
-<span class="cstat-no" title="statement not covered" >    const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;</span>
+<span class="cstat-no" title="statement not covered" >    const memoryUsage = (performance as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;</span>
     
 <span class="cstat-no" title="statement not covered" >    // Bundle load time from navigation timing</span>
 <span class="cstat-no" title="statement not covered" >    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;</span>
@@ -711,7 +711,7 @@ interface HealthContextType {
 <span class="cstat-no" title="statement not covered" >  };</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  // Comprehensive health check</span>
-<span class="cstat-no" title="statement not covered" >  const checkHealth = async () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  const checkHealth = useCallback(async () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const startTime = performance.now();</span>
     
 <span class="cstat-no" title="statement not covered" >    try {</span>
@@ -732,7 +732,7 @@ interface HealthContextType {
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >      recordError(error as Error, 'health-check');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >  };</span>
+<span class="cstat-no" title="statement not covered" >  }, [recordError]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  // Update overall health status</span>
 <span class="cstat-no" title="statement not covered" >  const updateHealthStatus = () =&gt; {</span>
@@ -782,7 +782,7 @@ interface HealthContextType {
 <span class="cstat-no" title="statement not covered" >    return () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      healthInterval &amp;&amp; clearInterval(healthInterval);</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
-<span class="cstat-no" title="statement not covered" >  }, []);</span>
+<span class="cstat-no" title="statement not covered" >  }, [checkHealth]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  // Global error handling</span>
 <span class="cstat-no" title="statement not covered" >  useEffect(() =&gt; {</span>
@@ -801,7 +801,7 @@ interface HealthContextType {
 <span class="cstat-no" title="statement not covered" >      window.removeEventListener('error', handleUnhandledError);</span>
 <span class="cstat-no" title="statement not covered" >      window.removeEventListener('unhandledrejection', handleUnhandledRejection);</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
-<span class="cstat-no" title="statement not covered" >  }, []);</span>
+<span class="cstat-no" title="statement not covered" >  }, [recordError]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const value: HealthContextType = {</span>
 <span class="cstat-no" title="statement not covered" >    metrics,</span>
@@ -826,7 +826,7 @@ interface HealthContextType {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-28T09:40:00.524Z
+                at 2025-08-31T09:41:55.058Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

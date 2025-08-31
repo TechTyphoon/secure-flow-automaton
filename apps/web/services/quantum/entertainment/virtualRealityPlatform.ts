@@ -239,7 +239,7 @@ export class QuantumVRPlatform {
   async initializeVRSession(
     userId: string,
     experienceId: string,
-    hardwareConfig: any
+    hardwareConfig: VRHardwareConfig
   ): Promise<QuantumVRResult> {
     const startTime = performance.now();
 
@@ -311,7 +311,7 @@ export class QuantumVRPlatform {
   /**
    * Initialize quantum-enhanced VR hardware
    */
-  private async initializeQuantumHardware(config: any): Promise<VRHardware> {
+  private async initializeQuantumHardware(config: VRHardwareConfig): Promise<VRHardware> {
     const hardware: VRHardware = {
       id: `quantum_vr_${Date.now()}`,
       name: 'Quantum VR Pro',
@@ -526,10 +526,10 @@ export class QuantumVRPlatform {
    */
   async monitorVRSession(sessionId: string): Promise<{
     status: string;
-    performance: any;
-    user: any;
-    environment: any;
-    biometrics: any;
+    performance: VRSessionPerformance;
+    user: VRSessionUser;
+    environment: VRSessionEnvironment;
+    biometrics: VRSessionBiometrics;
   }> {
     const user = this.users.get(sessionId.split('_')[0]);
     if (!user) {
@@ -575,11 +575,11 @@ export class QuantumVRPlatform {
     sessionId: string,
     interactionType: 'grab' | 'point' | 'gesture' | 'voice' | 'gaze' | 'thought',
     target: string,
-    parameters: any
+    parameters: VRInteractionParameters
   ): Promise<{
-    response: any;
-    feedback: any;
-    environment: any;
+    response: VRInteractionResponse;
+    feedback: VRInteractionFeedback;
+    environment: VREnvironmentUpdate;
   }> {
     // Quantum interaction processing
     const response = await this.processQuantumInteraction(interactionType, target, parameters);
@@ -615,9 +615,9 @@ export class QuantumVRPlatform {
    * Optimize VR experience based on user data
    */
   async optimizeVRExperience(userId: string): Promise<{
-    optimizations: any;
-    personalizations: any;
-    predictions: any;
+    optimizations: VROptimizations;
+    personalizations: VRPersonalizations;
+    predictions: VRPredictions;
   }> {
     const user = this.users.get(userId);
     if (!user) {
@@ -652,7 +652,7 @@ export class QuantumVRPlatform {
     console.log(`Generating quantum environment: ${environment.name}`);
   }
 
-  private async processQuantumInteraction(type: string, target: string, params: any): Promise<any> {
+  private async processQuantumInteraction(type: string, target: string, params: VRInteractionParameters): Promise<QuantumInteractionResult> {
     return {
       result: 'interaction_successful',
       quantumEffects: ['superposition_collapse', 'entanglement_created'],
@@ -660,7 +660,7 @@ export class QuantumVRPlatform {
     };
   }
 
-  private async generateQuantumHapticFeedback(type: string, response: any): Promise<any> {
+  private async generateQuantumHapticFeedback(type: string, response: QuantumInteractionResult): Promise<HapticFeedbackResult> {
     return {
       haptic: 'precise_tactile_response',
       visual: 'quantum_particle_effects',
@@ -669,13 +669,119 @@ export class QuantumVRPlatform {
     };
   }
 
-  private async updateQuantumEnvironment(target: string, response: any): Promise<any> {
+  private async updateQuantumEnvironment(target: string, response: QuantumInteractionResult): Promise<EnvironmentUpdateResult> {
     return {
       changes: ['lighting_adjustment', 'physics_update'],
       newObjects: 3,
       stateUpdates: 15
     };
   }
+}
+
+// Type definitions for virtual reality platform
+interface VRHardwareConfig {
+  type: string;
+  resolution?: string;
+  trackingType?: string;
+  [key: string]: unknown;
+}
+
+interface VRSessionPerformance {
+  frameRate: number;
+  latency: number;
+  cpuUsage: number;
+  gpuUsage: number;
+  thermalStatus: string;
+  trackingAccuracy: number;
+}
+
+interface VRSessionUser {
+  immersionScore: number;
+  comfortLevel: number;
+  engagementLevel: number;
+  motionSickness: string;
+  presence: string;
+}
+
+interface VRSessionEnvironment {
+  objectsRendered: number;
+  lightSources: number;
+  particleEffects: number;
+  quantumInteractions: number;
+}
+
+interface VRSessionBiometrics {
+  heartRate: number;
+  eyeMovement: string;
+  handTracking: string;
+  brainActivity: string;
+}
+
+interface VRInteractionParameters {
+  intensity?: number;
+  duration?: number;
+  target?: string;
+  [key: string]: unknown;
+}
+
+interface VRInteractionResponse {
+  success: boolean;
+  type: string;
+  result: string;
+  quantumEffects: string[];
+}
+
+interface VRInteractionFeedback {
+  haptic: string;
+  visual: string;
+  audio: string;
+  intensity: number;
+}
+
+interface VREnvironmentUpdate {
+  changes: string[];
+  newObjects: number;
+  stateUpdates: number;
+}
+
+interface VROptimizations {
+  renderingQuality: string;
+  performanceMode: string;
+  comfortSettings: string;
+  interactionMethods: string;
+}
+
+interface VRPersonalizations {
+  visualStyle: string;
+  difficultyLevel: string;
+  contentRecommendations: string;
+  socialInteractions: string;
+}
+
+interface VRPredictions {
+  engagementDuration: number;
+  satisfactionScore: number;
+  returningProbability: number;
+  recommendationAccuracy: number;
+}
+
+interface QuantumInteractionResult {
+  result: string;
+  quantumEffects: string[];
+  responseTime: number;
+}
+
+interface HapticFeedbackResult {
+  haptic: string;
+  visual: string;
+  audio: string;
+  intensity: number;
+}
+
+interface EnvironmentUpdateResult {
+  changes: string[];
+  newObjects: number;
+  stateUpdates: number;
 }
 
 // Export for use in entertainment quantum applications

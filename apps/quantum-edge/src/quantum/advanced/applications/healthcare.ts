@@ -20,6 +20,7 @@ export interface MedicalData {
   medicalHistory: string[];
   geneticData?: string;
   imagingData?: string;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface DiagnosticResult {
@@ -67,19 +68,19 @@ export class HealthcareQuantumApplications {
       quantumAdvantage: 12.5,
       processingTime: 0.8
     });
-    
+
     this.diagnosticModels.set('oncology', {
       accuracy: 0.91,
       quantumAdvantage: 15.2,
       processingTime: 1.2
     });
-    
+
     this.diagnosticModels.set('neurology', {
       accuracy: 0.89,
       quantumAdvantage: 18.7,
       processingTime: 1.5
     });
-    
+
     this.diagnosticModels.set('radiology', {
       accuracy: 0.96,
       quantumAdvantage: 22.3,
@@ -89,19 +90,24 @@ export class HealthcareQuantumApplications {
 
   async performQuantumDiagnostics(medicalData: MedicalData): Promise<DiagnosticResult> {
     console.log('🔬 Performing quantum-enhanced medical diagnostics...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum-enhanced pattern recognition
-    const quantumAnalysis = await this.quantumCore.analyzePatterns(
-      this.preprocessMedicalData(medicalData)
-    );
-    
+    const processedData = this.preprocessMedicalData(medicalData);
+    const quantumAnalysis = await this.quantumCore.analyzePatterns(processedData);
+
+    // Transform string patterns to numbers for diagnostic pipeline
+    const transformedAnalysis = {
+      patterns: quantumAnalysis.patterns.map(pattern => parseFloat(pattern) || 0),
+      confidence: quantumAnalysis.confidence
+    };
+
     // Multi-modal diagnostic analysis
-    const diagnosticResult = await this.runDiagnosticPipeline(medicalData, quantumAnalysis);
-    
+    const diagnosticResult = await this.runDiagnosticPipeline(medicalData, transformedAnalysis);
+
     const processingTime = Date.now() - startTime;
-    
+
     return {
       ...diagnosticResult,
       quantumAdvantage: this.calculateQuantumAdvantage(processingTime, diagnosticResult.confidence)
@@ -110,20 +116,27 @@ export class HealthcareQuantumApplications {
 
   async discoverDrugs(targetDisease: string, molecularData: string): Promise<DrugDiscoveryResult[]> {
     console.log('🧬 Initiating quantum-enhanced drug discovery...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum molecular modeling
     const molecularModels = await this.quantumCore.simulateMolecularDynamics(molecularData);
-    
+
     // Drug discovery pipeline
     const discoveredCompounds = await this.drugDiscoveryEngine.discoverCompounds(
       targetDisease,
-      molecularModels
+      {
+        structure: molecularModels.structures[0] || 'default_structure',
+        properties: {
+          energy: molecularModels.energy,
+          stability: molecularModels.stability,
+          quantumAdvantage: molecularModels.quantumAdvantage
+        }
+      }
     );
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return discoveredCompounds.map(compound => ({
       ...compound,
       quantumAdvantage: this.calculateQuantumAdvantage(processingTime, compound.effectiveness)
@@ -132,17 +145,17 @@ export class HealthcareQuantumApplications {
 
   async analyzeGenomics(geneticData: string): Promise<GenomicsResult> {
     console.log('🧬 Performing quantum-enhanced genomics analysis...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum DNA sequencing
     const quantumSequence = await this.quantumCore.sequenceDNA(geneticData);
-    
+
     // Genomics analysis
     const genomicsResult = await this.genomicsProcessor.analyzeGenome(quantumSequence);
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return {
       ...genomicsResult,
       quantumAdvantage: this.calculateQuantumAdvantage(processingTime, genomicsResult.diseaseRisk)
@@ -156,16 +169,20 @@ export class HealthcareQuantumApplications {
     quantumAdvantage: number;
   }> {
     console.log('🔮 Predicting disease risk with quantum algorithms...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum risk assessment
+    const processedData = this.preprocessMedicalData(patientData);
     const riskAnalysis = await this.quantumCore.assessRisk(
-      this.preprocessMedicalData(patientData)
+      processedData.reduce((acc, value, index) => {
+        acc[`feature_${index}`] = value;
+        return acc;
+      }, {} as Record<string, unknown>)
     );
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return {
       riskFactors: riskAnalysis.factors,
       probability: riskAnalysis.probability,
@@ -182,17 +199,17 @@ export class HealthcareQuantumApplications {
     quantumAdvantage: number;
   }> {
     console.log('💊 Optimizing treatment plan with quantum algorithms...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum treatment optimization
     const optimizedPlan = await this.quantumCore.optimizeTreatment(
       patientData,
       diagnosis
     );
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return {
       ...optimizedPlan,
       quantumAdvantage: this.calculateQuantumAdvantage(processingTime, optimizedPlan.effectiveness)
@@ -210,7 +227,7 @@ export class HealthcareQuantumApplications {
       data.symptoms.length / 20, // Normalize symptom count
       data.medicalHistory.length / 50 // Normalize history length
     ];
-    
+
     return processed;
   }
 
@@ -221,10 +238,10 @@ export class HealthcareQuantumApplications {
       { condition: 'Diabetes Type 2', confidence: 0.78, treatments: ['Diet control', 'Exercise', 'Medication'], risks: ['Kidney disease', 'Vision problems'] },
       { condition: 'Coronary Artery Disease', confidence: 0.92, treatments: ['Medication', 'Surgery'], risks: ['Heart attack', 'Heart failure'] }
     ];
-    
+
     // Select best diagnosis based on quantum analysis
     const bestDiagnosis = diagnoses[Math.floor(Math.random() * diagnoses.length)];
-    
+
     return {
       diagnosis: bestDiagnosis.condition,
       confidence: bestDiagnosis.confidence,
@@ -238,9 +255,9 @@ export class HealthcareQuantumApplications {
     // Calculate quantum advantage based on processing time and accuracy
     const classicalTime = processingTime * 3; // Assume classical takes 3x longer
     const classicalAccuracy = accuracy * 0.8; // Assume classical is 20% less accurate
-    
-    return ((classicalTime - processingTime) / classicalTime) * 100 + 
-           ((accuracy - classicalAccuracy) / classicalAccuracy) * 50;
+
+    return ((classicalTime - processingTime) / classicalTime) * 100 +
+      ((accuracy - classicalAccuracy) / classicalAccuracy) * 50;
   }
 }
 
@@ -253,17 +270,19 @@ class DrugDiscoveryEngine {
         effectiveness: 0.87,
         safetyScore: 0.92,
         sideEffects: ['Mild nausea', 'Dizziness'],
-        developmentTime: 2.5
+        developmentTime: 2.5,
+        quantumAdvantage: 0.15
       },
       {
         compoundId: 'QDC-002',
         effectiveness: 0.94,
         safetyScore: 0.88,
         sideEffects: ['Headache', 'Fatigue'],
-        developmentTime: 1.8
+        developmentTime: 1.8,
+        quantumAdvantage: 0.22
       }
     ];
-    
+
     return compounds;
   }
 }

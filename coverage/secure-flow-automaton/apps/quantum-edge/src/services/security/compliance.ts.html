@@ -209,10 +209,46 @@
 <a name='L144'></a><a href='#L144'>144</a>
 <a name='L145'></a><a href='#L145'>145</a>
 <a name='L146'></a><a href='#L146'>146</a>
-<a name='L147'></a><a href='#L147'>147</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -360,9 +396,27 @@
  * Security compliance validation and monitoring
  */
 &nbsp;
+export interface ComplianceStandard {
+  requirements: string[];
+  validationRules: string[];
+}
+&nbsp;
+export interface ValidationRecord {
+  standard: string;
+  status: string;
+  isValid: boolean;
+  timestamp: string;
+}
+&nbsp;
+export interface ComplianceData {
+  standard?: string;
+  status?: string;
+  additionalData?: Record&lt;string, unknown&gt;;
+}
+&nbsp;
 export class Compliance {
-  private complianceStandards: Map&lt;string, any&gt; = new Map();
-  private validationHistory: any[] = [];
+  private complianceStandards: Map&lt;string, ComplianceStandard&gt; = new Map();
+  private validationHistory: ValidationRecord[] = [];
 &nbsp;
   constructor() {
     this.initializeComplianceStandards();
@@ -373,22 +427,22 @@ export class Compliance {
       requirements: ['access_control', 'data_protection', 'incident_response'],
       validationRules: ['encryption_enabled', 'mfa_required', 'audit_logging']
     });
-    
+&nbsp;
     this.complianceStandards.set('SOC 2', {
       requirements: ['security', 'availability', 'processing_integrity'],
       validationRules: ['security_controls', 'availability_monitoring', 'data_integrity']
     });
-    
+&nbsp;
     this.complianceStandards.set('PCI DSS', {
       requirements: ['card_data_protection', 'vulnerability_management', 'access_control'],
       validationRules: ['encryption_standards', 'regular_scans', 'access_restrictions']
     });
   }
 &nbsp;
-  async validate(complianceData: any): Promise&lt;boolean&gt; {
+  async validate(complianceData: ComplianceData): Promise&lt;boolean&gt; {
     const standard = complianceData.standard<span class="branch-0 cbranch-no" title="branch not covered" > || 'ISO 27001';</span>
     const status = complianceData.status<span class="branch-0 cbranch-no" title="branch not covered" > || 'unknown';</span>
-    
+&nbsp;
     const standardConfig = this.complianceStandards.get(standard);
     if (!standardConfig) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
@@ -396,7 +450,7 @@ export class Compliance {
 &nbsp;
     // Simulate compliance validation
     const isValid = this.performValidation(standard, status, standardConfig);
-    
+&nbsp;
     this.validationHistory.push({
       standard,
       status,
@@ -407,7 +461,7 @@ export class Compliance {
     return isValid;
   }
 &nbsp;
-  private performValidation(standard: string, status: string, config: any): boolean {
+  private performValidation(standard: string, status: string, config: ComplianceStandard): boolean {
     // Simulate validation logic
     if (status === 'compliant') {
       return true;
@@ -428,7 +482,7 @@ export class Compliance {
 <span class="cstat-no" title="statement not covered" >  }&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const targetStandard = standard || 'ISO 27001';</span>
 <span class="cstat-no" title="statement not covered" >    const standardConfig = this.complianceStandards.get(targetStandard);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    if (!standardConfig) {</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        standard: targetStandard,</span>
@@ -443,7 +497,7 @@ export class Compliance {
 <span class="cstat-no" title="statement not covered" >      .filter(v =&gt; v.standard === targetStandard)</span>
 <span class="cstat-no" title="statement not covered" >      .slice(-10);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    const complianceRate = recentValidations.length &gt; 0 </span>
+<span class="cstat-no" title="statement not covered" >    const complianceRate = recentValidations.length &gt; 0</span>
 <span class="cstat-no" title="statement not covered" >      ? recentValidations.filter(v =&gt; v.isValid).length / recentValidations.length * 100</span>
 <span class="cstat-no" title="statement not covered" >      : 0;</span>
 &nbsp;
@@ -452,15 +506,15 @@ export class Compliance {
 <span class="cstat-no" title="statement not covered" >      complianceRate,</span>
 <span class="cstat-no" title="statement not covered" >      violations: this.generateViolations(targetStandard),</span>
 <span class="cstat-no" title="statement not covered" >      recommendations: this.generateRecommendations(targetStandard),</span>
-<span class="cstat-no" title="statement not covered" >      lastValidated: recentValidations.length &gt; 0 </span>
-<span class="cstat-no" title="statement not covered" >        ? recentValidations[recentValidations.length - 1].timestamp </span>
+<span class="cstat-no" title="statement not covered" >      lastValidated: recentValidations.length &gt; 0</span>
+<span class="cstat-no" title="statement not covered" >        ? recentValidations[recentValidations.length - 1].timestamp</span>
 <span class="cstat-no" title="statement not covered" >        : new Date().toISOString()</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   private <span class="fstat-no" title="function not covered" >generateViolations(standard: string): string[] {</span>
 <span class="cstat-no" title="statement not covered" >    const violations: string[] = [];</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    switch (standard) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'ISO 27001':</span>
 <span class="cstat-no" title="statement not covered" >        violations.push('Access control policy needs review', 'Data encryption not fully implemented');</span>
@@ -480,7 +534,7 @@ export class Compliance {
 &nbsp;
   private <span class="fstat-no" title="function not covered" >generateRecommendations(standard: string): string[] {</span>
 <span class="cstat-no" title="statement not covered" >    const recommendations: string[] = [];</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    switch (standard) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'ISO 27001':</span>
 <span class="cstat-no" title="statement not covered" >        recommendations.push('Implement multi-factor authentication', 'Enhance audit logging', 'Update security policies');</span>
@@ -498,7 +552,7 @@ export class Compliance {
 <span class="cstat-no" title="statement not covered" >    return recommendations;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="fstat-no" title="function not covered" >  getValidationHistory(): any[] {</span>
+<span class="fstat-no" title="function not covered" >  getValidationHistory(): ValidationRecord[] {</span>
 <span class="cstat-no" title="statement not covered" >    return [...this.validationHistory];</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 }</pre></td></tr></table></pre>
@@ -508,7 +562,7 @@ export class Compliance {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-28T09:40:00.524Z
+                at 2025-08-31T09:41:55.058Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>

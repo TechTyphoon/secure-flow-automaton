@@ -15,7 +15,7 @@ interface GateCondition {
   id: string;
   type: 'branch' | 'environment' | 'user' | 'time' | 'dependency' | 'custom';
   operator: 'equals' | 'not_equals' | 'contains' | 'matches' | 'in' | 'greater_than' | 'less_than';
-  value: any;
+  value: GateConditionValue;
   parameter?: string;
 }
 
@@ -46,8 +46,8 @@ interface SecurityGateSummary {
 interface ComplianceStatus {
   frameworks: string[];
   overallScore: number;
-  requirements: any[];
-  violations: any[];
+  requirements: ComplianceRequirement[];
+  violations: ComplianceViolation[];
 }
 
 interface PipelineValidationResult {
@@ -444,9 +444,9 @@ class PipelineOrchestrationEngine implements PipelineOrchestrator {
   private syncHistory: SyncResult[] = [];
 
   constructor(
-    private securityGatesEngine: any,
-    private complianceEngine: any,
-    private policyEngine: any
+    private securityGatesEngine: SecurityGatesEngine,
+    private complianceEngine: ComplianceEngine,
+    private policyEngine: PolicyEngine
   ) {
     this.initializeDefaultEnvironments();
   }
@@ -1374,8 +1374,8 @@ interface SecurityGateResult {
   status: SecurityGateStatus;
   required: boolean;
   score: number;
-  findings: any[];
-  vulnerabilities: any[];
+  findings: SecurityFinding[];
+  vulnerabilities: SecurityVulnerability[];
   recommendations: string[];
 }
 
@@ -1397,15 +1397,15 @@ interface TargetSyncResult {
 interface ConfigChange {
   type: 'add' | 'update' | 'delete';
   path: string;
-  oldValue?: any;
-  newValue?: any;
+  oldValue?: ConfigValue;
+  newValue?: ConfigValue;
   timestamp: string;
 }
 
 interface SyncConflict {
   path: string;
-  sourceValue: any;
-  targetValue: any;
+  sourceValue: ConfigValue;
+  targetValue: ConfigValue;
   resolution?: 'source' | 'target' | 'merge' | 'manual';
 }
 
@@ -1462,6 +1462,49 @@ interface ComplianceReport {
   lastExecutions: ExecutionSummary[];
   recommendations: string[];
   generatedAt: string;
+}
+
+// Type definitions for pipeline orchestrator
+interface GateConditionValue {
+  value: string | number | boolean;
+  [key: string]: unknown;
+}
+
+interface SecurityGatesEngine {
+  type: string;
+  capabilities: string[];
+  status: string;
+}
+
+interface ComplianceEngine {
+  type: string;
+  capabilities: string[];
+  status: string;
+}
+
+interface PolicyEngine {
+  type: string;
+  capabilities: string[];
+  status: string;
+}
+
+interface SecurityFinding {
+  id: string;
+  severity: string;
+  description: string;
+  remediation: string;
+}
+
+interface SecurityVulnerability {
+  id: string;
+  severity: string;
+  description: string;
+  remediation: string;
+}
+
+interface ConfigValue {
+  value: string | number | boolean | Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 interface ExecutionSummary {

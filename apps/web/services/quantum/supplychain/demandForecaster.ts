@@ -323,7 +323,7 @@ export class QuantumDemandForecaster {
    * Predict consumer behavior changes
    * Uses quantum algorithms to model complex behavioral shifts
    */
-  private async predictConsumerBehavior(config: any): Promise<ConsumerBehaviorPrediction> {
+  private async predictConsumerBehavior(config: ConsumerBehaviorConfig): Promise<ConsumerBehaviorPrediction> {
     const quantumPrediction = await this.quantumML.executeQuantumAlgorithm({
       algorithm: 'QuantumConsumerBehaviorPredictor',
       parameters: {
@@ -345,7 +345,7 @@ export class QuantumDemandForecaster {
    * Generate quantum-enhanced demand predictions
    * Combines multiple data sources with quantum ML algorithms
    */
-  private async generateQuantumPredictions(params: any): Promise<DemandPrediction[]> {
+  private async generateQuantumPredictions(params: QuantumPredictionParams): Promise<DemandPrediction[]> {
     const predictions: DemandPrediction[] = [];
     
     // Process each SKU with quantum algorithms
@@ -413,52 +413,52 @@ export class QuantumDemandForecaster {
     return [];
   }
 
-  private async analyzeConsumerSentiment(): Promise<any> {
+  private async analyzeConsumerSentiment(): Promise<ConsumerSentiment> {
     // Consumer sentiment analysis implementation
     return {};
   }
 
-  private async monitorCompetitorActivity(): Promise<any> {
+  private async monitorCompetitorActivity(): Promise<CompetitorActivity> {
     // Competitor activity monitoring implementation
     return {};
   }
 
-  private identifyCurrentTrends(data: any): any[] {
+  private identifyCurrentTrends(data: TrendData): MarketTrend[] {
     // Current trend identification implementation
     return [];
   }
 
-  private detectDemandShifts(data: any): any[] {
+  private detectDemandShifts(data: TrendData): DemandShift[] {
     // Demand shift detection implementation
     return [];
   }
 
-  private generateDemandAlerts(data: any, sentiment: any): any[] {
+  private generateDemandAlerts(data: TrendData, sentiment: ConsumerSentiment): DemandAlert[] {
     // Demand alert generation implementation
     return [];
   }
 
-  private async adjustPredictions(data: any): Promise<DemandPrediction[]> {
+  private async adjustPredictions(data: TrendData): Promise<DemandPrediction[]> {
     // Prediction adjustment implementation
     return [];
   }
 
-  private async generateCrisisForecasts(crisis: any, impact: any): Promise<DemandPrediction[]> {
+  private async generateCrisisForecasts(crisis: CrisisEvent, impact: CrisisImpact): Promise<DemandPrediction[]> {
     // Crisis forecast generation implementation
     return [];
   }
 
-  private generateCrisisActions(impact: any): any[] {
+  private generateCrisisActions(impact: CrisisImpact): CrisisAction[] {
     // Crisis action generation implementation
     return [];
   }
 
-  private estimateRecoveryTime(crisis: any, impact: any): number {
+  private estimateRecoveryTime(crisis: CrisisEvent, impact: CrisisImpact): number {
     // Recovery time estimation implementation
     return 30; // days
   }
 
-  private generateContingencyPlans(crisis: any): any[] {
+  private generateContingencyPlans(crisis: CrisisEvent): ContingencyPlan[] {
     // Contingency plan generation implementation
     return [];
   }
@@ -468,11 +468,11 @@ export class QuantumDemandForecaster {
 class MarketIntelligenceEngine {
   constructor(private quantumML: QuantumMLEngine) {}
   
-  async analyzeMarket(config: any): Promise<any> {
+  async analyzeMarket(config: QuantumDemandConfig): Promise<MarketAnalysis> {
     return { trends: [], insights: [] };
   }
   
-  async getLiveMarketData(): Promise<any> {
+  async getLiveMarketData(): Promise<Record<string, unknown>> {
     return { data: [] };
   }
 }
@@ -480,7 +480,7 @@ class MarketIntelligenceEngine {
 class SeasonalAnalyzer {
   constructor(private quantumML: QuantumMLEngine) {}
   
-  async analyzeSeasonalPatterns(config: any): Promise<any> {
+  async analyzeSeasonalPatterns(config: QuantumDemandConfig): Promise<SeasonalAnalysis> {
     return { insights: [] };
   }
 }
@@ -488,33 +488,216 @@ class SeasonalAnalyzer {
 class CrisisPredictor {
   constructor(private quantumML: QuantumMLEngine) {}
   
-  async assessCrisisImpact(crisis: any): Promise<any> {
+  async assessCrisisImpact(crisis: CrisisEvent): Promise<CrisisImpact> {
     return { severity: 50, duration: 30, impact: [] };
   }
 }
 
 // Additional Interfaces
+interface BehaviorShift {
+  segment: string;
+  change: string;
+  magnitude: number;
+  confidence: number;
+  timeline: TimeWindow;
+}
+
 interface ConsumerBehaviorPrediction {
-  behaviorShifts: any[];
+  behaviorShifts: BehaviorShift[];
   confidenceLevel: number;
   impactOnDemand: number;
   timeline: TimeWindow;
 }
 
 interface DemandMonitoringResult {
-  currentTrends: any[];
-  demandShifts: any[];
-  alerts: any[];
+  currentTrends: MarketTrend[];
+  demandShifts: DemandShift[];
+  alerts: DemandAlert[];
   adjustedPredictions: DemandPrediction[];
   healthScore: number;
 }
 
+// Method parameter interfaces
+interface ConsumerBehaviorConfig {
+  segments: ConsumerSegment[];
+  externalInfluences: ExternalInfluence[];
+  timeframe: TimeWindow;
+}
+
+interface QuantumPredictionParams {
+  config: QuantumDemandConfig;
+  marketAnalysis: MarketAnalysis;
+  behaviorPrediction: ConsumerBehaviorPrediction;
+  seasonalAnalysis: SeasonalAnalysis;
+}
+
+interface MarketAnalysis {
+  trends: MarketTrend[];
+  insights: MarketInsight[];
+  volatility: number;
+  growthRate: number;
+}
+
+interface MarketTrend {
+  factor: string;
+  direction: 'up' | 'down' | 'stable';
+  strength: number;
+  duration: number;
+}
+
+interface MarketInsight {
+  type: string;
+  description: string;
+  impact: number;
+  confidence: number;
+}
+
+interface SeasonalAnalysis {
+  patterns: SeasonalPattern[];
+  strength: number;
+  peakPeriods: TimeWindow[];
+  lowPeriods: TimeWindow[];
+}
+
+interface SeasonalPattern {
+  name: string;
+  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  amplitude: number;
+  phase: number;
+}
+
+interface ConsumerSegment {
+  id: string;
+  name: string;
+  characteristics: Record<string, unknown>;
+  size: number;
+  preferences: ConsumerPreference[];
+}
+
+interface ConsumerPreference {
+  category: string;
+  preference: string;
+  strength: number;
+  trend: 'increasing' | 'decreasing' | 'stable';
+}
+
+interface BuyingPattern {
+  pattern: string;
+  frequency: number;
+  averageOrder: number;
+  seasonality: number;
+}
+
+interface LoyaltyFactor {
+  factor: string;
+  impact: number;
+  retention: number;
+  lifetimeValue: number;
+}
+
+interface PriceElasticity {
+  sku: string;
+  elasticity: number;
+  priceRange: { min: number; max: number };
+  demandImpact: number;
+}
+
+interface ConsumerSentiment {
+  overall: number;
+  categories: Record<string, number>;
+  trends: SentimentTrend[];
+  influencers: string[];
+}
+
+interface SentimentTrend {
+  category: string;
+  direction: 'positive' | 'negative' | 'neutral';
+  strength: number;
+  duration: number;
+}
+
+interface CompetitorActivity {
+  competitor: string;
+  actions: CompetitorAction[];
+  impact: number;
+  response: string;
+}
+
+interface CompetitorAction {
+  type: string;
+  description: string;
+  date: Date;
+  impact: number;
+}
+
+interface TrendData {
+  trends: MarketTrend[];
+  shifts: DemandShift[];
+  patterns: SeasonalPattern[];
+}
+
+interface DemandShift {
+  sku: string;
+  direction: 'increase' | 'decrease' | 'stable';
+  magnitude: number;
+  duration: number;
+  cause: string;
+}
+
+interface DemandAlert {
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  affectedSKUs: string[];
+  recommendedAction: string;
+}
+
+interface CrisisImpact {
+  severity: number;
+  duration: number;
+  affectedRegions: string[];
+  demandChange: number;
+  recoveryTime: number;
+}
+
+interface CrisisAction {
+  action: string;
+  priority: number;
+  impact: number;
+  cost: number;
+  timeline: number;
+}
+
+interface ContingencyPlan {
+  scenario: string;
+  actions: CrisisAction[];
+  resources: string[];
+  timeline: number;
+  effectiveness: number;
+}
+
+interface ImpactAssessment {
+  severity: number;
+  affectedSKUs: string[];
+  demandChange: number;
+  recoveryTime: number;
+  mitigation: string[];
+}
+
+interface RecommendedAction {
+  action: string;
+  category: string;
+  priority: number;
+  impact: number;
+  cost: number;
+}
+
 interface EmergencyDemandResponse {
-  impactAssessment: any;
+  impactAssessment: ImpactAssessment;
   adjustedForecasts: DemandPrediction[];
-  recommendedActions: any[];
+  recommendedActions: RecommendedAction[];
   recoveryTimeline: number;
-  contingencyPlans: any[];
+  contingencyPlans: ContingencyPlan[];
 }
 
 interface CrisisEvent {

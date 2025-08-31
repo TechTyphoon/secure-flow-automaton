@@ -50,14 +50,6 @@ interface ServiceBinding {
   quantumSecured: boolean;
 }
 
-interface LoadBalancingStrategy {
-  name: string;
-  algorithm: 'ROUND_ROBIN' | 'LEAST_CONNECTIONS' | 'WEIGHTED_ROUND_ROBIN' | 
-           'LEAST_RESPONSE_TIME' | 'QUANTUM_OPTIMIZED' | 'ADAPTIVE';
-  quantumAware: boolean;
-  selector: (instances: QuantumServiceInstance[], metrics: any) => QuantumServiceInstance | null;
-}
-
 interface QuantumHealthCheck {
   checkId: string;
   serviceId: string;
@@ -71,6 +63,45 @@ interface QuantumHealthCheck {
   maxFailures: number;
   lastCheck: number;
   status: 'HEALTHY' | 'UNHEALTHY' | 'UNKNOWN';
+}
+
+interface LoadBalancingStrategy {
+  name: string;
+  algorithm: 'ROUND_ROBIN' | 'LEAST_CONNECTIONS' | 'WEIGHTED_ROUND_ROBIN' |
+  'LEAST_RESPONSE_TIME' | 'QUANTUM_OPTIMIZED' | 'ADAPTIVE';
+  quantumAware: boolean;
+  selector: (instances: QuantumServiceInstance[], metrics: LoadBalancingMetrics) => QuantumServiceInstance | null;
+}
+
+interface LoadBalancingMetrics {
+  clientId: string;
+  serviceId: string;
+}
+
+interface LoadBalancingStats {
+  totalConnections: number;
+  activeAffinities: number;
+  instanceDistribution: Array<{
+    instanceId: string;
+    connections: number;
+  }>;
+  strategies: string[];
+  timestamp: number;
+}
+
+interface DiscoveryStatistics {
+  registry: {
+    totalServices: number;
+    healthyInstances: number;
+    totalRequests: number;
+    averageResponseTime: number;
+  };
+  loadBalancing: LoadBalancingStats;
+  activeBindings: number;
+  discoveryRequests: number;
+  networkNodes: number;
+  isInitialized: boolean;
+  timestamp: number;
 }
 
 // Quantum Service Registry
@@ -95,13 +126,13 @@ class QuantumServiceRegistryManager {
         averageResponseTime: 0
       }
     };
-    
+
     this.startHealthChecking();
   }
 
   async registerService(service: Omit<QuantumService, 'serviceId'>): Promise<string> {
     const serviceId = `service_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const quantumService: QuantumService = {
       serviceId,
       ...service,
@@ -149,7 +180,7 @@ class QuantumServiceRegistryManager {
 
   async registerServiceInstance(instance: Omit<QuantumServiceInstance, 'instanceId'>): Promise<string> {
     const instanceId = `instance_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const quantumInstance: QuantumServiceInstance = {
       instanceId,
       ...instance,
@@ -199,11 +230,11 @@ class QuantumServiceRegistryManager {
 
   async discoverServices(pattern: string, requesterNodeId: string): Promise<QuantumService[]> {
     const matchedServices: QuantumService[] = [];
-    
+
     for (const [serviceId, service] of this.registry.services.entries()) {
-      if (this.matchesPattern(service.name, pattern) || 
-          service.metadata.tags.some(tag => this.matchesPattern(tag, pattern))) {
-        
+      if (this.matchesPattern(service.name, pattern) ||
+        service.metadata.tags.some(tag => this.matchesPattern(tag, pattern))) {
+
         // Check if requester has access to this service
         if (await this.checkServiceAccess(service, requesterNodeId)) {
           matchedServices.push(service);
@@ -212,7 +243,7 @@ class QuantumServiceRegistryManager {
     }
 
     this.registry.metrics.totalRequests++;
-    
+
     console.log(`🔍 Discovered ${matchedServices.length} services for pattern: ${pattern}`);
     return matchedServices;
   }
@@ -245,12 +276,12 @@ class QuantumServiceRegistryManager {
   }
 
   async subscribeToServices(
-    pattern: string, 
-    nodeId: string, 
+    pattern: string,
+    nodeId: string,
     callback: (service: QuantumService) => void
   ): Promise<string> {
     const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const subscription: ServiceSubscription = {
       subscriptionId,
       servicePattern: pattern,
@@ -261,7 +292,7 @@ class QuantumServiceRegistryManager {
     };
 
     this.registry.subscriptions.set(subscriptionId, subscription);
-    
+
     // Send current matching services
     const matchingServices = await this.discoverServices(pattern, nodeId);
     for (const service of matchingServices) {
@@ -275,8 +306,8 @@ class QuantumServiceRegistryManager {
   private async notifySubscribers(service: QuantumService): Promise<void> {
     for (const [subId, subscription] of this.registry.subscriptions.entries()) {
       if (this.matchesPattern(service.name, subscription.servicePattern) ||
-          service.metadata.tags.some(tag => this.matchesPattern(tag, subscription.servicePattern))) {
-        
+        service.metadata.tags.some(tag => this.matchesPattern(tag, subscription.servicePattern))) {
+
         try {
           subscription.callback(service);
           subscription.lastNotified = Date.now();
@@ -291,28 +322,28 @@ class QuantumServiceRegistryManager {
     this.healthCheckTimer = setInterval(() => {
       this.performHealthChecks();
     }, this.healthCheckInterval);
-    
+
     console.log('❤️ Service health checking started');
   }
 
   private async performHealthChecks(): Promise<void> {
     const currentTime = Date.now();
-    
+
     for (const [checkId, healthCheck] of this.healthChecks.entries()) {
       if (currentTime - healthCheck.lastCheck >= healthCheck.interval) {
         await this.executeHealthCheck(healthCheck);
       }
     }
-    
+
     this.updateRegistryMetrics();
   }
 
   private async executeHealthCheck(healthCheck: QuantumHealthCheck): Promise<void> {
     healthCheck.lastCheck = Date.now();
-    
+
     try {
       let isHealthy = false;
-      
+
       switch (healthCheck.type) {
         case 'HTTP':
           isHealthy = await this.performHttpHealthCheck(healthCheck);
@@ -327,7 +358,7 @@ class QuantumServiceRegistryManager {
           isHealthy = await this.performQuantumHandshakeCheck(healthCheck);
           break;
       }
-      
+
       if (isHealthy) {
         healthCheck.status = 'HEALTHY';
         healthCheck.consecutiveFailures = 0;
@@ -364,10 +395,10 @@ class QuantumServiceRegistryManager {
     // Check quantum channel health
     const service = this.registry.services.get(healthCheck.serviceId);
     if (!service) return false;
-    
+
     const node = this.networkManager.getTopology().nodes.get(service.endpoint.nodeId);
     if (!node) return false;
-    
+
     return node.status.quantumReady && node.status.qberRate < 0.11;
   }
 
@@ -387,7 +418,7 @@ class QuantumServiceRegistryManager {
     if (instance) {
       instance.health.healthy = healthy;
       instance.health.lastCheck = Date.now();
-      
+
       if (!healthy) {
         instance.health.consecutiveFailures++;
         instance.status = 'FAILED';
@@ -401,9 +432,9 @@ class QuantumServiceRegistryManager {
   private updateRegistryMetrics(): void {
     const healthyInstances = Array.from(this.registry.instances.values())
       .filter(instance => instance.health.healthy).length;
-    
+
     this.registry.metrics.healthyInstances = healthyInstances;
-    
+
     // Calculate average response time
     const instances = Array.from(this.registry.instances.values());
     if (instances.length > 0) {
@@ -428,19 +459,19 @@ class QuantumServiceRegistryManager {
   unregisterService(serviceId: string): boolean {
     const service = this.registry.services.get(serviceId);
     if (!service) return false;
-    
+
     // Remove all instances
     for (const instance of service.loadBalancing.instances) {
       this.registry.instances.delete(instance.instanceId);
       this.healthChecks.delete(instance.instanceId);
     }
-    
+
     // Remove service
     this.registry.services.delete(serviceId);
     this.healthChecks.delete(serviceId);
-    
+
     this.registry.metrics.totalServices = this.registry.services.size;
-    
+
     console.log(`🗑️ Service unregistered: ${serviceId}`);
     return true;
   }
@@ -449,7 +480,7 @@ class QuantumServiceRegistryManager {
     if (this.healthCheckTimer) {
       clearInterval(this.healthCheckTimer);
     }
-    
+
     this.registry.services.clear();
     this.registry.instances.clear();
     this.registry.subscriptions.clear();
@@ -479,7 +510,7 @@ class QuantumLoadBalancer {
       selector: (instances: QuantumServiceInstance[]) => {
         const healthyInstances = instances.filter(i => i.health.healthy && i.status === 'RUNNING');
         if (healthyInstances.length === 0) return null;
-        
+
         // Simple round-robin based on timestamp
         const index = Date.now() % healthyInstances.length;
         return healthyInstances[index];
@@ -494,7 +525,7 @@ class QuantumLoadBalancer {
       selector: (instances: QuantumServiceInstance[]) => {
         const healthyInstances = instances.filter(i => i.health.healthy && i.status === 'RUNNING');
         if (healthyInstances.length === 0) return null;
-        
+
         return healthyInstances.reduce((least, current) => {
           const leastConnections = this.connectionMetrics.get(least.instanceId) || 0;
           const currentConnections = this.connectionMetrics.get(current.instanceId) || 0;
@@ -511,8 +542,8 @@ class QuantumLoadBalancer {
       selector: (instances: QuantumServiceInstance[]) => {
         const healthyInstances = instances.filter(i => i.health.healthy && i.status === 'RUNNING');
         if (healthyInstances.length === 0) return null;
-        
-        return healthyInstances.reduce((fastest, current) => 
+
+        return healthyInstances.reduce((fastest, current) =>
           current.metrics.responseTime < fastest.metrics.responseTime ? current : fastest
         );
       }
@@ -523,37 +554,37 @@ class QuantumLoadBalancer {
       name: 'Quantum Optimized',
       algorithm: 'QUANTUM_OPTIMIZED',
       quantumAware: true,
-      selector: (instances: QuantumServiceInstance[], metrics: any) => {
+      selector: (instances: QuantumServiceInstance[], metrics: LoadBalancingMetrics) => {
         const healthyInstances = instances.filter(i => i.health.healthy && i.status === 'RUNNING');
         if (healthyInstances.length === 0) return null;
-        
+
         // Score instances based on quantum capabilities and performance
         const scoredInstances = healthyInstances.map(instance => {
           const node = this.networkManager.getTopology().nodes.get(instance.nodeId);
           let score = 0;
-          
+
           // Quantum readiness score
           if (node?.status.quantumReady) score += 50;
-          
+
           // QBER score (lower is better)
           if (node?.status.qberRate) {
             score += (0.11 - node.status.qberRate) * 100;
           }
-          
+
           // Response time score (lower is better)
           score += Math.max(0, 100 - instance.metrics.responseTime);
-          
+
           // Quantum operations score
           score += instance.metrics.quantumOperations * 0.1;
-          
+
           return { instance, score };
         });
-        
+
         // Return instance with highest score
-        const best = scoredInstances.reduce((best, current) => 
+        const best = scoredInstances.reduce((best, current) =>
           current.score > best.score ? current : best
         );
-        
+
         return best.instance;
       }
     });
@@ -562,8 +593,8 @@ class QuantumLoadBalancer {
   }
 
   async selectInstance(
-    serviceId: string, 
-    clientId: string, 
+    serviceId: string,
+    clientId: string,
     strategy: string = 'QUANTUM_OPTIMIZED'
   ): Promise<QuantumServiceInstance | null> {
     const service = this.registryManager.getService(serviceId);
@@ -580,7 +611,7 @@ class QuantumLoadBalancer {
       const affinityInstanceId = this.sessionAffinity.get(clientId)!;
       const affinityInstance = service.loadBalancing.instances
         .find(i => i.instanceId === affinityInstanceId);
-      
+
       if (affinityInstance && affinityInstance.health.healthy && affinityInstance.status === 'RUNNING') {
         return affinityInstance;
       } else {
@@ -599,12 +630,12 @@ class QuantumLoadBalancer {
       // Update connection metrics
       const currentConnections = this.connectionMetrics.get(selectedInstance.instanceId) || 0;
       this.connectionMetrics.set(selectedInstance.instanceId, currentConnections + 1);
-      
+
       // Set session affinity if sticky sessions enabled
       if (service.loadBalancing.algorithm === 'ROUND_ROBIN') {
         this.sessionAffinity.set(clientId, selectedInstance.instanceId);
       }
-      
+
       console.log(`⚖️ Selected instance ${selectedInstance.instanceId} for service ${serviceId} using ${strategy}`);
     }
 
@@ -620,18 +651,18 @@ class QuantumLoadBalancer {
     if (!selectedInstance) return null;
 
     const bindingId = `binding_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Generate session key if quantum security required
     let sessionKey = new Uint8Array(32);
     let quantumSecured = false;
-    
+
     if (requireQuantumSecurity) {
       try {
         const qkdSessionId = await this.networkManager.getQKD().startBB84Session('default', 256);
         const qkdKey = this.networkManager.getQKD().getSessionKey(qkdSessionId);
-        
+
         if (qkdKey) {
-          sessionKey = qkdKey;
+          sessionKey = new Uint8Array(qkdKey);
           quantumSecured = true;
         }
       } catch (error) {
@@ -661,10 +692,10 @@ class QuantumLoadBalancer {
     }
   }
 
-  getLoadBalancingStats(): any {
+  getLoadBalancingStats(): LoadBalancingStats {
     const totalConnections = Array.from(this.connectionMetrics.values())
       .reduce((sum, connections) => sum + connections, 0);
-    
+
     const instanceDistribution = Array.from(this.connectionMetrics.entries())
       .map(([instanceId, connections]) => ({ instanceId, connections }))
       .sort((a, b) => b.connections - a.connections);
@@ -693,7 +724,7 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
   private loadBalancer: QuantumLoadBalancer;
   private serviceBindings: Map<string, ServiceBinding> = new Map();
   private discoveryRequests: Map<string, ServiceDiscoveryRequest> = new Map();
-  
+
   private isInitialized: boolean = false;
 
   constructor(
@@ -701,10 +732,10 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
     private cryptoEngine: PostQuantumCryptoEngine
   ) {
     super();
-    
+
     this.registryManager = new QuantumServiceRegistryManager(networkManager, cryptoEngine);
     this.loadBalancer = new QuantumLoadBalancer(this.registryManager, networkManager);
-    
+
     this.initialize();
   }
 
@@ -712,14 +743,14 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
     try {
       // Register default quantum services
       await this.registerDefaultServices();
-      
+
       this.isInitialized = true;
-      
+
       this.emit('initialized', {
         services: this.registryManager.getRegistry().services.size,
         timestamp: Date.now()
       });
-      
+
       console.log('🔍 Quantum Service Discovery Engine initialized');
     } catch (error) {
       console.error('❌ Failed to initialize service discovery engine:', error);
@@ -802,16 +833,16 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
     if (!this.isInitialized) {
       throw new Error('Service discovery engine not initialized');
     }
-    
+
     const serviceId = await this.registryManager.registerService(service);
-    
+
     this.emit('service_registered', {
       serviceId,
       name: service.name,
       type: service.type,
       timestamp: Date.now()
     });
-    
+
     return serviceId;
   }
 
@@ -819,16 +850,16 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
     if (!this.isInitialized) {
       throw new Error('Service discovery engine not initialized');
     }
-    
+
     const instanceId = await this.registryManager.registerServiceInstance(instance);
-    
+
     this.emit('instance_registered', {
       instanceId,
       serviceId: instance.serviceId,
       nodeId: instance.nodeId,
       timestamp: Date.now()
     });
-    
+
     return instanceId;
   }
 
@@ -836,17 +867,17 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
     if (!this.isInitialized) {
       throw new Error('Service discovery engine not initialized');
     }
-    
+
     const requesterId = requesterNodeId || this.networkManager.getLocalNodeId();
     const services = await this.registryManager.discoverServices(pattern, requesterId);
-    
+
     this.emit('services_discovered', {
       pattern,
       count: services.length,
       requesterNodeId: requesterId,
       timestamp: Date.now()
     });
-    
+
     return services;
   }
 
@@ -858,23 +889,23 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
     if (!this.isInitialized) {
       throw new Error('Service discovery engine not initialized');
     }
-    
+
     // Find service by name
     const services = await this.discoverServices(serviceName, clientNodeId);
     if (services.length === 0) return null;
-    
+
     const service = services[0]; // Use first matching service
     const requesterId = clientNodeId || this.networkManager.getLocalNodeId();
-    
+
     const binding = await this.loadBalancer.bindToService(
       service.serviceId,
       requesterId,
       requireQuantumSecurity
     );
-    
+
     if (binding) {
       this.serviceBindings.set(binding.bindingId, binding);
-      
+
       this.emit('service_bound', {
         bindingId: binding.bindingId,
         serviceId: binding.serviceId,
@@ -883,7 +914,7 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
         timestamp: Date.now()
       });
     }
-    
+
     return binding;
   }
 
@@ -895,17 +926,17 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
     if (!this.isInitialized) {
       throw new Error('Service discovery engine not initialized');
     }
-    
+
     const requesterId = nodeId || this.networkManager.getLocalNodeId();
     const subscriptionId = await this.registryManager.subscribeToServices(pattern, requesterId, callback);
-    
+
     this.emit('subscription_created', {
       subscriptionId,
       pattern,
       nodeId: requesterId,
       timestamp: Date.now()
     });
-    
+
     return subscriptionId;
   }
 
@@ -929,23 +960,23 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
   releaseServiceBinding(bindingId: string): boolean {
     const binding = this.serviceBindings.get(bindingId);
     if (!binding) return false;
-    
+
     this.loadBalancer.releaseConnection(binding.instanceId);
     this.serviceBindings.delete(bindingId);
-    
+
     this.emit('binding_released', {
       bindingId,
       serviceId: binding.serviceId,
       instanceId: binding.instanceId,
       timestamp: Date.now()
     });
-    
+
     return true;
   }
 
   unregisterService(serviceId: string): boolean {
     const success = this.registryManager.unregisterService(serviceId);
-    
+
     if (success) {
       // Remove related bindings
       for (const [bindingId, binding] of this.serviceBindings.entries()) {
@@ -953,20 +984,20 @@ export class QuantumServiceDiscoveryEngine extends EventEmitter {
           this.serviceBindings.delete(bindingId);
         }
       }
-      
+
       this.emit('service_unregistered', {
         serviceId,
         timestamp: Date.now()
       });
     }
-    
+
     return success;
   }
 
-  getDiscoveryStatistics(): any {
+  getDiscoveryStatistics(): DiscoveryStatistics {
     const registry = this.registryManager.getRegistry();
     const loadBalancingStats = this.loadBalancer.getLoadBalancingStats();
-    
+
     return {
       registry: registry.metrics,
       loadBalancing: loadBalancingStats,

@@ -1,11 +1,24 @@
+export interface SatelliteLinkParameters {
+    frequency: number;
+    bandwidth: number;
+    encryption: string;
+    protocol: string;
+}
+
+export interface LinkEstablishmentResult {
+    status: string;
+    linkId: string;
+    parameters: SatelliteLinkParameters;
+}
+
 export class SatelliteNetwork {
-    private satelliteLinks: Map<string, any>;
+    private satelliteLinks: Map<string, SatelliteLinkParameters>;
 
     constructor() {
         this.satelliteLinks = new Map();
     }
 
-    public establishLink(linkId: string, parameters: any): { status: string; linkId: string; parameters: any } {
+    public establishLink(linkId: string, parameters: SatelliteLinkParameters): LinkEstablishmentResult {
         // Logic to establish a quantum communication link through satellite
         this.satelliteLinks.set(linkId, parameters);
         return {
@@ -15,7 +28,7 @@ export class SatelliteNetwork {
         };
     }
 
-    public transmitData(linkId: string, data: any): Promise<any> {
+    public transmitData(linkId: string, data: unknown): Promise<string> {
         // Logic to transmit data over the established satellite link
         return new Promise((resolve, reject) => {
             const link = this.satelliteLinks.get(linkId);

@@ -229,7 +229,7 @@ export interface GenomicSample {
   genomicData: GenomicSequence;
   phenotype: string;
   ancestry: string;
-  demographics: any;
+  demographics: DemographicsData;
 }
 
 export interface PopulationMetadata {
@@ -256,7 +256,7 @@ export interface PhenotypeMeasurement {
 
 export interface Covariate {
   name: string;
-  value: any;
+  value: CovariateValue;
   type: 'CONTINUOUS' | 'CATEGORICAL' | 'BINARY';
 }
 
@@ -754,7 +754,7 @@ export class QuantumGenomicsEngine {
       coverage: genome.coverage
     });
 
-    return variantResult.variants.map((variant: any) => ({
+    return variantResult.variants.map((variant: RawVariant) => ({
       chromosome: variant.chromosome,
       position: variant.position,
       referenceAllele: variant.ref,
@@ -823,6 +823,29 @@ export interface GenomicsConfig {
   processingAccuracy: 'HIGH' | 'MEDIUM' | 'FAST';
   privacyMode: 'STANDARD' | 'ENHANCED' | 'MAXIMUM';
   populationReference: string;
+}
+
+// Type definitions for quantum genomics
+interface DemographicsData {
+  age: number;
+  sex: string;
+  ethnicity: string;
+  [key: string]: unknown;
+}
+
+type CovariateValue = string | number | boolean;
+
+interface RawVariant {
+  chromosome: string;
+  position: number;
+  ref: string;
+  alt: string;
+  genotype: string;
+  quality: number;
+  depth: number;
+  alleleFrequency: number;
+  annotation: VariantAnnotation;
+  quantumConfidence: number;
 }
 
 console.log('✅ Quantum Genomics Analysis Engine module loaded successfully');

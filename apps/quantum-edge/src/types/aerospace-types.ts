@@ -46,6 +46,7 @@ export interface AircraftGeometry {
   aspectRatio: number;
   sweepAngle: number;
   airfoilType: string;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface OperatingConditions {
@@ -55,14 +56,19 @@ export interface OperatingConditions {
   pressure: number;
   humidity: number;
   turbulence: number;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface StabilityMetrics {
-  longitudinalStability: number;
-  lateralStability: number;
-  directionalStability: number;
-  controlEffectiveness: number;
-  stallCharacteristics: number;
+  longitudinalStability?: number;
+  lateralStability?: number;
+  directionalStability?: number;
+  controlEffectiveness?: number;
+  stallCharacteristics?: number;
+  pitch?: number;
+  roll?: number;
+  yaw?: number;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface MissionPayload {
@@ -82,10 +88,11 @@ export interface MissionConstraints {
 }
 
 export interface MissionPlan {
-  phases: MissionPhase[];
-  resourceAllocation: ResourceAllocation;
-  riskMitigation: RiskMitigation[];
-  successCriteria: SuccessCriteria[];
+  phases?: MissionPhase[];
+  resourceAllocation?: ResourceAllocation;
+  riskMitigation?: RiskMitigation[];
+  successCriteria?: SuccessCriteria[];
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface MissionPhase {
@@ -98,9 +105,12 @@ export interface MissionPhase {
 }
 
 export interface ResourceAllocation {
-  personnel: PersonnelAllocation[];
-  equipment: EquipmentAllocation[];
-  budget: BudgetAllocation;
+  personnel?: PersonnelAllocation[];
+  equipment?: EquipmentAllocation[];
+  budget?: BudgetAllocation;
+  fuel?: number;
+  power?: number;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface PersonnelAllocation {
@@ -110,10 +120,14 @@ export interface PersonnelAllocation {
   availability: Date[];
 }
 
+export interface EquipmentSpecifications {
+  [key: string]: string | number | boolean;
+}
+
 export interface EquipmentAllocation {
   equipmentType: string;
   quantity: number;
-  specifications: Record<string, any>;
+  specifications: EquipmentSpecifications;
   availability: Date[];
 }
 
@@ -153,6 +167,7 @@ export interface SpaceDebris {
   material: string;
   origin: string;
   trackingAccuracy: number;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface CollisionRisk {
@@ -165,10 +180,17 @@ export interface CollisionRisk {
 }
 
 export interface QuantumOptimizationResult {
-  schedule: MaintenanceSchedule[];
-  risks: RiskAssessment[];
-  cost: number;
-  accuracy: number;
+  schedule?: MaintenanceSchedule[];
+  risks?: RiskAssessment[];
+  cost?: number;
+  accuracy?: number;
+  optimizedRoute?: string[];
+  fuelEfficiency?: number;
+  timeSavings?: number;
+  quality?: number;
+  efficiency?: number;
+  costSavings?: number;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface QuantumAerodynamicsResult {

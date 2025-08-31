@@ -50,6 +50,65 @@ interface GitHubSecurityAlert {
   updated_at: string;
 }
 
+interface CodeQLAlert {
+  number: number;
+  rule: {
+    id: string;
+    description: string;
+    severity: string;
+  };
+  most_recent_instance: {
+    message: {
+      text: string;
+    };
+    location: {
+      path: string;
+      start_line: number;
+      start_column: number;
+    };
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+interface SecretScanningAlert {
+  number: number;
+  secret_type: string;
+  secret_type_display_name: string;
+  locations?: Array<{
+    details?: {
+      path: string;
+      start_line: number;
+      start_column: number;
+    };
+  }>;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SonarCloudFlow {
+  locations: Array<{
+    component: string;
+    textRange: {
+      startLine: number;
+      endLine: number;
+      startOffset: number;
+      endOffset: number;
+    };
+  }>;
+}
+
+interface SonarCloudComment {
+  key: string;
+  login: string;
+  markdown: string;
+  createdAt: string;
+}
+
+interface SonarCloudAttribute {
+  [key: string]: string | number | boolean;
+}
+
 interface SonarCloudIssue {
   key: string;
   rule: string;
@@ -64,7 +123,7 @@ interface SonarCloudIssue {
     startOffset: number;
     endOffset: number;
   };
-  flows: any[];
+  flows: SonarCloudFlow[];
   status: string;
   message: string;
   effort: string;
@@ -74,8 +133,8 @@ interface SonarCloudIssue {
   tags: string[];
   transitions: string[];
   actions: string[];
-  comments: any[];
-  attr: any;
+  comments: SonarCloudComment[];
+  attr: SonarCloudAttribute;
   creationDate: string;
   updateDate: string;
   type: string;
@@ -101,90 +160,89 @@ export class RealSecurityService {
       this.octokit = new Octokit({
         auth: this.githubToken,
       });
-    } else {
-      console.log('Security tokens not configured - using mock data for development');
     }
   }
 
-  async scanRepository(owner: string, repo: string): Promise<SecurityScan> {
-    const scanId = crypto.randomUUID();
-    const startTime = new Date().toISOString();
-
+  /**
+   * Perform a comprehensive security scan
+   */
+  async performSecurityScan(owner: string, repo: string): Promise<SecurityMetrics> {
+    console.log(`🔍 Starting security scan for ${owner}/${repo}`);
+    
+    const scanId = `scan-${Date.now()}`;
+    
     try {
-      console.log(`🔍 Starting real security scan for ${owner}/${repo}`);
+      // Create scan record
+      const scanData: SecurityScanInsert = {
+        id: scanId,
+        repository: `${owner}/${repo}`,
+        scan_type: 'comprehensive',
+        status: 'in_progress',
+        started_at: new Date().toISOString(),
+        completed_at: null,
+        total_issues: 0,
+        critical_issues: 0,
+        high_issues: 0,
+        medium_issues: 0,
+        low_issues: 0,
+        security_score: 0,
+        compliance_score: 0,
+        scan_duration: 0,
+        tool_used: 'github-sonarcloud',
+        scan_config: {},
+        error_message: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: null
+      };
 
-      // Run parallel scans
+      // Collect vulnerabilities from different sources
       const [
         dependencyAlerts,
-        codeqlAlerts,
+        codeQLAlerts,
         secretScanningAlerts,
         sonarCloudIssues
-      ] = await Promise.allSettled([
+      ] = await Promise.all([
         this.getDependencyAlerts(owner, repo),
         this.getCodeQLAlerts(owner, repo),
         this.getSecretScanningAlerts(owner, repo),
         this.getSonarCloudIssues(owner, repo)
       ]);
 
-      const vulnerabilities: VulnerabilityInsert[] = [];
+      // Process and store vulnerabilities
+      const allVulnerabilities = [
+        ...this.processDependencyAlerts(dependencyAlerts, scanId),
+        ...this.processCodeQLAlerts(codeQLAlerts, scanId),
+        ...this.processSecretScanningAlerts(secretScanningAlerts, scanId),
+        ...this.processSonarCloudIssues(sonarCloudIssues, scanId)
+      ];
 
-      // Process GitHub Dependency Alerts
-      if (dependencyAlerts.status === 'fulfilled') {
-        vulnerabilities.push(...this.processDependencyAlerts(dependencyAlerts.value, scanId));
-      }
-
-      // Process CodeQL Alerts
-      if (codeqlAlerts.status === 'fulfilled') {
-        vulnerabilities.push(...this.processCodeQLAlerts(codeqlAlerts.value, scanId));
-      }
-
-      // Process Secret Scanning Alerts
-      if (secretScanningAlerts.status === 'fulfilled') {
-        vulnerabilities.push(...this.processSecretScanningAlerts(secretScanningAlerts.value, scanId));
-      }
-
-      // Process SonarCloud Issues
-      if (sonarCloudIssues.status === 'fulfilled') {
-        vulnerabilities.push(...this.processSonarCloudIssues(sonarCloudIssues.value, scanId));
-      }
-
-      const severityCounts = this.calculateSeverityCounts(vulnerabilities);
-
-      const securityScan: SecurityScan = {
-        id: scanId,
-        project_name: `${owner}/${repo}`,
-        branch: 'main',
-        scan_type: 'comprehensive',
+      // Calculate metrics
+      const metrics = this.calculateSecurityMetrics(allVulnerabilities);
+      
+      // Update scan record
+      const completedScan: SecurityScanInsert = {
+        ...scanData,
         status: 'completed',
-        started_at: startTime,
         completed_at: new Date().toISOString(),
-        total_vulnerabilities: vulnerabilities.length,
-        critical_count: severityCounts.critical,
-        high_count: severityCounts.high,
-        medium_count: severityCounts.medium,
-        low_count: severityCounts.low,
-        scan_results: {
-          github_dependency_alerts: dependencyAlerts.status === 'fulfilled' ? dependencyAlerts.value.length : 0,
-          github_codeql_alerts: codeqlAlerts.status === 'fulfilled' ? codeqlAlerts.value.length : 0,
-          github_secret_scanning: secretScanningAlerts.status === 'fulfilled' ? secretScanningAlerts.value.length : 0,
-          sonarcloud_issues: sonarCloudIssues.status === 'fulfilled' ? sonarCloudIssues.value.length : 0,
-          scan_metadata: {
-            tools_used: ['github-dependency-alerts', 'github-codeql', 'github-secret-scanning', 'sonarcloud'],
-            scan_duration: Date.now() - new Date(startTime).getTime(),
-            repository: `${owner}/${repo}`,
-            scan_id: scanId
-          }
-        },
-        created_at: startTime,
-        updated_at: new Date().toISOString(),
-        user_id: null
+        total_issues: metrics.total_vulnerabilities,
+        critical_issues: metrics.critical_vulnerabilities,
+        high_issues: metrics.high_vulnerabilities,
+        medium_issues: metrics.medium_vulnerabilities,
+        low_issues: metrics.low_vulnerabilities,
+        security_score: metrics.security_score,
+        compliance_score: metrics.compliance_score,
+        scan_duration: Date.now() - parseInt(scanId.split('-')[1]),
+        updated_at: new Date().toISOString()
       };
 
-      console.log(`✅ Security scan completed for ${owner}/${repo}: ${vulnerabilities.length} vulnerabilities found`);
-      return securityScan;
+      console.log(`✅ Security scan completed for ${owner}/${repo}`);
+      console.log(`📊 Found ${metrics.total_vulnerabilities} vulnerabilities`);
+      console.log(`🛡️  Security score: ${metrics.security_score}/100`);
 
+      return metrics;
     } catch (error) {
-      console.error(`❌ Error during security scan for ${owner}/${repo}:`, error);
+      console.error(`❌ Security scan failed for ${owner}/${repo}:`, error);
       throw error;
     }
   }
@@ -210,7 +268,7 @@ export class RealSecurityService {
     }
   }
 
-  private async getCodeQLAlerts(owner: string, repo: string): Promise<any[]> {
+  private async getCodeQLAlerts(owner: string, repo: string): Promise<CodeQLAlert[]> {
     try {
       if (!this.isConfigured) {
         console.warn('GitHub token not available - skipping CodeQL alerts');
@@ -223,14 +281,14 @@ export class RealSecurityService {
         state: 'open',
         per_page: 100
       });
-      return response.data;
+      return response.data as unknown as CodeQLAlert[];
     } catch (error) {
       console.warn(`⚠️  Could not fetch CodeQL alerts: ${error.message}`);
       return [];
     }
   }
 
-  private async getSecretScanningAlerts(owner: string, repo: string): Promise<any[]> {
+  private async getSecretScanningAlerts(owner: string, repo: string): Promise<SecretScanningAlert[]> {
     try {
       if (!this.isConfigured) {
         console.warn('GitHub token not available - skipping secret scanning alerts');
@@ -243,7 +301,7 @@ export class RealSecurityService {
         state: 'open',
         per_page: 100
       });
-      return response.data;
+      return response.data as unknown as SecretScanningAlert[];
     } catch (error) {
       console.warn(`⚠️  Could not fetch secret scanning alerts: ${error.message}`);
       return [];
@@ -306,7 +364,7 @@ export class RealSecurityService {
     }));
   }
 
-  private processCodeQLAlerts(alerts: any[], scanId: string): VulnerabilityInsert[] {
+  private processCodeQLAlerts(alerts: CodeQLAlert[], scanId: string): VulnerabilityInsert[] {
     return alerts.map(alert => ({
       id: `codeql-${alert.number}`,
       title: `Code Quality Issue: ${alert.rule.description}`,
@@ -335,7 +393,7 @@ export class RealSecurityService {
     }));
   }
 
-  private processSecretScanningAlerts(alerts: any[], scanId: string): VulnerabilityInsert[] {
+  private processSecretScanningAlerts(alerts: SecretScanningAlert[], scanId: string): VulnerabilityInsert[] {
     return alerts.map(alert => ({
       id: `secret-${alert.number}`,
       title: `Secret Detected: ${alert.secret_type_display_name}`,
@@ -408,93 +466,43 @@ export class RealSecurityService {
       case 'info': return 'low';
       case 'minor': return 'low';
       case 'major': return 'medium';
-      case 'critical': return 'high';
+      case 'critical': return 'critical';
       case 'blocker': return 'critical';
       default: return 'medium';
     }
   }
 
-  private calculateSeverityCounts(vulnerabilities: VulnerabilityInsert[]) {
-    return vulnerabilities.reduce((acc, vuln) => {
-      acc[vuln.severity]++;
-      return acc;
-    }, { low: 0, medium: 0, high: 0, critical: 0 });
-  }
+  private calculateSecurityMetrics(vulnerabilities: VulnerabilityInsert[]): SecurityMetrics {
+    const total = vulnerabilities.length;
+    const critical = vulnerabilities.filter(v => v.severity === 'critical').length;
+    const high = vulnerabilities.filter(v => v.severity === 'high').length;
+    const medium = vulnerabilities.filter(v => v.severity === 'medium').length;
+    const low = vulnerabilities.filter(v => v.severity === 'low').length;
 
-  async getSecurityMetrics(projectName: string): Promise<SecurityMetrics> {
-    try {
-      // If not configured, return mock data for development
-      if (!this.isConfigured) {
-        console.log('Using mock security metrics for development');
-        return {
-          security_score: 85,
-          total_vulnerabilities: 12,
-          critical_vulnerabilities: 0,
-          high_vulnerabilities: 2,
-          medium_vulnerabilities: 5,
-          low_vulnerabilities: 5,
-          last_scan_date: new Date().toISOString(),
-          compliance_score: 92,
-          trend_direction: 'improving' as const
-        };
-      }
-
-      // This would typically fetch from your database
-      // For now, we'll calculate based on recent scans
-      const scans = await this.getRecentScans(projectName);
-      
-      const totalVulnerabilities = scans.reduce((sum, scan) => sum + scan.total_vulnerabilities, 0);
-      const criticalCount = scans.reduce((sum, scan) => sum + scan.critical_count, 0);
-      const highCount = scans.reduce((sum, scan) => sum + scan.high_count, 0);
-      
-      const securityScore = Math.max(0, 100 - (criticalCount * 20 + highCount * 10));
-      
-      return {
-        security_score: securityScore,
-        total_vulnerabilities: totalVulnerabilities,
-        critical_vulnerabilities: criticalCount,
-        high_vulnerabilities: highCount,
-        medium_vulnerabilities: scans.reduce((sum, scan) => sum + scan.medium_count, 0),
-        low_vulnerabilities: scans.reduce((sum, scan) => sum + scan.low_count, 0),
-        last_scan_date: scans[0]?.completed_at || new Date().toISOString(),
-        compliance_score: this.calculateComplianceScore(scans),
-        trend_direction: this.calculateTrendDirection(scans)
-      };
-    } catch (error) {
-      console.error('Error calculating security metrics:', error);
-      throw error;
-    }
-  }
-
-  private async getRecentScans(projectName: string): Promise<SecurityScan[]> {
-    // This would fetch from your database
-    // Placeholder implementation
-    return [];
-  }
-
-  private calculateComplianceScore(scans: SecurityScan[]): number {
-    if (scans.length === 0) return 0;
+    // Calculate security score (0-100)
+    const maxScore = 100;
+    const criticalPenalty = critical * 20;
+    const highPenalty = high * 10;
+    const mediumPenalty = medium * 5;
+    const lowPenalty = low * 1;
     
-    const recentScan = scans[0];
-    const totalIssues = recentScan.total_vulnerabilities;
-    const criticalIssues = recentScan.critical_count;
-    const highIssues = recentScan.high_count;
-    
-    // Basic compliance scoring logic
-    if (criticalIssues > 0) return 30;
-    if (highIssues > 5) return 60;
-    if (totalIssues > 20) return 75;
-    return 95;
-  }
+    const securityScore = Math.max(0, maxScore - criticalPenalty - highPenalty - mediumPenalty - lowPenalty);
 
-  private calculateTrendDirection(scans: SecurityScan[]): 'improving' | 'stable' | 'declining' {
-    if (scans.length < 2) return 'stable';
-    
-    const latest = scans[0];
-    const previous = scans[1];
-    
-    if (latest.total_vulnerabilities < previous.total_vulnerabilities) return 'improving';
-    if (latest.total_vulnerabilities > previous.total_vulnerabilities) return 'declining';
-    return 'stable';
+    // Calculate compliance score (based on having security measures in place)
+    const complianceScore = this.isConfigured ? 85 : 50;
+
+    return {
+      security_score: securityScore,
+      total_vulnerabilities: total,
+      critical_vulnerabilities: critical,
+      high_vulnerabilities: high,
+      medium_vulnerabilities: medium,
+      low_vulnerabilities: low,
+      last_scan_date: new Date().toISOString(),
+      compliance_score: complianceScore,
+      trend_direction: 'stable' // This would need historical data to calculate
+    };
   }
 }
+
+export default RealSecurityService;

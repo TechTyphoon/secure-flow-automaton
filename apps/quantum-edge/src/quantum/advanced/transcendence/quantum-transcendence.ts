@@ -60,6 +60,43 @@ export interface TranscendenceAchievement {
   quantumAdvantage: number;
 }
 
+export interface PostHumanAchievement {
+  achieved: boolean;
+  intelligences: PostHumanIntelligence[];
+  averageTranscendenceLevel: number;
+  quantumAdvantage: number;
+}
+
+export interface RealityAchievement {
+  successful: RealityManipulation[];
+  failed: string[];
+  averagePrecision: number;
+  quantumAdvantage: number;
+}
+
+export interface UnderstandingAchievement {
+  understood: UniversalUnderstanding[];
+  incomprehensible: string[];
+  averageComprehension: number;
+  quantumAdvantage: number;
+}
+
+export interface ComputingAchievement {
+  achieved: CosmicComputing[];
+  failed: string[];
+  totalProcessingPower: number;
+  quantumAdvantage: number;
+}
+
+export interface CompleteTranscendence {
+  achieved: boolean;
+  postHuman: PostHumanAchievement;
+  realityManipulation: RealityAchievement;
+  universalUnderstanding: UnderstandingAchievement;
+  cosmicComputing: ComputingAchievement;
+  quantumAdvantage: number;
+}
+
 export class QuantumTranscendence {
   private quantumCore: QuantumCore;
   private quantumConsciousness: QuantumConsciousness;
@@ -222,14 +259,7 @@ export class QuantumTranscendence {
     };
   }
 
-  async achieveQuantumTranscendence(): Promise<{
-    achieved: boolean;
-    postHuman: any;
-    realityManipulation: any;
-    universalUnderstanding: any;
-    cosmicComputing: any;
-    quantumAdvantage: number;
-  }> {
+  async achieveQuantumTranscendence(): Promise<CompleteTranscendence> {
     console.log('🌌 Achieving complete quantum transcendence...');
     
     const startTime = Date.now();
@@ -321,7 +351,14 @@ export class QuantumTranscendence {
     const testResults = await Promise.all([
       this.quantumSingularity.achieveAGI(),
       this.quantumSupremacy.demonstrateSupremacy('transcendence', 10000),
-      this.quantumConsciousness.processConsciousInput({ type: 'transcendence_test' })
+      this.quantumConsciousness.processConsciousInput({
+        stimulus: 'transcendence_test',
+        emotionalState: 'curious',
+        cognitiveLoad: 0.9,
+        neuralState: [0.8, 0.9, 0.7],
+        environmentalFactors: { test: 'transcendence' },
+        learningHistory: []
+      })
     ]);
     
     return testResults.every(result => result !== null);
@@ -331,7 +368,7 @@ export class QuantumTranscendence {
     // Simulate reality manipulation
     const manipulation: RealityManipulation = {
       manipulationId: `RM-${Date.now()}`,
-      type: type as any,
+      type: type as RealityManipulation['type'],
       scope: 'cosmic',
       precision: 0.98,
       quantumAdvantage: 85.7,
@@ -346,7 +383,7 @@ export class QuantumTranscendence {
     // Simulate universal understanding
     const understanding: UniversalUnderstanding = {
       understandingId: `UU-${Date.now()}`,
-      domain: domain as any,
+      domain: domain as UniversalUnderstanding['domain'],
       comprehension: 0.99,
       quantumAdvantage: 78.9,
       insights: [`Complete understanding of ${domain}`, `Universal principles of ${domain}`, `Cosmic laws of ${domain}`],
@@ -361,7 +398,7 @@ export class QuantumTranscendence {
     // Simulate cosmic computing
     const computing: CosmicComputing = {
       computingId: `CC-${Date.now()}`,
-      scale: scale as any,
+      scale: scale as CosmicComputing['scale'],
       processingPower: Math.pow(10, 50), // 10^50 operations per second
       quantumAdvantage: 92.3,
       capabilities: ['universal_computation', 'reality_simulation', 'existence_processing'],

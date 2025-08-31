@@ -92,7 +92,7 @@ export class MultiFactorAuthEngine {
     response: string,
     metadata?: {
       deviceId?: string;
-      biometricData?: any;
+      biometricData?: BiometricData;
       location?: string;
     }
   ): Promise<MfaVerificationResult> {
@@ -330,7 +330,7 @@ export class MultiFactorAuthEngine {
   private async verifyByMethod(
     challenge: MfaChallenge,
     response: string,
-    metadata?: any
+    metadata?: VerificationMetadata
   ): Promise<boolean> {
     switch (challenge.method) {
       case 'totp':
@@ -365,7 +365,7 @@ export class MultiFactorAuthEngine {
     return this.validateHardwareToken(userId, response);
   }
 
-  private async verifyBiometric(userId: string, biometricData: any): Promise<boolean> {
+  private async verifyBiometric(userId: string, biometricData: BiometricData): Promise<boolean> {
     // Implement biometric verification
     return this.validateBiometric(userId, biometricData);
   }
@@ -435,7 +435,7 @@ export class MultiFactorAuthEngine {
     return false;
   }
 
-  private async validateBiometric(userId: string, data: any): Promise<boolean> {
+  private async validateBiometric(userId: string, data: BiometricData): Promise<boolean> {
     // Implement biometric validation
     return false;
   }
@@ -500,6 +500,21 @@ class PushNotificationService {
     // Implement push notification using services like Firebase, Apple Push
     console.log(`Push notification to user ${userId}:`, challenge);
   }
+}
+
+// Type definitions for MFA engine
+interface BiometricData {
+  type: 'fingerprint' | 'face' | 'iris' | 'voice';
+  data: string;
+  confidence?: number;
+  [key: string]: unknown;
+}
+
+interface VerificationMetadata {
+  deviceId?: string;
+  biometricData?: BiometricData;
+  location?: string;
+  [key: string]: unknown;
 }
 
 export default MultiFactorAuthEngine;

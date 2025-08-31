@@ -56,7 +56,7 @@ export interface GateCondition {
   id: string;
   type: 'branch' | 'environment' | 'user' | 'time' | 'dependency' | 'custom';
   operator: 'equals' | 'not_equals' | 'contains' | 'matches' | 'in' | 'greater_than' | 'less_than';
-  value: any;
+  value: ConditionValue;
   parameter?: string;
 }
 
@@ -83,7 +83,7 @@ export interface ValidationRule {
   description: string;
   pattern: string;
   type: 'regex' | 'json-path' | 'xml-path' | 'custom';
-  expected: any;
+  expected: ValidationExpected;
   errorMessage: string;
 }
 
@@ -424,7 +424,7 @@ class SecurityGatesEngine {
   /**
    * Validate pipeline security configuration
    */
-  async validatePipelineConfiguration(pipelineConfig: any): Promise<PipelineValidationResult> {
+  async validatePipelineConfiguration(pipelineConfig: PipelineConfig): Promise<PipelineValidationResult> {
     const pipelineId = pipelineConfig.id || 'unknown';
     const issues: ValidationIssue[] = [];
     const securityGates: SecurityGateSummary[] = [];
@@ -755,7 +755,7 @@ class SecurityGatesEngine {
     });
   }
 
-  private evaluateCondition(actual: any, operator: string, expected: any): boolean {
+  private evaluateCondition(actual: unknown, operator: string, expected: ConditionValue): boolean {
     switch (operator) {
       case 'equals':
         return actual === expected;
@@ -1154,12 +1154,12 @@ class SecurityGatesEngine {
   }
 
   // Additional helper methods for metrics and analysis
-  private extractStagesFromConfig(pipelineConfig: any): PipelineStage[] {
+  private extractStagesFromConfig(pipelineConfig: PipelineConfig): PipelineStage[] {
     // Mock implementation - would extract actual stages from pipeline config
     return ['build', 'test', 'deploy'];
   }
 
-  private async validateSecurityToolsConfig(pipelineConfig: any, issues: ValidationIssue[]): Promise<void> {
+  private async validateSecurityToolsConfig(pipelineConfig: PipelineConfig, issues: ValidationIssue[]): Promise<void> {
     // Mock validation - would validate actual security tools configuration
     if (!pipelineConfig.security?.tools) {
       issues.push({
@@ -1173,7 +1173,7 @@ class SecurityGatesEngine {
     }
   }
 
-  private async validateComplianceRequirements(pipelineConfig: any): Promise<ComplianceStatus> {
+  private async validateComplianceRequirements(pipelineConfig: PipelineConfig): Promise<ComplianceStatus> {
     // Mock compliance validation
     return {
       frameworks: ['SOC2', 'ISO27001'],
@@ -1365,7 +1365,7 @@ class SecurityGatesEngine {
     return 'stable';
   }
 
-  private identifyFixableIssues(execution: GateExecution, options?: any): FixableIssue[] {
+  private identifyFixableIssues(execution: GateExecution, options?: FixOptions): FixableIssue[] {
     const fixableIssues: FixableIssue[] = [];
 
     execution.checkResults.forEach(checkResult => {
@@ -1530,6 +1530,31 @@ interface FixableIssue {
   fixVersion?: string;
   fixType: string;
   confidence: number;
+}
+
+// Type definitions for security gates
+interface ConditionValue {
+  value: string | number | boolean | string[];
+  [key: string]: unknown;
+}
+
+interface ValidationExpected {
+  value: string | number | boolean | string[];
+  [key: string]: unknown;
+}
+
+interface PipelineConfig {
+  id: string;
+  security?: {
+    tools?: Record<string, unknown>;
+  };
+  [key: string]: unknown;
+}
+
+interface FixOptions {
+  dryRun?: boolean;
+  maxFixes?: number;
+  [key: string]: unknown;
 }
 
 // Export singleton instance

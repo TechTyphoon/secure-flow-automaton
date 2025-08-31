@@ -18,7 +18,7 @@ export interface ComplianceConfig {
 
 export interface ComplianceActivity {
   action: string;
-  data?: any;
+  data?: ComplianceData;
   timestamp: Date;
   userId?: string;
   ipAddress?: string;
@@ -44,7 +44,7 @@ export class QuantumHealthcareCompliance {
     console.log('✅ Healthcare Compliance initialized');
   }
 
-  async logDrugDiscoveryActivity(activity: any): Promise<void> {
+  async logDrugDiscoveryActivity(activity: DrugDiscoveryActivity): Promise<void> {
     if (!this.initialized) return;
 
     const complianceActivity: ComplianceActivity = {
@@ -58,7 +58,7 @@ export class QuantumHealthcareCompliance {
     console.log(`📝 Logged compliance activity: ${activity.action}`);
   }
 
-  private sanitizeData(data: any): any {
+  private sanitizeData(data: DrugDiscoveryActivity): SanitizedData {
     // Remove sensitive data for compliance logging
     const sanitized = { ...data };
     delete sanitized.patientData;
@@ -72,8 +72,8 @@ export interface StudyDesign {
   title: string;
   phase: 'PRECLINICAL' | 'PHASE_I' | 'PHASE_II' | 'PHASE_III' | 'PHASE_IV';
   studyType: 'RCT' | 'OBSERVATIONAL' | 'CASE_CONTROL';
-  constraints: any[];
-  parameters: any[];
+  constraints: StudyConstraint[];
+  parameters: StudyParameter[];
 }
 
 export interface ClinicalEndpoint {
@@ -125,7 +125,7 @@ export interface PatientStratum {
   name: string;
   criteria: string[];
   size: number;
-  characteristics: any;
+  characteristics: PatientCharacteristics;
 }
 
 export interface PatientDemographics {
@@ -298,15 +298,15 @@ export interface DrugTarget {
 
 export interface ProteinTarget {
   sequence: string;
-  structure: any;
-  activesite: any;
+  structure: ProteinStructure;
+  activesite: ActiveSite;
   bindingAffinity?: number;
 }
 
 export interface ChemicalProperties {
   smiles: string;
   inchi: string;
-  descriptors: any;
+  descriptors: ChemicalDescriptor;
 }
 
 export interface QuantumState {
@@ -337,6 +337,64 @@ export interface TertiaryFold {
   domain: string;
   structure: string;
   stability: number;
+}
+
+// Type definitions for healthcare compliance
+interface ComplianceData {
+  action: string;
+  timestamp: Date;
+  [key: string]: unknown;
+}
+
+interface DrugDiscoveryActivity {
+  action: string;
+  timestamp: Date;
+  patientData?: Record<string, unknown>;
+  personalInfo?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface SanitizedData {
+  action: string;
+  timestamp: Date;
+  [key: string]: unknown;
+}
+
+interface StudyConstraint {
+  type: string;
+  description: string;
+  [key: string]: unknown;
+}
+
+interface StudyParameter {
+  name: string;
+  value: string | number | boolean;
+  [key: string]: unknown;
+}
+
+interface PatientCharacteristics {
+  age: number;
+  gender: string;
+  ethnicity: string;
+  [key: string]: unknown;
+}
+
+interface ProteinStructure {
+  type: string;
+  coordinates: Record<string, number>;
+  [key: string]: unknown;
+}
+
+interface ActiveSite {
+  residues: string[];
+  coordinates: Record<string, number>;
+  [key: string]: unknown;
+}
+
+interface ChemicalDescriptor {
+  molecularWeight: number;
+  logP: number;
+  [key: string]: unknown;
 }
 
 console.log('✅ Healthcare Compliance module loaded successfully');

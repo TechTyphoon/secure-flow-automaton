@@ -4,6 +4,40 @@ import { SecurityConfigManager } from '../security/config';
  * Real Notification Service - Production Implementation
  * Integrates with actual Slack and email services
  */
+
+export interface SecurityAlertDetails {
+  [key: string]: string | number | boolean | string[] | Record<string, unknown>;
+}
+
+export interface Vulnerability {
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  title?: string;
+  name?: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
+export interface Compliance {
+  violation?: boolean;
+  framework: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
+export interface Performance {
+  score: number;
+  metric: string;
+  value: string | number;
+  target: string | number;
+  [key: string]: unknown;
+}
+
+export interface Incident {
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  type: string;
+  description?: string;
+  [key: string]: unknown;
+}
 export class RealNotificationService {
   private config: SecurityConfigManager;
 
@@ -114,7 +148,7 @@ export class RealNotificationService {
     severity: 'low' | 'medium' | 'high' | 'critical',
     title: string,
     description: string,
-    details?: any
+    details?: SecurityAlertDetails
   ): Promise<boolean> {
     const colorMap = {
       low: '#36a64f',
@@ -153,7 +187,7 @@ export class RealNotificationService {
   /**
    * Send Vulnerability Alert
    */
-  async sendVulnerabilityAlert(vulnerability: any): Promise<boolean> {
+  async sendVulnerabilityAlert(vulnerability: Vulnerability): Promise<boolean> {
     const severity = vulnerability.severity || 'medium';
     const title = `Vulnerability Detected: ${vulnerability.title || vulnerability.name}`;
     const description = vulnerability.description || 'A security vulnerability has been detected.';
@@ -164,7 +198,7 @@ export class RealNotificationService {
   /**
    * Send Compliance Alert
    */
-  async sendComplianceAlert(compliance: any): Promise<boolean> {
+  async sendComplianceAlert(compliance: Compliance): Promise<boolean> {
     const severity = compliance.violation ? 'high' : 'low';
     const title = `Compliance ${compliance.violation ? 'Violation' : 'Check'}: ${compliance.framework}`;
     const description = compliance.description || 'A compliance check has been completed.';
@@ -175,7 +209,7 @@ export class RealNotificationService {
   /**
    * Send Performance Alert
    */
-  async sendPerformanceAlert(performance: any): Promise<boolean> {
+  async sendPerformanceAlert(performance: Performance): Promise<boolean> {
     const severity = performance.score < 50 ? 'critical' : performance.score < 80 ? 'high' : 'medium';
     const title = `Performance Alert: ${performance.metric}`;
     const description = `Performance metric ${performance.metric} is at ${performance.value} (target: ${performance.target})`;
@@ -186,7 +220,7 @@ export class RealNotificationService {
   /**
    * Send Incident Alert
    */
-  async sendIncidentAlert(incident: any): Promise<boolean> {
+  async sendIncidentAlert(incident: Incident): Promise<boolean> {
     const severity = incident.severity || 'medium';
     const title = `Security Incident: ${incident.type}`;
     const description = incident.description || 'A security incident has been detected.';

@@ -422,9 +422,45 @@
 <a name='L357'></a><a href='#L357'>357</a>
 <a name='L358'></a><a href='#L358'>358</a>
 <a name='L359'></a><a href='#L359'>359</a>
-<a name='L360'></a><a href='#L360'>360</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L360'></a><a href='#L360'>360</a>
+<a name='L361'></a><a href='#L361'>361</a>
+<a name='L362'></a><a href='#L362'>362</a>
+<a name='L363'></a><a href='#L363'>363</a>
+<a name='L364'></a><a href='#L364'>364</a>
+<a name='L365'></a><a href='#L365'>365</a>
+<a name='L366'></a><a href='#L366'>366</a>
+<a name='L367'></a><a href='#L367'>367</a>
+<a name='L368'></a><a href='#L368'>368</a>
+<a name='L369'></a><a href='#L369'>369</a>
+<a name='L370'></a><a href='#L370'>370</a>
+<a name='L371'></a><a href='#L371'>371</a>
+<a name='L372'></a><a href='#L372'>372</a>
+<a name='L373'></a><a href='#L373'>373</a>
+<a name='L374'></a><a href='#L374'>374</a>
+<a name='L375'></a><a href='#L375'>375</a>
+<a name='L376'></a><a href='#L376'>376</a>
+<a name='L377'></a><a href='#L377'>377</a>
+<a name='L378'></a><a href='#L378'>378</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -789,6 +825,24 @@ type SecurityScan = Database['public']['Tables']['security_scans']['Row'];
 type SecurityScanInsert = Database['public']['Tables']['security_scans']['Insert'];
 type Vulnerability = Database['public']['Tables']['vulnerabilities']['Row'];
 type VulnerabilityInsert = Database['public']['Tables']['vulnerabilities']['Insert'];
+type Json = Database['public']['Tables']['security_scans']['Row']['scan_results'];
+&nbsp;
+interface ScanVulnerability {
+  id: string;
+  title: string;
+  description: string;
+  severity: string;
+  file_path: string;
+  line_number?: number;
+  tool: string;
+  cwe_id?: string;
+  first_detected: string;
+  rule_id?: string;
+  column_number?: number;
+  cve_id?: string;
+  package_name?: string;
+  affected_versions?: string;
+}
 &nbsp;
 export interface SecurityScanRequest {
   projectName: string;
@@ -806,7 +860,7 @@ export interface SecurityScanResult {
   highCount: number;
   mediumCount: number;
   lowCount: number;
-  scanResults: any;
+  scanResults: Json | null;
   startedAt: string;
   completedAt?: string;
 }
@@ -824,7 +878,7 @@ export interface SecurityScanResult {
 <span class="cstat-no" title="statement not covered" >  async triggerScan(request: SecurityScanRequest): Promise&lt;SecurityScanResult&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      logger.info('Triggering security scan for:', request.projectName);</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      // Create initial scan record</span>
 <span class="cstat-no" title="statement not covered" >      const scanInsert: SecurityScanInsert = {</span>
 <span class="cstat-no" title="statement not covered" >        project_name: request.projectName,</span>
@@ -838,7 +892,7 @@ export interface SecurityScanResult {
 <span class="cstat-no" title="statement not covered" >        medium_count: 0,</span>
 <span class="cstat-no" title="statement not covered" >        low_count: 0,</span>
 <span class="cstat-no" title="statement not covered" >        scan_results: {</span>
-<span class="cstat-no" title="statement not covered" >          request: request as any,</span>
+<span class="cstat-no" title="statement not covered" >          request: request as unknown as Json,</span>
 <span class="cstat-no" title="statement not covered" >          started_at: new Date().toISOString()</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
@@ -877,7 +931,7 @@ export interface SecurityScanResult {
 <span class="cstat-no" title="statement not covered" >  private async performScan(scanId: string, request: SecurityScanRequest) {</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      logger.debug(`Performing scan for ID: ${scanId}`);</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      // Simulate different scanning tools</span>
 <span class="cstat-no" title="statement not covered" >      const scanResults = await Promise.all([</span>
 <span class="cstat-no" title="statement not covered" >        this.runStaticAnalysis(request),</span>
@@ -886,7 +940,7 @@ export interface SecurityScanResult {
 <span class="cstat-no" title="statement not covered" >      ]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      const [staticResults, dependencyResults, lintResults] = scanResults;</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      // Combine all vulnerabilities</span>
 <span class="cstat-no" title="statement not covered" >      const allVulnerabilities = [</span>
 <span class="cstat-no" title="statement not covered" >        ...staticResults.vulnerabilities,</span>
@@ -959,7 +1013,7 @@ export interface SecurityScanResult {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >      console.error(`❌ Error performing scan for ID: ${scanId}:`, error);</span>
-      
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      // Update scan record with error</span>
 <span class="cstat-no" title="statement not covered" >      await supabase</span>
 <span class="cstat-no" title="statement not covered" >        .from('security_scans')</span>
@@ -978,7 +1032,7 @@ export interface SecurityScanResult {
 <span class="cstat-no" title="statement not covered" >  private async runStaticAnalysis(request: SecurityScanRequest) {</span>
 <span class="cstat-no" title="statement not covered" >    // Simulate static analysis scanning</span>
 <span class="cstat-no" title="statement not covered" >    await this.delay(2000);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    // Real vulnerabilities will come from external security tools</span>
 <span class="cstat-no" title="statement not covered" >    const realVulnerabilities = [</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
@@ -1015,7 +1069,7 @@ export interface SecurityScanResult {
 <span class="cstat-no" title="statement not covered" >  private async runDependencyScanning(request: SecurityScanRequest) {</span>
 <span class="cstat-no" title="statement not covered" >    // Simulate dependency vulnerability scanning</span>
 <span class="cstat-no" title="statement not covered" >    await this.delay(1500);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    // Real vulnerabilities will come from external security tools</span>
 <span class="cstat-no" title="statement not covered" >    const realVulnerabilities = [</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
@@ -1042,7 +1096,7 @@ export interface SecurityScanResult {
 <span class="cstat-no" title="statement not covered" >  private async runSecurityLinting(request: SecurityScanRequest) {</span>
 <span class="cstat-no" title="statement not covered" >    // Simulate security linting</span>
 <span class="cstat-no" title="statement not covered" >    await this.delay(1000);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    // Real vulnerabilities will come from external security tools</span>
 <span class="cstat-no" title="statement not covered" >    const realVulnerabilities = [</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
@@ -1065,7 +1119,7 @@ export interface SecurityScanResult {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private countVulnerabilitiesBySeverity(vulnerabilities: any[]) {</span>
+<span class="cstat-no" title="statement not covered" >  private countVulnerabilitiesBySeverity(vulnerabilities: ScanVulnerability[]) {</span>
 <span class="cstat-no" title="statement not covered" >    return vulnerabilities.reduce((counts, vuln) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      counts[vuln.severity] = (counts[vuln.severity] || 0) + 1;</span>
 <span class="cstat-no" title="statement not covered" >      return counts;</span>
@@ -1147,7 +1201,7 @@ export interface SecurityScanResult {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-28T09:40:00.524Z
+                at 2025-08-31T09:41:55.058Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

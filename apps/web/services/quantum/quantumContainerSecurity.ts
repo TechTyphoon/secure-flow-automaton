@@ -375,10 +375,35 @@ interface SecurityFinding {
   category: string;
   title: string;
   description: string;
-  evidence: Record<string, any>;
+  evidence: SecurityEvidence;
   recommendation: string;
   timestamp: number;
   quantumRelated: boolean;
+}
+
+interface SecurityEvidence {
+  behaviorScore?: number;
+  quantumBehaviorScore?: number;
+  deviationMetrics?: {
+    processActivity: number;
+    networkActivity: number;
+    fileSystemActivity: number;
+  };
+  qkdMetrics?: {
+    qberRate: number;
+    keyGenerationRate: number;
+    channelEfficiency: number;
+  };
+  [key: string]: unknown;
+}
+
+interface SecurityResponse {
+  responseId: string;
+  action: 'ALERT' | 'BLOCK' | 'QUARANTINE' | 'TERMINATE' | 'ISOLATE';
+  timestamp: number;
+  success: boolean;
+  details: string;
+  quantumAction: boolean;
 }
 
 interface SecurityAlert {
@@ -395,13 +420,38 @@ interface SecurityAlert {
   quantumAlert: boolean;
 }
 
-interface SecurityResponse {
-  responseId: string;
-  action: 'ALERT' | 'BLOCK' | 'QUARANTINE' | 'TERMINATE' | 'ISOLATE';
+interface SecurityDashboard {
+  overview: {
+    totalImages: number;
+    scannedImages: number;
+    protectedContainers: number;
+    quantumProtectedContainers: number;
+    activeAlerts: number;
+    quantumAlerts: number;
+  };
+  vulnerabilities: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+    quantum: number;
+  };
+  policies: {
+    total: number;
+    active: number;
+    quantumPolicies: number;
+  };
+  compliance: {
+    averageScore: number;
+    quantumCompliance: number;
+  };
+  config: {
+    quantumSecurity: boolean;
+    imageScanning: boolean;
+    runtimeProtection: boolean;
+    defaultPolicy: string;
+  };
   timestamp: number;
-  success: boolean;
-  details: string;
-  quantumAction: boolean;
 }
 
 interface SecurityPolicy {
@@ -530,7 +580,7 @@ class QuantumImageScanner {
 
   async scanImage(image: ContainerImage): Promise<ImageScanResult> {
     const scanId = `scan-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-    
+
     console.log(`🔍 Starting image scan: ${image.repository}:${image.tag} (${scanId})`);
 
     const scanResult: ImageScanResult = {
@@ -575,7 +625,7 @@ class QuantumImageScanner {
       this.categorizeBySeverity(scanResult);
 
       scanResult.status = 'COMPLETED';
-      
+
       // Store scan history
       const history = this.scanHistory.get(image.imageId) || [];
       history.push(scanResult);
@@ -602,7 +652,7 @@ class QuantumImageScanner {
         const randomVuln = this.vulnerabilityDatabase.get(
           vulnIds[Math.floor(Math.random() * vulnIds.length)]
         );
-        
+
         if (randomVuln) {
           vulnerabilities.push({
             ...randomVuln,
@@ -622,7 +672,7 @@ class QuantumImageScanner {
     // Check for quantum-unsafe cryptography
     const cryptoPackages = ['openssl', 'libcrypto', 'crypto-js', 'rsa', 'ecdsa'];
     const imagePackages = Object.keys(image.metadata.labels || {});
-    
+
     for (const pkg of cryptoPackages) {
       if (imagePackages.some(p => p.toLowerCase().includes(pkg))) {
         // Add quantum vulnerability
@@ -630,7 +680,7 @@ class QuantumImageScanner {
         const randomQVuln = this.quantumVulnDatabase.get(
           qvulnIds[Math.floor(Math.random() * qvulnIds.length)]
         );
-        
+
         if (randomQVuln) {
           quantumVulns.push({
             ...randomQVuln,
@@ -761,7 +811,7 @@ class QuantumImageScanner {
 
   private calculateRiskScore(vulnerabilities: Vulnerability[]): number {
     let riskScore = 0;
-    
+
     for (const vuln of vulnerabilities) {
       switch (vuln.severity) {
         case 'CRITICAL':
@@ -777,7 +827,7 @@ class QuantumImageScanner {
           riskScore += 1;
           break;
       }
-      
+
       // Add extra weight for exploitable vulnerabilities
       if (vuln.exploitAvailable) {
         riskScore += 3;
@@ -789,7 +839,7 @@ class QuantumImageScanner {
 
   private calculateQuantumRiskScore(quantumVulns: QuantumVulnerability[]): number {
     let quantumRiskScore = 0;
-    
+
     for (const qvuln of quantumVulns) {
       quantumRiskScore += qvuln.quantumImpactScore;
     }
@@ -799,7 +849,7 @@ class QuantumImageScanner {
 
   private categorizeBySeverity(scanResult: ImageScanResult): void {
     scanResult.totalVulnerabilities = scanResult.vulnerabilities.length;
-    
+
     for (const vuln of scanResult.vulnerabilities) {
       switch (vuln.severity) {
         case 'CRITICAL':
@@ -834,14 +884,14 @@ class RuntimeProtectionManager {
   private securityPolicies: Map<string, SecurityPolicy> = new Map();
   private anomalyDetectors: Map<string, AnomalyDetection> = new Map();
 
-  constructor(private cryptoEngine: PostQuantumCryptoEngine) {}
+  constructor(private cryptoEngine: PostQuantumCryptoEngine) { }
 
   addProtectedContainer(container: RuntimeContainer): void {
     this.protectedContainers.set(container.containerId, container);
-    
+
     // Initialize anomaly detection
     this.initializeAnomalyDetection(container);
-    
+
     // Start monitoring
     this.startContainerMonitoring(container);
 
@@ -880,7 +930,7 @@ class RuntimeProtectionManager {
   private startContainerMonitoring(container: RuntimeContainer): void {
     // Simulate monitoring initialization
     console.log(`📊 Started monitoring for container: ${container.containerId}`);
-    
+
     // Start quantum behavior analysis if enabled
     if (container.runtimeProtection.quantumBehaviorAnalysis.enabled) {
       this.startQuantumBehaviorAnalysis(container);
@@ -900,7 +950,7 @@ class RuntimeProtectionManager {
 
     // Simulate behavior analysis
     const behaviorScore = Math.random();
-    
+
     if (behaviorScore > 0.8) {
       findings.push({
         findingId: `finding-${Date.now()}`,
@@ -925,7 +975,7 @@ class RuntimeProtectionManager {
     // Quantum-specific analysis
     if (container.quantumSecurity.enabled && container.runtimeProtection.quantumBehaviorAnalysis.enabled) {
       const quantumBehaviorScore = Math.random();
-      
+
       if (quantumBehaviorScore > 0.85) {
         findings.push({
           findingId: `qfinding-${Date.now()}`,
@@ -954,11 +1004,11 @@ class RuntimeProtectionManager {
   removeProtectedContainer(containerId: string): boolean {
     const removed = this.protectedContainers.delete(containerId);
     this.anomalyDetectors.delete(containerId);
-    
+
     if (removed) {
       console.log(`🗑️ Removed runtime protection for container: ${containerId}`);
     }
-    
+
     return removed;
   }
 
@@ -991,7 +1041,7 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
     private cryptoEngine: PostQuantumCryptoEngine
   ) {
     super();
-    
+
     this.config = config;
     this.imageScanner = new QuantumImageScanner(cryptoEngine);
     this.runtimeProtectionManager = new RuntimeProtectionManager(cryptoEngine);
@@ -1015,7 +1065,7 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
       }
 
       this.isInitialized = true;
-      
+
       this.emit('initialized', {
         quantumSecurity: this.config.quantumSecurity.enabled,
         imageScanning: this.config.imageScanning.enabled,
@@ -1161,9 +1211,9 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
     }
 
     this.containerRegistry.set(image.imageId, image);
-    
+
     const scanResult = await this.imageScanner.scanImage(image);
-    
+
     // Check against security policies
     await this.evaluateSecurityPolicies(image, scanResult);
 
@@ -1187,7 +1237,7 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
 
     for (const policy of applicablePolicies) {
       const policyViolations = await this.checkPolicyCompliance(image, scanResult, policy);
-      
+
       if (policyViolations.length > 0) {
         await this.handlePolicyViolations(image, policy, policyViolations);
       }
@@ -1202,7 +1252,7 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
     });
 
     // Check labels
-    const matchesLabels = Object.entries(policy.scope.labels).every(([key, value]) => 
+    const matchesLabels = Object.entries(policy.scope.labels).every(([key, value]) =>
       image.metadata.labels[key] === value
     );
 
@@ -1276,16 +1326,16 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
     return true;
   }
 
-  private compareValues(actual: any, operator: string, expected: any): boolean {
+  private compareValues(actual: string | number | boolean, operator: string, expected: string | number | boolean): boolean {
     switch (operator) {
       case 'EQUALS':
         return actual === expected;
       case 'NOT_EQUALS':
         return actual !== expected;
       case 'GREATER_THAN':
-        return actual > expected;
+        return (typeof actual === 'number' && typeof expected === 'number') ? actual > expected : false;
       case 'LESS_THAN':
-        return actual < expected;
+        return (typeof actual === 'number' && typeof expected === 'number') ? actual < expected : false;
       case 'CONTAINS':
         return String(actual).includes(String(expected));
       default:
@@ -1327,7 +1377,7 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
 
   async protectRuntimeContainer(container: RuntimeContainer): Promise<void> {
     this.runtimeProtectionManager.addProtectedContainer(container);
-    
+
     this.emit('container_protected', {
       containerId: container.containerId,
       name: container.name,
@@ -1341,11 +1391,11 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
     return this.runtimeProtectionManager.analyzeContainerBehavior(containerId);
   }
 
-  getSecurityDashboard(): any {
+  getSecurityDashboard(): SecurityDashboard {
     const totalImages = this.containerRegistry.size;
     const scannedImages = Array.from(this.containerRegistry.values())
       .filter(img => this.imageScanner.getLatestScan(img.imageId)).length;
-    
+
     const protectedContainers = this.runtimeProtectionManager.getProtectedContainers();
     const activeAlerts = Array.from(this.securityAlerts.values())
       .filter(alert => alert.status === 'OPEN');
@@ -1427,7 +1477,7 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
   private getAverageComplianceScore(): number {
     let totalScore = 0;
     let count = 0;
-    
+
     for (const image of this.containerRegistry.values()) {
       const scanResult = this.imageScanner.getLatestScan(image.imageId);
       if (scanResult) {
@@ -1437,14 +1487,14 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
         }
       }
     }
-    
+
     return count > 0 ? totalScore / count : 0;
   }
 
   private getQuantumComplianceScore(): number {
     let quantumCompliantCount = 0;
     let totalCount = 0;
-    
+
     for (const image of this.containerRegistry.values()) {
       const scanResult = this.imageScanner.getLatestScan(image.imageId);
       if (scanResult) {
@@ -1456,13 +1506,13 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
         }
       }
     }
-    
+
     return totalCount > 0 ? quantumCompliantCount / totalCount : 0;
   }
 
   addSecurityPolicy(policy: SecurityPolicy): void {
     this.securityPolicies.set(policy.policyId, policy);
-    
+
     this.emit('policy_added', {
       policyId: policy.policyId,
       name: policy.name,
@@ -1475,7 +1525,7 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
 
   removeSecurityPolicy(policyId: string): boolean {
     const removed = this.securityPolicies.delete(policyId);
-    
+
     if (removed) {
       this.emit('policy_removed', {
         policyId,
@@ -1483,7 +1533,7 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
       });
       console.log(`🗑️ Removed security policy: ${policyId}`);
     }
-    
+
     return removed;
   }
 
@@ -1496,7 +1546,7 @@ export class QuantumContainerSecurityEngine extends EventEmitter {
     if (!alert) return false;
 
     alert.status = 'RESOLVED';
-    
+
     this.emit('alert_resolved', {
       alertId,
       timestamp: Date.now()

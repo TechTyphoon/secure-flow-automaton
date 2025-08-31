@@ -2,6 +2,46 @@ import axios from 'axios';
 import { BaseSecurityService } from './apiClient';
 import { SecurityNotificationService } from './notifications';
 
+interface SnykApiResponse {
+  issues: {
+    vulnerabilities: Array<{
+      id: string;
+      title: string;
+      description: string;
+      severity: string;
+      package: string;
+      version: string;
+      fixedIn?: string[];
+      patchAvailable?: boolean;
+      exploitMaturity?: string;
+      cvssScore?: number;
+      cve?: string[];
+      cwe?: string[];
+      publicationTime?: string;
+      disclosureTime?: string;
+      credit?: string[];
+      semver?: {
+        vulnerable: string[];
+        unaffected?: string;
+      };
+      references?: Array<{
+        title: string;
+        url: string;
+      }>;
+      patches?: Array<{
+        id: string;
+        urls: string[];
+        version: string;
+        comments: string[];
+        modificationTime: string;
+      }>;
+    }>;
+  };
+  dependencyCount?: number;
+  packageManager?: string;
+  projectName?: string;
+}
+
 export interface SnykVulnerability {
   id: string;
   title: string;
@@ -26,7 +66,13 @@ export interface SnykVulnerability {
     title: string;
     url: string;
   }[];
-  patches?: any[];
+  patches?: Array<{
+    id: string;
+    urls: string[];
+    version: string;
+    comments: string[];
+    modificationTime: string;
+  }>;
   upgradePath?: (string | boolean)[];
 }
 
@@ -99,7 +145,7 @@ export class SnykService extends BaseSecurityService {
 
         return response?.projects || null;
       },
-              () => { throw new Error('Snyk not configured - no mock data in production'); },
+      () => { throw new Error('Snyk not configured - no mock data in production'); },
       'getProjects'
     );
   }
@@ -164,14 +210,14 @@ export class SnykService extends BaseSecurityService {
           summary
         };
       },
-              () => { throw new Error('Snyk not configured - no mock data in production'); },
+      () => { throw new Error('Snyk not configured - no mock data in production'); },
       'testDependencies'
     );
   }
 
   async getHealthStatus() {
     const startTime = Date.now();
-    
+
     try {
       if (!this.token) {
         return {
@@ -203,24 +249,25 @@ export class SnykService extends BaseSecurityService {
         lastCheck: new Date().toISOString(),
         message: isHealthy ? 'Service operational' : 'Authentication check failed'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as Error;
       return {
         service: 'snyk',
         status: 'unhealthy' as const,
         responseTime: Date.now() - startTime,
         lastCheck: new Date().toISOString(),
-        message: `Health check failed: ${error.message}`
+        message: `Health check failed: ${err.message || 'Unknown error'}`
       };
     }
   }
 
   async getVulnerabilities(severity?: string): Promise<SnykVulnerability[]> {
     const testResult = await this.testDependencies();
-    
+
     if (severity) {
       return testResult.vulnerabilities.filter(vuln => vuln.severity === severity);
     }
-    
+
     return testResult.vulnerabilities;
   }
 
@@ -229,38 +276,38 @@ export class SnykService extends BaseSecurityService {
     return testResult.dependencyCount;
   }
 
-  private formatTestResult(data: any): SnykTestResult {
+  private formatTestResult(data: SnykApiResponse): SnykTestResult {
     const vulnerabilities = data.issues?.vulnerabilities || [];
-    
+
     const summary = {
       total: vulnerabilities.length,
-      critical: vulnerabilities.filter((v: any) => v.severity === 'critical').length,
-      high: vulnerabilities.filter((v: any) => v.severity === 'high').length,
-      medium: vulnerabilities.filter((v: any) => v.severity === 'medium').length,
-      low: vulnerabilities.filter((v: any) => v.severity === 'low').length,
+      critical: vulnerabilities.filter((v) => v.severity === 'critical').length,
+      high: vulnerabilities.filter((v) => v.severity === 'high').length,
+      medium: vulnerabilities.filter((v) => v.severity === 'medium').length,
+      low: vulnerabilities.filter((v) => v.severity === 'low').length,
     };
 
     return {
-      vulnerabilities: vulnerabilities.map((vuln: any) => ({
+      vulnerabilities: vulnerabilities.map((vuln) => ({
         id: vuln.id,
         title: vuln.title,
         description: vuln.description,
-        severity: vuln.severity,
+        severity: vuln.severity as 'low' | 'medium' | 'high' | 'critical',
         package: vuln.package,
         version: vuln.version,
         fixedIn: vuln.fixedIn,
         patchAvailable: !!vuln.patches && vuln.patches.length > 0,
-        exploitMaturity: vuln.exploitMaturity,
+        exploitMaturity: vuln.exploitMaturity as 'mature' | 'proof-of-concept' | 'no-known-exploit' | 'no-data' | undefined,
         cvssScore: vuln.cvssScore,
-        cve: vuln.identifiers?.CVE || [],
-        cwe: vuln.identifiers?.CWE || [],
+        cve: vuln.cve || [],
+        cwe: vuln.cwe || [],
         publicationTime: vuln.publicationTime,
         disclosureTime: vuln.disclosureTime,
         credit: vuln.credit,
-        semver: vuln.semver,
+        semver: vuln.semver || { vulnerable: [] },
         references: vuln.references || [],
         patches: vuln.patches,
-        upgradePath: vuln.upgradePath,
+        upgradePath: []
       })),
       dependencyCount: data.dependencyCount || 0,
       packageManager: data.packageManager || 'npm',
@@ -418,13 +465,13 @@ export class SnykService extends BaseSecurityService {
   // Calculate security metrics
   calculateRiskScore(testResult: SnykTestResult): number {
     const { summary } = testResult;
-    
+
     // Weight different severities
-    const score = (summary.critical * 10) + 
-                  (summary.high * 7) + 
-                  (summary.medium * 4) + 
-                  (summary.low * 1);
-    
+    const score = (summary.critical * 10) +
+      (summary.high * 7) +
+      (summary.medium * 4) +
+      (summary.low * 1);
+
     // Normalize to 0-100 scale (inverted - lower score is better)
     const maxPossibleScore = testResult.dependencyCount * 10; // Assume all deps have critical vulns
     return Math.max(0, Math.min(100, Math.round((1 - (score / Math.max(maxPossibleScore, 100))) * 100)));
@@ -433,7 +480,7 @@ export class SnykService extends BaseSecurityService {
   async getSecuritySummary() {
     const testResult = await this.testDependencies();
     const projects = await this.getProjects();
-    
+
     return {
       totalProjects: projects.length,
       totalDependencies: testResult.dependencyCount,

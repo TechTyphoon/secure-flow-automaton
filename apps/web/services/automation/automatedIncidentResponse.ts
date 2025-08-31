@@ -70,20 +70,42 @@ export interface ResponseAction {
     status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'skipped';
     priority: number;
     prerequisites: string[];
-    parameters: Record<string, any>;
+    parameters: ActionParameters;
     executedAt?: Date;
     completedAt?: Date;
     result?: ActionResult;
     assignedTo?: string;
 }
 
+export interface ActionParameters {
+    systems?: string[];
+    isolation_type?: string;
+    update_rules?: boolean;
+    patch_systems?: boolean;
+    [key: string]: string | boolean | string[] | number | undefined;
+}
+
 export interface ActionResult {
     success: boolean;
     message: string;
-    output: any;
+    output: ActionOutput;
     executionTime: number;
     errors: string[];
     artifacts: string[];
+}
+
+export interface ActionOutput {
+    systems_isolated?: string[];
+    isolation_method?: string;
+    timestamp?: Date;
+    evidence_collected?: boolean;
+    artifacts_count?: number;
+    analysis_score?: number;
+    controls_deployed?: boolean;
+    rules_updated?: boolean;
+    systems_patched?: boolean;
+    completed?: boolean;
+    [key: string]: string | boolean | string[] | number | Date | undefined;
 }
 
 export interface ResponsePlaybook {
@@ -98,92 +120,150 @@ export interface ResponsePlaybook {
     prerequisites: string[];
     tags: string[];
     lastUpdated: Date;
-    effectiveness: PlaybookEffectiveness;
+    createdBy: string;
+    enabled: boolean;
 }
 
 export interface PlaybookAction {
     id: string;
     name: string;
-    type: string;
+    type: 'containment' | 'investigation' | 'mitigation' | 'recovery' | 'notification' | 'documentation';
     description: string;
     automated: boolean;
-    order: number;
-    parameters: Record<string, any>;
-    condition?: string;
-    timeout: number;
-    retries: number;
-    onFailure: 'continue' | 'stop' | 'escalate';
+    priority: number;
+    estimatedDuration: number;
     dependencies: string[];
+    parameters: ActionParameters;
+    conditions: ActionCondition[];
+    rollbackActions: string[];
 }
 
-export interface PlaybookEffectiveness {
-    totalExecutions: number;
-    successRate: number;
-    averageResolutionTime: number;
-    userRatings: number[];
-    lastEvaluated: Date;
+export interface ActionCondition {
+    field: string;
+    operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'in' | 'not_in';
+    value: string | number | boolean | string[];
+    logicalOperator?: 'and' | 'or';
 }
 
-export interface IncidentResponseResult {
-    incidentId: string;
-    playbook: string;
-    success: boolean;
-    resolutionTime: number;
-    actionsExecuted: number;
-    actionsSuccessful: number;
-    finalStatus: IncidentStatus;
-    lessons: string[];
+export interface IncidentStatus {
+    current: 'new' | 'triaging' | 'investigating' | 'containing' | 'mitigating' | 'recovering' | 'resolved' | 'closed';
+    previous: string[];
+    transitions: StatusTransition[];
+    slaBreach: boolean;
+    slaResponseTime?: number;
+    slaResolutionTime?: number;
 }
 
-type IncidentStatus = 'new' | 'triaging' | 'investigating' | 'containing' | 'mitigating' | 'recovering' | 'resolved' | 'closed';
+export interface StatusTransition {
+    from: string;
+    to: string;
+    timestamp: Date;
+    reason: string;
+    performedBy: string;
+}
 
-interface IncidentMetadata {
-    createdBy: string;
-    updatedBy: string;
-    createdAt: Date;
-    updatedAt: Date;
+export interface IncidentMetadata {
     tags: string[];
     priority: number;
-    sla: {
-        responseTime: number;
-        resolutionTime: number;
-    };
+    slaBreach: boolean;
+    escalationLevel: number;
     notifications: NotificationRecord[];
+    lessonsLearned: string[];
+    automationScore: number;
+    manualInterventions: number;
+    falsePositive: boolean;
+    businessImpact: 'low' | 'medium' | 'high' | 'critical';
+    costEstimate: number;
+    complianceViolations: string[];
 }
 
-interface NotificationRecord {
-    type: 'email' | 'slack' | 'webhook' | 'sms';
+export interface NotificationRecord {
+    type: 'email' | 'sms' | 'slack' | 'webhook';
     recipient: string;
     sentAt: Date;
-    status: 'sent' | 'failed' | 'pending';
+    status: 'pending' | 'sent' | 'failed' | 'delivered';
+    retryCount: number;
+    errorMessage?: string;
 }
 
-// =================== AI INCIDENT CLASSIFIER ===================
+export interface ModelConfig {
+    name: string;
+    type: string;
+    accuracy: number;
+    features: string[];
+    loaded?: boolean;
+    version?: string;
+    lastUpdated?: Date;
+}
 
-class AIIncidentClassifier {
-    private models: Map<string, any> = new Map();
+export interface ClassificationFeatures {
+    title: string;
+    description: string;
+    source: string;
+    indicatorTypes: string[];
+    indicatorCount: number;
+    affectedSystemCount: number;
+    detectionTime: number;
+    weekday: number;
+}
 
-    async loadModels(): Promise<void> {
-        await this.loadModel('incident_classifier', {
-            type: 'ensemble',
+export interface ClassificationResult {
+    category: string;
+    subCategory: string;
+    confidence: number;
+}
+
+export interface SeverityAssessment {
+    businessImpact: 'low' | 'medium' | 'high' | 'critical';
+    severityScore: number;
+}
+
+export interface TrendData {
+    period: string;
+    incidents: number;
+    trend: 'increasing' | 'decreasing' | 'stable';
+}
+
+// =================== MAIN CLASS ===================
+
+export class AutomatedIncidentResponse extends EventEmitter {
+    private incidents: Map<string, SecurityIncident> = new Map();
+    private playbooks: Map<string, ResponsePlaybook> = new Map();
+    private activeResponses: Map<string, ResponseExecution> = new Map();
+    private models: Map<string, ModelConfig> = new Map();
+    private config: ResponseConfig;
+
+    constructor(config: ResponseConfig) {
+        super();
+        this.config = config;
+        this.initializeModels();
+        this.loadDefaultPlaybooks();
+    }
+
+    private initializeModels(): void {
+        this.loadModel('incident_classifier', {
+            name: 'incident_classifier_v2.1',
+            type: 'neural_network',
             accuracy: 0.92,
-            features: ['title', 'description', 'indicators', 'source_system']
+            features: ['text_analysis', 'pattern_recognition', 'context_awareness']
         });
 
-        await this.loadModel('severity_assessor', {
+        this.loadModel('severity_assessor', {
+            name: 'severity_assessor_v1.5',
             type: 'gradient_boosting',
             accuracy: 0.89,
-            features: ['incident_type', 'affected_systems', 'business_impact']
+            features: ['impact_analysis', 'business_context', 'threat_intelligence']
         });
 
-        await this.loadModel('response_recommender', {
+        this.loadModel('response_optimizer', {
+            name: 'response_optimizer_v2.0',
             type: 'reinforcement_learning',
             accuracy: 0.87,
             features: ['incident_classification', 'historical_responses', 'effectiveness_metrics']
         });
     }
 
-    private async loadModel(name: string, config: any): Promise<void> {
+    private async loadModel(name: string, config: ModelConfig): Promise<void> {
         this.models.set(name, { ...config, loaded: true });
     }
 
@@ -221,7 +301,7 @@ class AIIncidentClassifier {
         }
     }
 
-    private extractClassificationFeatures(incident: SecurityIncident): any {
+    private extractClassificationFeatures(incident: SecurityIncident): ClassificationFeatures {
         return {
             title: incident.title.toLowerCase(),
             description: incident.description.toLowerCase(),
@@ -234,7 +314,7 @@ class AIIncidentClassifier {
         };
     }
 
-    private async runClassificationModel(features: any): Promise<any> {
+    private async runClassificationModel(features: ClassificationFeatures): Promise<ClassificationResult> {
         // Simulate AI classification
         const categories = [
             { category: 'intrusion', subCategory: 'unauthorized_access', confidence: 0.85 },
@@ -249,7 +329,7 @@ class AIIncidentClassifier {
         );
     }
 
-    private async assessSeverity(incident: SecurityIncident, classification: any): Promise<any> {
+    private async assessSeverity(incident: SecurityIncident, classification: ClassificationResult): Promise<SeverityAssessment> {
         // AI-based severity assessment
         const factors = {
             categoryWeight: this.getCategoryWeight(classification.category),
@@ -285,7 +365,7 @@ class AIIncidentClassifier {
         return weights[category] || 0.6;
     }
 
-    private async calculateRiskScore(incident: SecurityIncident, classification: any): Promise<number> {
+    private async calculateRiskScore(incident: SecurityIncident, classification: ClassificationResult): Promise<number> {
         // Calculate risk score based on multiple factors
         const factors = {
             severity: this.getSeverityScore(incident.severity),
@@ -306,7 +386,7 @@ class AIIncidentClassifier {
         return scores[severity] || 1;
     }
 
-    private async generateAlternativeClassifications(features: any): Promise<AlternativeClassification[]> {
+    private async generateAlternativeClassifications(features: ClassificationFeatures): Promise<AlternativeClassification[]> {
         // Generate alternative classifications with lower confidence
         return [
             {
@@ -318,371 +398,100 @@ class AIIncidentClassifier {
             {
                 category: 'compliance',
                 subCategory: 'policy_violation',
-                confidence: 0.32,
-                reasoning: 'Potential policy breach indicators'
+                confidence: 0.35,
+                reasoning: 'Policy compliance indicators present'
             }
         ];
     }
 
     private getDefaultClassification(incident: SecurityIncident): IncidentClassification {
         return {
-            primaryCategory: 'other',
+            primaryCategory: incident.category,
             subCategory: 'unknown',
             confidence: 0.5,
-            aiModel: 'fallback_classifier',
+            aiModel: 'default_classifier',
             classificationTime: new Date(),
             alternativeClassifications: [],
-            riskScore: 5,
-            businessImpact: incident.severity === 'critical' ? 'critical' : 'medium'
+            riskScore: 5.0,
+            businessImpact: 'medium'
         };
     }
-}
 
-// =================== MAIN INCIDENT RESPONSE CLASS ===================
+    // =================== INCIDENT MANAGEMENT ===================
 
-export class AutomatedIncidentResponseOrchestrator extends EventEmitter {
-    private incidents: Map<string, SecurityIncident> = new Map();
-    private playbooks: Map<string, ResponsePlaybook> = new Map();
-    private aiClassifier: AIIncidentClassifier = new AIIncidentClassifier();
-    private activeResponses: Map<string, ResponseExecution> = new Map();
-    private config: ResponseConfig;
-
-    constructor(config?: Partial<ResponseConfig>) {
-        super();
-        
-        this.config = {
-            maxConcurrentIncidents: 10,
-            autoExecutionEnabled: true,
-            escalationThreshold: 0.7,
-            aiClassificationEnabled: true,
-            notificationEnabled: true,
-            ...config
-        };
-
-        this.initialize();
-    }
-
-    // =================== INITIALIZATION ===================
-
-    async initialize(): Promise<void> {
-        console.log('🚨 Initializing Automated Incident Response Orchestrator...');
-        
-        try {
-            await this.loadDefaultPlaybooks();
-            await this.aiClassifier.loadModels();
-            await this.startIncidentMonitoring();
-            
-            console.log('✅ Incident Response Orchestrator initialized successfully');
-            this.emit('initialized');
-        } catch (error) {
-            console.error('❌ Failed to initialize Incident Response:', error);
-            this.emit('error', error);
-        }
-    }
-
-    private async loadDefaultPlaybooks(): Promise<void> {
-        const defaultPlaybooks: ResponsePlaybook[] = [
-            {
-                id: 'playbook-intrusion-001',
-                name: 'Intrusion Response Playbook',
-                description: 'Standard response for unauthorized access incidents',
-                version: '2.1.0',
-                applicableCategories: ['intrusion'],
-                severity: ['critical', 'high', 'medium'],
-                estimatedDuration: 3600, // 1 hour
-                prerequisites: ['network_access', 'admin_privileges'],
-                tags: ['intrusion', 'containment', 'investigation'],
-                lastUpdated: new Date(),
-                effectiveness: {
-                    totalExecutions: 45,
-                    successRate: 0.89,
-                    averageResolutionTime: 2400,
-                    userRatings: [4.2, 4.5, 3.8, 4.1],
-                    lastEvaluated: new Date()
-                },
-                actions: [
-                    {
-                        id: 'action-001',
-                        name: 'Isolate Affected Systems',
-                        type: 'containment',
-                        description: 'Immediately isolate systems showing signs of compromise',
-                        automated: true,
-                        order: 1,
-                        parameters: { isolation_type: 'network', notify_users: true },
-                        timeout: 300,
-                        retries: 2,
-                        onFailure: 'escalate',
-                        dependencies: []
-                    },
-                    {
-                        id: 'action-002',
-                        name: 'Collect Forensic Evidence',
-                        type: 'investigation',
-                        description: 'Collect logs, memory dumps, and system artifacts',
-                        automated: true,
-                        order: 2,
-                        parameters: { evidence_types: ['logs', 'memory', 'disk'], compression: true },
-                        timeout: 600,
-                        retries: 1,
-                        onFailure: 'continue',
-                        dependencies: ['action-001']
-                    },
-                    {
-                        id: 'action-003',
-                        name: 'Analyze Attack Vectors',
-                        type: 'investigation',
-                        description: 'Use AI to analyze how the intrusion occurred',
-                        automated: true,
-                        order: 3,
-                        parameters: { ai_analysis: true, threat_intelligence: true },
-                        timeout: 900,
-                        retries: 1,
-                        onFailure: 'continue',
-                        dependencies: ['action-002']
-                    },
-                    {
-                        id: 'action-004',
-                        name: 'Implement Countermeasures',
-                        type: 'mitigation',
-                        description: 'Deploy security controls to prevent re-exploitation',
-                        automated: true,
-                        order: 4,
-                        parameters: { update_rules: true, patch_systems: true },
-                        timeout: 1200,
-                        retries: 2,
-                        onFailure: 'escalate',
-                        dependencies: ['action-003']
-                    },
-                    {
-                        id: 'action-005',
-                        name: 'Restore Normal Operations',
-                        type: 'recovery',
-                        description: 'Safely restore systems to normal operation',
-                        automated: false,
-                        order: 5,
-                        parameters: { validation_required: true, monitoring_enhanced: true },
-                        timeout: 1800,
-                        retries: 1,
-                        onFailure: 'escalate',
-                        dependencies: ['action-004']
-                    }
-                ]
-            },
-            {
-                id: 'playbook-malware-001',
-                name: 'Malware Response Playbook',
-                description: 'Comprehensive response for malware incidents',
-                version: '1.8.0',
-                applicableCategories: ['malware'],
-                severity: ['critical', 'high', 'medium'],
-                estimatedDuration: 2700, // 45 minutes
-                prerequisites: ['endpoint_protection', 'admin_access'],
-                tags: ['malware', 'containment', 'eradication'],
-                lastUpdated: new Date(),
-                effectiveness: {
-                    totalExecutions: 67,
-                    successRate: 0.94,
-                    averageResolutionTime: 1980,
-                    userRatings: [4.6, 4.3, 4.8, 4.4],
-                    lastEvaluated: new Date()
-                },
-                actions: [
-                    {
-                        id: 'malware-001',
-                        name: 'Quarantine Infected Systems',
-                        type: 'containment',
-                        description: 'Immediately quarantine systems with malware detection',
-                        automated: true,
-                        order: 1,
-                        parameters: { quarantine_type: 'full', preserve_evidence: true },
-                        timeout: 180,
-                        retries: 3,
-                        onFailure: 'escalate',
-                        dependencies: []
-                    },
-                    {
-                        id: 'malware-002',
-                        name: 'Malware Analysis',
-                        type: 'investigation',
-                        description: 'Analyze malware samples using AI and sandbox',
-                        automated: true,
-                        order: 2,
-                        parameters: { sandbox_analysis: true, ai_classification: true },
-                        timeout: 600,
-                        retries: 1,
-                        onFailure: 'continue',
-                        dependencies: ['malware-001']
-                    },
-                    {
-                        id: 'malware-003',
-                        name: 'Eradicate Malware',
-                        type: 'mitigation',
-                        description: 'Remove malware from infected systems',
-                        automated: true,
-                        order: 3,
-                        parameters: { deep_scan: true, repair_files: true },
-                        timeout: 1200,
-                        retries: 2,
-                        onFailure: 'escalate',
-                        dependencies: ['malware-002']
-                    }
-                ]
-            }
-        ];
-
-        defaultPlaybooks.forEach(playbook => {
-            this.playbooks.set(playbook.id, playbook);
-        });
-
-        console.log(`📖 Loaded ${defaultPlaybooks.length} response playbooks`);
-    }
-
-    private async startIncidentMonitoring(): Promise<void> {
-        console.log('👁️ Starting incident monitoring...');
-        // In real implementation, this would connect to SIEM, monitoring systems, etc.
-        console.log('✅ Incident monitoring started');
-    }
-
-    // =================== MAIN INCIDENT HANDLING ===================
-
-    async handleNewIncident(incidentData: Partial<SecurityIncident>): Promise<string> {
+    async createIncident(incidentData: Partial<SecurityIncident>): Promise<SecurityIncident> {
         const incident: SecurityIncident = {
-            id: `incident-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            title: incidentData.title || 'Unknown Security Incident',
-            description: incidentData.description || '',
+            id: this.generateIncidentId(),
+            title: incidentData.title || 'Unknown Incident',
+            description: incidentData.description || 'No description provided',
             severity: incidentData.severity || 'medium',
             category: incidentData.category || 'other',
-            source: incidentData.source || 'manual',
-            detectedAt: new Date(),
+            source: incidentData.source || 'unknown',
+            detectedAt: incidentData.detectedAt || new Date(),
             affectedSystems: incidentData.affectedSystems || [],
             indicators: incidentData.indicators || [],
-            status: 'new',
+            status: {
+                current: 'new',
+                previous: [],
+                transitions: [],
+                slaBreach: false
+            },
             classification: {
-                primaryCategory: '',
-                subCategory: '',
-                confidence: 0,
-                aiModel: '',
+                primaryCategory: 'unknown',
+                subCategory: 'unknown',
+                confidence: 0.0,
+                aiModel: 'pending',
                 classificationTime: new Date(),
                 alternativeClassifications: [],
-                riskScore: 0,
-                businessImpact: 'medium'
+                riskScore: 0.0,
+                businessImpact: 'low'
             },
             responseActions: [],
             metadata: {
-                createdBy: 'automated',
-                updatedBy: 'automated',
-                createdAt: new Date(),
-                updatedAt: new Date(),
                 tags: [],
                 priority: this.calculateInitialPriority(incidentData.severity || 'medium'),
-                sla: {
-                    responseTime: this.getSLAResponseTime(incidentData.severity || 'medium'),
-                    resolutionTime: this.getSLAResolutionTime(incidentData.severity || 'medium')
-                },
-                notifications: []
+                slaBreach: false,
+                escalationLevel: 0,
+                notifications: [],
+                lessonsLearned: [],
+                automationScore: 0.0,
+                manualInterventions: 0,
+                falsePositive: false,
+                businessImpact: 'low',
+                costEstimate: 0,
+                complianceViolations: []
             }
         };
 
-        console.log(`🚨 New incident received: ${incident.id} - ${incident.title}`);
-        
+        // Classify the incident using AI
+        incident.classification = await this.classifyIncident(incident);
+
+        // Store the incident
         this.incidents.set(incident.id, incident);
+
+        // Emit event
         this.emit('incident_created', incident);
 
-        try {
-            // Step 1: AI Classification
-            if (this.config.aiClassificationEnabled) {
-                await this.classifyIncident(incident);
-            }
-
-            // Step 2: Select appropriate playbook
-            const playbook = await this.selectPlaybook(incident);
-            
-            if (playbook) {
-                // Step 3: Execute automated response
-                if (this.config.autoExecutionEnabled) {
-                    await this.executeResponse(incident, playbook);
-                } else {
-                    console.log(`📋 Manual approval required for incident: ${incident.id}`);
-                    incident.status = 'triaging';
-                }
-            } else {
-                console.log(`⚠️ No suitable playbook found for incident: ${incident.id}`);
-                incident.status = 'triaging';
-                this.emit('manual_intervention_required', incident);
-            }
-
-            // Step 4: Send notifications
-            if (this.config.notificationEnabled) {
-                await this.sendNotifications(incident);
-            }
-
-        } catch (error) {
-            console.error(`❌ Failed to handle incident ${incident.id}:`, error);
-            incident.status = 'triaging';
-            this.emit('incident_error', { incident, error });
-        }
-
-        this.incidents.set(incident.id, incident);
-        return incident.id;
+        console.log(`🚨 Created incident: ${incident.id} - ${incident.title}`);
+        return incident;
     }
 
-    private async classifyIncident(incident: SecurityIncident): Promise<void> {
-        console.log(`🤖 Classifying incident: ${incident.id}`);
-        
-        try {
-            incident.status = 'triaging';
-            incident.classification = await this.aiClassifier.classifyIncident(incident);
-            
-            // Update incident category based on AI classification
-            if (incident.classification.confidence > 0.8) {
-                incident.category = incident.classification.primaryCategory as any;
-            }
+    async executeResponse(incidentId: string, playbookId: string): Promise<ResponseExecution> {
+        const incident = this.incidents.get(incidentId);
+        const playbook = this.playbooks.get(playbookId);
 
-            console.log(`✅ Incident classified: ${incident.classification.primaryCategory}/${incident.classification.subCategory} (confidence: ${incident.classification.confidence.toFixed(2)})`);
-            this.emit('incident_classified', incident);
-
-        } catch (error) {
-            console.error(`❌ Failed to classify incident ${incident.id}:`, error);
-            incident.classification = this.aiClassifier['getDefaultClassification'](incident);
-        }
-    }
-
-    private async selectPlaybook(incident: SecurityIncident): Promise<ResponsePlaybook | null> {
-        console.log(`📖 Selecting playbook for incident: ${incident.id}`);
-
-        const applicablePlaybooks = Array.from(this.playbooks.values()).filter(playbook => {
-            // Check if playbook applies to this incident category
-            const categoryMatch = playbook.applicableCategories.includes(incident.category) ||
-                                  playbook.applicableCategories.includes(incident.classification.primaryCategory);
-            
-            // Check if playbook applies to this severity level
-            const severityMatch = playbook.severity.includes(incident.severity);
-
-            return categoryMatch && severityMatch;
-        });
-
-        if (applicablePlaybooks.length === 0) {
-            console.log(`⚠️ No applicable playbooks found for ${incident.category}/${incident.severity}`);
-            return null;
+        if (!incident) {
+            throw new Error(`Incident not found: ${incidentId}`);
         }
 
-        // Select the most effective playbook
-        const selectedPlaybook = applicablePlaybooks.reduce((best, current) => {
-            const bestScore = best.effectiveness.successRate * 0.7 + (1 - best.effectiveness.averageResolutionTime / 3600) * 0.3;
-            const currentScore = current.effectiveness.successRate * 0.7 + (1 - current.effectiveness.averageResolutionTime / 3600) * 0.3;
-            return currentScore > bestScore ? current : best;
-        });
+        if (!playbook) {
+            throw new Error(`Playbook not found: ${playbookId}`);
+        }
 
-        console.log(`📋 Selected playbook: ${selectedPlaybook.name} (effectiveness: ${selectedPlaybook.effectiveness.successRate.toFixed(2)})`);
-        return selectedPlaybook;
-    }
-
-    private async executeResponse(incident: SecurityIncident, playbook: ResponsePlaybook): Promise<void> {
-        console.log(`🚀 Executing response for incident: ${incident.id} using playbook: ${playbook.name}`);
-
+        // Create execution record
         const execution: ResponseExecution = {
-            incidentId: incident.id,
-            playbookId: playbook.id,
+            incidentId,
+            playbookId,
             startTime: new Date(),
             status: 'running',
             completedActions: 0,
@@ -690,153 +499,123 @@ export class AutomatedIncidentResponseOrchestrator extends EventEmitter {
             errors: []
         };
 
-        this.activeResponses.set(incident.id, execution);
-        incident.status = 'investigating';
+        this.activeResponses.set(incidentId, execution);
 
         try {
-            // Execute playbook actions in order
-            for (const playbookAction of playbook.actions.sort((a, b) => a.order - b.order)) {
-                // Check if dependencies are satisfied
-                const dependenciesSatisfied = await this.checkActionDependencies(
-                    playbookAction, 
-                    incident.responseActions
-                );
-
-                if (!dependenciesSatisfied) {
-                    console.log(`⏸️ Skipping action ${playbookAction.name} - dependencies not satisfied`);
-                    continue;
-                }
-
-                // Create response action from playbook action
-                const responseAction: ResponseAction = {
-                    id: `${incident.id}-${playbookAction.id}`,
-                    name: playbookAction.name,
-                    type: playbookAction.type as 'containment' | 'investigation' | 'mitigation' | 'recovery' | 'notification' | 'documentation',
-                    description: playbookAction.description,
-                    automated: playbookAction.automated,
-                    status: 'pending',
-                    priority: playbookAction.order,
-                    prerequisites: playbookAction.dependencies,
-                    parameters: playbookAction.parameters
-                };
-
-                incident.responseActions.push(responseAction);
-
-                // Execute the action
-                if (playbookAction.automated) {
-                    await this.executeAutomatedAction(responseAction, incident);
-                } else {
-                    console.log(`👤 Manual action required: ${playbookAction.name}`);
-                    responseAction.status = 'pending';
-                    responseAction.assignedTo = 'security-team';
-                    this.emit('manual_action_required', { incident, action: responseAction });
-                }
-
+            // Execute playbook actions
+            for (const action of playbook.actions) {
+                await this.executeAction(incident, action);
                 execution.completedActions++;
             }
 
-            // Update execution status
-            execution.endTime = new Date();
             execution.status = 'completed';
-            
-            // Determine final incident status
-            const successfulActions = incident.responseActions.filter(a => a.status === 'completed').length;
-            const totalActions = incident.responseActions.length;
-            
-            if (successfulActions === totalActions) {
-                incident.status = 'resolved';
-                incident.resolvedAt = new Date();
-            } else if (successfulActions > totalActions / 2) {
-                incident.status = 'mitigating';
-            } else {
-                incident.status = 'triaging';
-                await this.escalateIncident(incident, 'Multiple action failures');
-            }
+            execution.endTime = new Date();
 
-            console.log(`✅ Response execution completed for incident: ${incident.id} (${successfulActions}/${totalActions} actions successful)`);
-            
-            const result: IncidentResponseResult = {
-                incidentId: incident.id,
-                playbook: playbook.name,
-                success: incident.status === 'resolved',
-                resolutionTime: Date.now() - incident.detectedAt.getTime(),
-                actionsExecuted: totalActions,
-                actionsSuccessful: successfulActions,
-                finalStatus: incident.status,
-                lessons: await this.extractLessons(incident, execution)
-            };
+            // Update incident status
+            incident.status.current = 'resolved';
+            incident.resolvedAt = new Date();
 
-            this.emit('incident_resolved', result);
+            // Extract lessons learned
+            incident.metadata.lessonsLearned = await this.extractLessons(incident, execution);
+
+            console.log(`✅ Response execution completed for incident: ${incidentId}`);
 
         } catch (error) {
             execution.status = 'failed';
             execution.endTime = new Date();
-            execution.errors.push(error.message);
-            
-            console.error(`❌ Response execution failed for incident ${incident.id}:`, error);
-            await this.escalateIncident(incident, `Execution failure: ${error.message}`);
-        } finally {
-            this.activeResponses.delete(incident.id);
+            execution.errors.push(error instanceof Error ? error.message : 'Unknown error');
+
+            console.error(`❌ Response execution failed for incident: ${incidentId}`, error);
         }
+
+        this.emit('response_executed', { incident, execution });
+        return execution;
     }
 
-    private async executeAutomatedAction(action: ResponseAction, incident: SecurityIncident): Promise<void> {
-        console.log(`⚙️ Executing automated action: ${action.name}`);
-        
-        action.status = 'in_progress';
-        action.executedAt = new Date();
+    private async executeAction(incident: SecurityIncident, action: PlaybookAction): Promise<void> {
+        // Check dependencies
+        const dependenciesMet = await this.checkActionDependencies(action, incident.responseActions);
+        if (!dependenciesMet) {
+            throw new Error(`Dependencies not met for action: ${action.id}`);
+        }
+
+        // Create response action
+        const responseAction: ResponseAction = {
+            id: `${incident.id}_${action.id}`,
+            name: action.name,
+            type: action.type,
+            description: action.description,
+            automated: action.automated,
+            status: 'in_progress',
+            priority: action.priority,
+            prerequisites: [],
+            parameters: action.parameters,
+            executedAt: new Date()
+        };
+
+        incident.responseActions.push(responseAction);
 
         try {
-            // Simulate action execution based on type
-            const result = await this.simulateActionExecution(action, incident);
-            
-            action.result = result;
-            action.status = result.success ? 'completed' : 'failed';
-            action.completedAt = new Date();
-
-            if (result.success) {
-                console.log(`✅ Action completed: ${action.name}`);
+            // Execute the action
+            if (action.automated) {
+                await this.executeAutomatedAction(responseAction);
             } else {
-                console.error(`❌ Action failed: ${action.name} - ${result.message}`);
+                // For manual actions, just mark as pending
+                responseAction.status = 'pending';
+                responseAction.assignedTo = 'security-analyst';
             }
 
-        } catch (error) {
-            action.status = 'failed';
-            action.result = {
-                success: false,
-                message: error.message,
-                output: null,
-                executionTime: Date.now() - action.executedAt!.getTime(),
-                errors: [error.message],
+            responseAction.status = 'completed';
+            responseAction.completedAt = new Date();
+            responseAction.result = {
+                success: true,
+                message: 'Action completed successfully',
+                output: this.generateActionOutput(responseAction),
+                executionTime: responseAction.completedAt.getTime() - responseAction.executedAt!.getTime(),
+                errors: [],
                 artifacts: []
             };
-            action.completedAt = new Date();
+
+        } catch (error) {
+            responseAction.status = 'failed';
+            responseAction.result = {
+                success: false,
+                message: error instanceof Error ? error.message : 'Action failed',
+                output: {},
+                executionTime: 0,
+                errors: [error instanceof Error ? error.message : 'Unknown error'],
+                artifacts: []
+            };
+
+            // Check if escalation is needed
+            if (this.shouldEscalate(incident)) {
+                await this.escalateIncident(incident, `Action failed: ${action.name}`);
+            }
         }
     }
 
-    private async simulateActionExecution(action: ResponseAction, incident: SecurityIncident): Promise<ActionResult> {
-        // Simulate different action types
-        const executionTime = Math.random() * 2000 + 1000; // 1-3 seconds
-        await new Promise(resolve => setTimeout(resolve, executionTime));
-
+    private async executeAutomatedAction(action: ResponseAction): Promise<void> {
+        // Simulate automated action execution
         const successRate = this.getActionSuccessRate(action.type);
-        const success = Math.random() < successRate;
+        
+        if (Math.random() > successRate) {
+            throw new Error(`Automated action failed: ${action.name}`);
+        }
 
-        return {
-            success,
-            message: success ? `Action ${action.name} completed successfully` : `Action ${action.name} failed`,
-            output: success ? { result: 'success', details: this.generateActionOutput(action) } : null,
-            executionTime,
-            errors: success ? [] : ['Simulated execution failure'],
-            artifacts: success ? [`artifact-${action.id}.log`] : []
-        };
+        // Simulate execution time
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
+    }
+
+    private shouldEscalate(incident: SecurityIncident): boolean {
+        const failedActions = incident.responseActions.filter(a => a.status === 'failed');
+        return failedActions.length >= this.config.escalationThreshold;
     }
 
     private getActionSuccessRate(actionType: string): number {
         const rates = {
             containment: 0.95,
-            investigation: 0.85,
-            mitigation: 0.90,
+            investigation: 0.90,
+            mitigation: 0.88,
             recovery: 0.80,
             notification: 0.98,
             documentation: 0.99
@@ -844,7 +623,7 @@ export class AutomatedIncidentResponseOrchestrator extends EventEmitter {
         return rates[actionType] || 0.85;
     }
 
-    private generateActionOutput(action: ResponseAction): any {
+    private generateActionOutput(action: ResponseAction): ActionOutput {
         switch (action.type) {
             case 'containment':
                 return {
@@ -974,7 +753,7 @@ export class AutomatedIncidentResponseOrchestrator extends EventEmitter {
         };
     }
 
-    private async calculateTrends(): Promise<any[]> {
+    private async calculateTrends(): Promise<TrendData[]> {
         // Calculate incident trends over time
         return [
             { period: 'last_24h', incidents: 12, trend: 'increasing' },
@@ -997,6 +776,35 @@ export class AutomatedIncidentResponseOrchestrator extends EventEmitter {
 
     getPlaybooks(): ResponsePlaybook[] {
         return Array.from(this.playbooks.values());
+    }
+
+    private generateIncidentId(): string {
+        return `INC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    private loadDefaultPlaybooks(): void {
+        // Load default response playbooks
+        const defaultPlaybooks: ResponsePlaybook[] = [
+            {
+                id: 'malware_response_v1',
+                name: 'Malware Response Playbook',
+                description: 'Automated response to malware incidents',
+                version: '1.0',
+                applicableCategories: ['malware'],
+                severity: ['critical', 'high', 'medium'],
+                actions: [],
+                estimatedDuration: 30,
+                prerequisites: [],
+                tags: ['malware', 'automated'],
+                lastUpdated: new Date(),
+                createdBy: 'system',
+                enabled: true
+            }
+        ];
+
+        defaultPlaybooks.forEach(playbook => {
+            this.playbooks.set(playbook.id, playbook);
+        });
     }
 }
 
@@ -1029,7 +837,7 @@ interface ResponseMetrics {
     resolutionRate: number;
     escalationRate: number;
     activeIncidents: number;
-    recentTrends: any[];
+    recentTrends: TrendData[];
 }
 
 export type { ResponseConfig, ResponseExecution, ResponseMetrics };

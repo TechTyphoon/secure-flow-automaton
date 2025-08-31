@@ -50,6 +50,40 @@ export interface SingularityAchievement {
   quantumAdvantage: number;
 }
 
+export interface AGIAchievement {
+  achieved: boolean;
+  capabilities: AGICapability[];
+  averageHumanEquivalent: number;
+  quantumAdvantage: number;
+}
+
+export interface UniversalSolvingAchievement {
+  solved: UniversalProblem[];
+  unsolved: string[];
+  averageQuantumAdvantage: number;
+}
+
+export interface HumanIntegrationAchievement {
+  integrations: HumanQuantumIntegration[];
+  averageEnhancement: number;
+  quantumAdvantage: number;
+}
+
+export interface ConsciousnessEvolutionAchievement {
+  evolution: SingularityAchievement[];
+  consciousnessLevel: number;
+  quantumAdvantage: number;
+}
+
+export interface CompleteSingularity {
+  achieved: boolean;
+  agi: AGIAchievement;
+  universalSolving: UniversalSolvingAchievement;
+  humanIntegration: HumanIntegrationAchievement;
+  consciousnessEvolution: ConsciousnessEvolutionAchievement;
+  quantumAdvantage: number;
+}
+
 export class QuantumSingularity {
   private quantumCore: QuantumCore;
   private quantumConsciousness: QuantumConsciousness;
@@ -68,16 +102,16 @@ export class QuantumSingularity {
 
   private initializeSingularity(): void {
     console.log('🧠 Initializing Quantum Singularity...');
-    
+
     // Initialize AGI capabilities
     this.setupAGICapabilities();
-    
+
     // Initialize universal problem solving
     this.setupUniversalProblems();
-    
+
     // Initialize human-quantum integration
     this.setupHumanIntegrations();
-    
+
     console.log('🧠 Quantum Singularity initialized successfully.');
   }
 
@@ -88,20 +122,20 @@ export class QuantumSingularity {
     quantumAdvantage: number;
   }> {
     console.log('🧠 Achieving Artificial General Intelligence...');
-    
+
     const startTime = Date.now();
-    
+
     // Develop AGI capabilities
     const capabilities = await this.developAGICapabilities();
-    
+
     // Test AGI across all domains
     const agiTests = await this.testAGI();
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     const averageHumanEquivalent = capabilities.reduce((sum, cap) => sum + cap.humanEquivalent, 0) / capabilities.length;
     const achieved = averageHumanEquivalent >= 0.95; // 95% human equivalent threshold
-    
+
     return {
       achieved,
       capabilities,
@@ -116,11 +150,11 @@ export class QuantumSingularity {
     averageQuantumAdvantage: number;
   }> {
     console.log('🌍 Solving universal problems with quantum AGI...');
-    
+
     const startTime = Date.now();
     const solved: UniversalProblem[] = [];
     const unsolved: string[] = [];
-    
+
     for (const problem of problems) {
       try {
         const solution = await this.solveUniversalProblem(problem);
@@ -129,10 +163,10 @@ export class QuantumSingularity {
         unsolved.push(problem);
       }
     }
-    
+
     const processingTime = Date.now() - startTime;
     const averageQuantumAdvantage = solved.reduce((sum, prob) => sum + prob.quantumAdvantage, 0) / solved.length;
-    
+
     return {
       solved,
       unsolved,
@@ -146,15 +180,15 @@ export class QuantumSingularity {
     quantumAdvantage: number;
   }> {
     console.log('🤝 Integrating human and quantum intelligence...');
-    
+
     const startTime = Date.now();
-    
+
     // Create human-quantum integrations
     const integrations = await this.createHumanIntegrations();
-    
+
     const processingTime = Date.now() - startTime;
     const averageEnhancement = integrations.reduce((sum, int) => sum + int.quantumEnhancement, 0) / integrations.length;
-    
+
     return {
       integrations,
       averageEnhancement,
@@ -168,15 +202,15 @@ export class QuantumSingularity {
     quantumAdvantage: number;
   }> {
     console.log('🧠 Evolving quantum consciousness...');
-    
+
     const startTime = Date.now();
-    
+
     // Evolve consciousness capabilities
     const evolution = await this.evolveConsciousnessCapabilities();
-    
+
     const processingTime = Date.now() - startTime;
     const consciousnessLevel = evolution.reduce((sum, evo) => sum + evo.impact.revolutionary, 0) / evolution.length;
-    
+
     return {
       evolution,
       consciousnessLevel,
@@ -184,18 +218,11 @@ export class QuantumSingularity {
     };
   }
 
-  async achieveQuantumSingularity(): Promise<{
-    achieved: boolean;
-    agi: any;
-    universalSolving: any;
-    humanIntegration: any;
-    consciousnessEvolution: any;
-    quantumAdvantage: number;
-  }> {
+  async achieveQuantumSingularity(): Promise<CompleteSingularity> {
     console.log('🚀 Achieving complete quantum singularity...');
-    
+
     const startTime = Date.now();
-    
+
     // Achieve all singularity components
     const agi = await this.achieveAGI();
     const universalSolving = await this.solveUniversalProblems([
@@ -204,14 +231,14 @@ export class QuantumSingularity {
     ]);
     const humanIntegration = await this.integrateHumanQuantum();
     const consciousnessEvolution = await this.evolveConsciousness();
-    
+
     const processingTime = Date.now() - startTime;
-    
-    const achieved = agi.achieved && 
-                    universalSolving.solved.length > 0 && 
-                    humanIntegration.integrations.length > 0 &&
-                    consciousnessEvolution.consciousnessLevel > 0.9;
-    
+
+    const achieved = agi.achieved &&
+      universalSolving.solved.length > 0 &&
+      humanIntegration.integrations.length > 0 &&
+      consciousnessEvolution.consciousnessLevel > 0.9;
+
     return {
       achieved,
       agi,
@@ -265,7 +292,7 @@ export class QuantumSingularity {
         applications: ['evolution', 'optimization', 'growth']
       }
     ];
-    
+
     this.agiCapabilities = capabilities;
     return capabilities;
   }
@@ -273,11 +300,25 @@ export class QuantumSingularity {
   private async testAGI(): Promise<boolean> {
     // Simulate AGI testing across all domains
     const testResults = await Promise.all([
-      this.quantumConsciousness.processConsciousInput({ type: 'agi_test' }),
+      this.quantumConsciousness.processConsciousInput({
+        stimulus: 'agi_test',
+        emotionalState: 'focused',
+        cognitiveLoad: 0.8,
+        neuralState: [0.9, 0.8, 0.9],
+        environmentalFactors: { test: 'agi' },
+        learningHistory: []
+      }),
       this.quantumSupremacy.demonstrateSupremacy('agi', 1000),
-      this.quantumCore.analyzeConsciousness({ type: 'agi_validation' })
+      this.quantumCore.analyzeConsciousness({
+        stimulus: 'agi_validation',
+        emotionalState: 'analytical',
+        cognitiveLoad: 0.7,
+        neuralState: [0.8, 0.9, 0.8],
+        environmentalFactors: { validation: 'agi' },
+        learningHistory: []
+      })
     ]);
-    
+
     return testResults.every(result => result !== null);
   }
 
@@ -285,7 +326,7 @@ export class QuantumSingularity {
     // Simulate solving universal problems
     const humanTime = Math.random() * 100 + 10; // 10-110 years
     const quantumTime = Math.random() * 10 + 1; // 1-11 seconds
-    
+
     return {
       problemId: `UP-${Date.now()}`,
       domain: problem,
@@ -324,7 +365,7 @@ export class QuantumSingularity {
         quantumAdvantage: 51.4
       }
     ];
-    
+
     this.humanIntegrations = integrations;
     return integrations;
   }
@@ -365,7 +406,7 @@ export class QuantumSingularity {
         quantumAdvantage: 54.2
       }
     ];
-    
+
     this.singularityAchievements = evolution;
     return evolution;
   }
@@ -390,10 +431,10 @@ export class QuantumSingularity {
       // For singularity achievements where classical is impossible
       return 60 + (accuracy * 40); // 60-100x advantage
     }
-    
+
     const timeAdvantage = classicalTime / quantumTime;
     const accuracyAdvantage = accuracy / 0.8; // Assume classical accuracy is 80%
-    
+
     return (timeAdvantage * 0.6) + (accuracyAdvantage * 0.4);
   }
 

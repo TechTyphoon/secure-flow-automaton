@@ -1,6 +1,11 @@
+export interface ThreatDetectionSystem {
+    detectThreats: () => void;
+    respondToThreats: () => void;
+}
+
 export class AdvancedSecurity {
     private securityProtocols: string[];
-    private threatDetectionSystem: any;
+    private threatDetectionSystem: ThreatDetectionSystem;
 
     constructor() {
         this.securityProtocols = ['Quantum Encryption', 'Zero-Trust Architecture', 'Behavioral Analysis'];

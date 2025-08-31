@@ -1359,7 +1359,7 @@ interface ResponsePlaybook {
 
 interface PlaybookTrigger {
   type: string;
-  value: any;
+  value: TriggerValue;
 }
 
 interface PlaybookStep {
@@ -1444,7 +1444,7 @@ interface RiskFactor { factor: string; impact: number; }
 interface PrioritizedAction { action: string; priority: number; }
 interface DetectedAnomaly { anomalyId: string; type: string; }
 interface BaselineMetrics { averageEvents: number; peakHours: number[]; commonPatterns: string[]; normalRanges: Record<string, number>; }
-interface HuntingSearchResult { source: string; data: any; }
+interface HuntingSearchResult { source: string; data: HuntingData; }
 interface HuntingFinding { findingId: string; confidence: number; }
 interface ThreatCorrelation { correlationId: string; strength: number; }
 interface TimelineEvent { timestamp: string; event: string; }
@@ -1466,11 +1466,20 @@ interface ThreatActor { name: string; aliases: string[]; }
 interface TimeRange { start: string; end: string; }
 interface QueryLogic { query: string; language: string; }
 interface SearchTerm { term: string; field: string; }
-interface QueryFilter { field: string; operator: string; value: any; }
+interface QueryFilter { field: string; operator: string; value: FilterValue; }
 interface CorrelationRule { name: string; condition: string; }
-interface PlaybookConstraint { type: string; value: any; }
+interface PlaybookConstraint { type: string; value: ConstraintValue; }
 interface SecurityMetrics { [key: string]: number; }
 interface ThreatRelationship { type: string; target: string; }
+
+// Type definitions for threat intelligence
+type TriggerValue = string | number | boolean | Record<string, unknown>;
+
+type HuntingData = Record<string, unknown>;
+
+type FilterValue = string | number | boolean | string[] | Record<string, unknown>;
+
+type ConstraintValue = string | number | boolean | Record<string, unknown>;
 
 // Export singleton instance
 export const threatIntelligenceEngine = new AdvancedThreatIntelligenceEngine();

@@ -60,7 +60,7 @@ interface NotificationChannel {
   type: 'email' | 'sms' | 'slack' | 'webhook';
   name: string;
   enabled: boolean;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   lastUsed?: Date;
 }
 

@@ -125,7 +125,7 @@ export class DeviceSecurityIntegrationService {
    * Enroll a new device with comprehensive security setup
    */
   async enrollDevice(enrollmentRequest: DeviceEnrollmentRequest): Promise<{
-    identityResult: any;
+    identityResult: DeviceAuthenticationResult;
     edrResult: EDREndpoint;
     complianceResult: DeviceComplianceStatus;
     securityProfile: DeviceSecurityProfile;
@@ -867,8 +867,8 @@ export class DeviceSecurityIntegrationService {
 
   private generateDashboardRecommendations(
     overview: DeviceSecurityMetrics,
-    violations: any[],
-    remediation: any[]
+    violations: ComplianceViolation[],
+    remediation: RemediationAction[]
   ): DeviceSecurityDashboard['recommendations'] {
     const recommendations: DeviceSecurityDashboard['recommendations'] = [];
 
@@ -929,6 +929,23 @@ export class DeviceSecurityIntegrationService {
   getDeviceComplianceService(): DeviceComplianceService {
     return this.deviceComplianceService;
   }
+}
+
+// Type definitions for device security integration
+interface ComplianceViolation {
+  deviceId: string;
+  violationType: string;
+  severity: string;
+  description: string;
+  [key: string]: unknown;
+}
+
+interface RemediationAction {
+  deviceId: string;
+  actionType: string;
+  priority: string;
+  description: string;
+  [key: string]: unknown;
 }
 
 export default DeviceSecurityIntegrationService;

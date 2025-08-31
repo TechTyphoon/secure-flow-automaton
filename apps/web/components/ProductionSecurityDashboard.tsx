@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -58,13 +58,7 @@ const ProductionSecurityDashboard: React.FC = () => {
   const notificationService = new RealNotificationService();
   const monitoringService = new RealMonitoringService();
 
-  useEffect(() => {
-    if (securityScans) {
-      updateMetrics();
-    }
-  }, [securityScans]);
-
-  const updateMetrics = () => {
+  const updateMetrics = useCallback(() => {
     if (!securityScans) return;
 
     const sonarQube = securityScans.sonarQube;
@@ -103,7 +97,13 @@ const ProductionSecurityDashboard: React.FC = () => {
 
     setMetrics(newMetrics);
     setLastUpdate(new Date());
-  };
+  }, [securityScans]);
+
+  useEffect(() => {
+    if (securityScans) {
+      updateMetrics();
+    }
+  }, [securityScans, updateMetrics]);
 
   const handleRefresh = async () => {
     setIsLoading(true);

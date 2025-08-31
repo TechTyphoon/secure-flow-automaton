@@ -51,7 +51,7 @@ export class QuantumCryptographyService {
     console.log('✅ Quantum Cryptography Service initialized successfully');
   }
 
-  async verifyTransaction(transaction: any): Promise<CryptoVerificationResult> {
+  async verifyTransaction(transaction: TransactionData): Promise<CryptoVerificationResult> {
     if (!this.isInitialized) {
       await this.initialize();
     }
@@ -87,7 +87,7 @@ export class QuantumCryptographyService {
   }
 
   async encryptTransaction(
-    transaction: any,
+    transaction: TransactionData,
     securityLevel: 'standard' | 'high' | 'quantum_safe'
   ): Promise<EncryptionResult> {
     if (!this.isInitialized) {
@@ -223,7 +223,7 @@ export class QuantumCryptographyService {
   }
 
   private async performQuantumEncryption(
-    data: any,
+    data: TransactionData,
     keyId: string,
     algorithm: string
   ): Promise<string> {
@@ -240,4 +240,15 @@ export class QuantumCryptographyService {
     // Generate initialization vector
     return Math.random().toString(36).substr(2, 16);
   }
+}
+
+// Type definitions for quantum cryptography
+interface TransactionData {
+  id: string;
+  amount: number;
+  currency: string;
+  sender: string;
+  recipient: string;
+  timestamp: Date;
+  [key: string]: unknown;
 }

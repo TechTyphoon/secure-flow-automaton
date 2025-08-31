@@ -38,7 +38,7 @@
     "win32"
   ],
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 8080",
+    "dev": "vite --host localhost --port 8080",
     "dev:windows": "set NODE_OPTIONS=--max-old-space-size=4096 && vite --host 0.0.0.0 --port 8080",
     "dev:unix": "NODE_OPTIONS=--max-old-space-size=4096 vite --host 0.0.0.0 --port 8080",
     "build": "vite build",
@@ -172,6 +172,7 @@
     "lint-staged": "^15.5.2",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
+    "rollup-plugin-visualizer": "^6.0.3",
     "serve": "^14.2.4",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",

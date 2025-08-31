@@ -138,6 +138,154 @@ interface RiskFactor {
 type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 type AlertLevel = 'GREEN' | 'YELLOW' | 'ORANGE' | 'RED';
 
+// Data interfaces for context analysis
+interface ContextAnalysisData {
+  network?: unknown;
+  systems?: unknown[];
+  data?: unknown;
+  business?: unknown;
+  geography?: unknown;
+  threats?: unknown[];
+  landscape?: unknown;
+  surface?: unknown;
+  vulnerabilities?: unknown[];
+  intelligence?: unknown;
+  emerging?: unknown[];
+  assets?: unknown[];
+  relationships?: unknown[];
+  impact?: unknown;
+  flows?: unknown[];
+  dependencies?: unknown[];
+  exposure?: unknown;
+  compliance?: unknown;
+  operational?: unknown;
+  risk?: unknown;
+  situational?: unknown;
+}
+
+interface NetworkData {
+  segments?: unknown[];
+  connections?: unknown[];
+  zones?: unknown[];
+  perimeter?: unknown[];
+}
+
+interface SystemData {
+  total?: number;
+  types?: { [key: string]: number };
+  operatingSystems?: { [key: string]: number };
+  securityStatus?: { [key: string]: number };
+  lastUpdated?: number;
+}
+
+// Context Engine Capabilities Interface
+interface ContextEngineCapabilities {
+  contextAnalysis: {
+    environmentalAnalysis: boolean;
+    threatContextualization: boolean;
+    assetRiskAssessment: boolean;
+    complianceMapping: boolean;
+    operationalAwareness: boolean;
+  };
+  riskAssessment: {
+    multiFactorAnalysis: boolean;
+    businessImpactAssessment: boolean;
+    technicalRiskEvaluation: boolean;
+    trendAnalysis: boolean;
+    mitigationEffectiveness: boolean;
+  };
+  situationalAwareness: {
+    alertLevelDetermination: boolean;
+    criticalEventIdentification: boolean;
+    contextualRecommendations: boolean;
+    environmentalFactors: boolean;
+    situationSummary: boolean;
+  };
+  realTimeCapabilities: {
+    continuousContextUpdates: boolean;
+    adaptiveAnalysis: boolean;
+    contextComparison: boolean;
+    historicalAnalysis: boolean;
+  };
+}
+
+// Context Engine Statistics Interface
+interface ContextEngineStatistics {
+  totalContextsAnalyzed: number;
+  alertLevelDistribution: { [key: string]: number };
+  riskLevelDistribution: { [key: string]: number };
+  isInitialized: boolean;
+  capabilities: ContextEngineCapabilities;
+  timestamp: number;
+}
+
+// Compliance Data Interface
+interface ComplianceData {
+  frameworks?: ComplianceFramework[];
+  requirements?: ComplianceRequirement[];
+  auditStatus?: { overall: string };
+  violations?: ComplianceViolation[];
+  controlEffectiveness?: { overall: number };
+}
+
+// Operational Data Interface
+interface OperationalData {
+  securityPosture?: { level: string };
+  incidentHistory?: { total: number; recent: number };
+  responseCapability?: { level: string };
+  monitoringCoverage?: { percentage: number };
+  teamCapacity?: { utilization: number };
+}
+
+// Risk Comparison Interface
+interface RiskComparison {
+  from: string;
+  to: string;
+  change: 'INCREASED' | 'DECREASED' | 'UNCHANGED';
+  magnitude: number;
+}
+
+// Threat Comparison Interface
+interface ThreatComparison {
+  threatCountChange: number;
+  criticalThreatChange: number;
+  emergingThreatChange: number;
+}
+
+// Alert Comparison Interface
+interface AlertComparison {
+  from: AlertLevel;
+  to: AlertLevel;
+  change: 'ESCALATED' | 'DE-ESCALATED' | 'UNCHANGED';
+  magnitude: number;
+}
+
+// Alert Context Interface
+interface AlertContext {
+  source?: string;
+  category?: string;
+  affectedAssets?: string[];
+  riskLevel?: string;
+  mitigationSteps?: string[];
+  relatedThreats?: string[];
+  threatsCount?: number;
+  assetsAffected?: number;
+  complianceImpact?: string;
+  operationalImpact?: string;
+}
+
+// Context Comparison Interface
+interface ContextComparison {
+  riskChange: RiskComparison;
+  threatChange: ThreatComparison;
+  alertLevelChange: AlertComparison;
+  timeline: {
+    from: number;
+    to: number;
+    duration: number;
+  };
+}
+
 // Context Analysis Engine
 class ContextAnalysisEngine {
   private contextHistory: Map<string, SecurityContext[]> = new Map();
@@ -149,7 +297,7 @@ class ContextAnalysisEngine {
     this.initializeAlertThresholds();
   }
 
-  analyzeEnvironmentContext(data: any): EnvironmentContext {
+  analyzeEnvironmentContext(data: ContextAnalysisData): EnvironmentContext {
     const networkTopology = this.analyzeNetworkTopology(data.network || {});
     const systemInventory = this.analyzeSystemInventory(data.systems || []);
     const dataClassification = this.analyzeDataClassification(data.data || {});
@@ -167,7 +315,7 @@ class ContextAnalysisEngine {
     };
   }
 
-  analyzeThreatContext(data: any): ThreatContext {
+  analyzeThreatContext(data: ContextAnalysisData): ThreatContext {
     const currentThreats = this.identifyCurrentThreats(data.threats || []);
     const threatLandscape = this.assessThreatLandscape(data.landscape || {});
     const attackSurface = this.calculateAttackSurface(data.surface || {});
@@ -185,7 +333,7 @@ class ContextAnalysisEngine {
     };
   }
 
-  analyzeAssetContext(data: any): AssetContext {
+  analyzeAssetContext(data: ContextAnalysisData): AssetContext {
     const criticalAssets = this.identifyCriticalAssets(data.assets || []);
     const assetRelationships = this.mapAssetRelationships(data.relationships || []);
     const businessImpact = this.assessBusinessImpact(data.impact || {});
@@ -250,7 +398,7 @@ class ContextAnalysisEngine {
     };
   }
 
-  private analyzeNetworkTopology(networkData: any): NetworkTopology {
+  private analyzeNetworkTopology(networkData: NetworkData): NetworkTopology {
     const segments: NetworkSegment[] = [];
     const connectivity: NetworkConnection[] = [];
     const securityZones: SecurityZone[] = [];
@@ -259,13 +407,14 @@ class ContextAnalysisEngine {
     // Analyze network segments
     if (networkData.segments) {
       for (const segmentData of networkData.segments) {
+        const seg = segmentData as { id?: string; name?: string; type?: string; ipRanges?: string[]; assets?: string[] };
         segments.push({
-          id: segmentData.id || `segment_${segments.length}`,
-          name: segmentData.name || `Segment ${segments.length}`,
-          type: segmentData.type || 'INTERNAL',
-          ipRanges: segmentData.ipRanges || [],
+          id: seg.id || `segment_${segments.length}`,
+          name: seg.name || `Segment ${segments.length}`,
+          type: (seg.type as 'DMZ' | 'INTERNAL' | 'EXTERNAL' | 'MANAGEMENT' | 'GUEST') || 'INTERNAL',
+          ipRanges: seg.ipRanges || [],
           securityLevel: this.assessSegmentSecurity(segmentData),
-          assets: segmentData.assets || []
+          assets: seg.assets || []
         });
       }
     }
@@ -295,18 +444,19 @@ class ContextAnalysisEngine {
     return { segments, connectivity, securityZones, perimeter };
   }
 
-  private analyzeSystemInventory(systemsData: any[]): SystemInventory {
+  private analyzeSystemInventory(systemsData: unknown[]): SystemInventory {
     const systemTypes: { [type: string]: number } = {};
     const operatingSystems: { [os: string]: number } = {};
     const securityStatus: { [status: string]: number } = {};
 
     for (const system of systemsData) {
+      const sys = system as { type?: string; os?: string };
       // Count system types
-      const type = system.type || 'Unknown';
+      const type = sys.type || 'Unknown';
       systemTypes[type] = (systemTypes[type] || 0) + 1;
 
       // Count operating systems
-      const os = system.os || 'Unknown';
+      const os = sys.os || 'Unknown';
       operatingSystems[os] = (operatingSystems[os] || 0) + 1;
 
       // Count security status
@@ -323,19 +473,20 @@ class ContextAnalysisEngine {
     };
   }
 
-  private identifyCurrentThreats(threatsData: any[]): ActiveThreat[] {
+  private identifyCurrentThreats(threatsData: unknown[]): ActiveThreat[] {
     const threats: ActiveThreat[] = [];
 
     for (const threatData of threatsData) {
+      const threat = threatData as { id?: string; type?: string; severity?: string; status?: string; affectedAssets?: string[]; firstDetected?: number; lastActivity?: number; confidence?: number };
       threats.push({
-        id: threatData.id || `threat_${threats.length}`,
-        type: threatData.type || 'Unknown',
-        severity: threatData.severity || 'MEDIUM',
-        status: threatData.status || 'ACTIVE',
-        affectedAssets: threatData.affectedAssets || [],
-        firstDetected: threatData.firstDetected || Date.now(),
-        lastActivity: threatData.lastActivity || Date.now(),
-        confidence: threatData.confidence || 0.7
+        id: threat.id || `threat_${threats.length}`,
+        type: threat.type || 'Unknown',
+        severity: (threat.severity as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL') || 'MEDIUM',
+        status: (threat.status as 'ACTIVE' | 'CONTAINED' | 'RESOLVED') || 'ACTIVE',
+        affectedAssets: threat.affectedAssets || [],
+        firstDetected: threat.firstDetected || Date.now(),
+        lastActivity: threat.lastActivity || Date.now(),
+        confidence: threat.confidence || 0.7
       });
     }
 
@@ -345,22 +496,23 @@ class ContextAnalysisEngine {
     });
   }
 
-  private identifyCriticalAssets(assetsData: any[]): CriticalAsset[] {
+  private identifyCriticalAssets(assetsData: unknown[]): CriticalAsset[] {
     const assets: CriticalAsset[] = [];
 
     for (const assetData of assetsData) {
+      const asset = assetData as { id?: string; name?: string; type?: string; dependencies?: string[]; threats?: string[] };
       const businessValue = this.calculateBusinessValue(assetData);
       const riskScore = this.calculateAssetRiskScore(assetData);
 
       if (businessValue > 0.7 || riskScore > 0.6) {
         assets.push({
-          id: assetData.id || `asset_${assets.length}`,
-          name: assetData.name || `Asset ${assets.length}`,
-          type: assetData.type || 'Unknown',
+          id: asset.id || `asset_${assets.length}`,
+          name: asset.name || `Asset ${assets.length}`,
+          type: asset.type || 'Unknown',
           businessValue,
           securityLevel: this.determineAssetSecurityLevel(businessValue, riskScore),
-          dependencies: assetData.dependencies || [],
-          threats: assetData.threats || [],
+          dependencies: asset.dependencies || [],
+          threats: asset.threats || [],
           riskScore
         });
       }
@@ -419,7 +571,7 @@ class ContextAnalysisEngine {
     const vulnerableSystems = Object.entries(environment.systemInventory.securityStatus)
       .filter(([status]) => status === 'Vulnerable')
       .reduce((sum, [, count]) => sum + count, 0);
-    
+
     if (vulnerableSystems > 0) {
       factors.push({
         factor: 'System Vulnerabilities',
@@ -483,7 +635,7 @@ class ContextAnalysisEngine {
     }
 
     // Escalate based on active critical threats
-    const criticalThreats = threats.currentThreats.filter(t => 
+    const criticalThreats = threats.currentThreats.filter(t =>
       t.severity === 'CRITICAL' && t.status === 'ACTIVE'
     );
 
@@ -546,7 +698,7 @@ class ContextAnalysisEngine {
 
     // High-priority recommendations based on risk factors
     const highImpactFactors = risk.riskFactors.filter(f => f.impact === 'HIGH');
-    
+
     for (const factor of highImpactFactors) {
       for (const mitigation of factor.mitigation) {
         recommendations.push({
@@ -565,7 +717,7 @@ class ContextAnalysisEngine {
     }
 
     // Threat-specific recommendations
-    const activeCriticalThreats = threats.currentThreats.filter(t => 
+    const activeCriticalThreats = threats.currentThreats.filter(t =>
       t.severity === 'CRITICAL' && t.status === 'ACTIVE'
     );
 
@@ -586,7 +738,7 @@ class ContextAnalysisEngine {
 
     // Asset protection recommendations
     const highRiskAssets = assets.criticalAssets.filter(a => a.riskScore > 0.8);
-    
+
     if (highRiskAssets.length > 0) {
       recommendations.push({
         id: `rec_${recommendations.length}`,
@@ -623,48 +775,52 @@ class ContextAnalysisEngine {
     this.alertThresholds.set('riskScore', 0.7);
   }
 
-  private assessSegmentSecurity(segmentData: any): 'HIGH' | 'MEDIUM' | 'LOW' {
+  private assessSegmentSecurity(segmentData: unknown): 'HIGH' | 'MEDIUM' | 'LOW' {
+    const seg = segmentData as { type?: string; firewallRules?: unknown[] };
     // Simple security assessment based on segment type and configuration
-    if (segmentData.type === 'EXTERNAL') return 'LOW';
-    if (segmentData.type === 'DMZ') return 'MEDIUM';
-    if (segmentData.firewallRules?.length > 0) return 'HIGH';
+    if (seg.type === 'EXTERNAL') return 'LOW';
+    if (seg.type === 'DMZ') return 'MEDIUM';
+    if (seg.firewallRules?.length > 0) return 'HIGH';
     return 'MEDIUM';
   }
 
-  private assessSystemSecurity(system: any): string {
-    if (system.vulnerabilities?.length > 5) return 'Vulnerable';
-    if (system.lastPatched && Date.now() - system.lastPatched > 30 * 24 * 60 * 60 * 1000) return 'Outdated';
-    if (system.securityScore > 0.8) return 'Secure';
+  private assessSystemSecurity(system: unknown): string {
+    const sys = system as { vulnerabilities?: unknown[]; lastPatched?: number; securityScore?: number };
+    if (sys.vulnerabilities?.length > 5) return 'Vulnerable';
+    if (sys.lastPatched && Date.now() - sys.lastPatched > 30 * 24 * 60 * 60 * 1000) return 'Outdated';
+    if (sys.securityScore > 0.8) return 'Secure';
     return 'Moderate';
   }
 
-  private calculateBusinessValue(assetData: any): number {
+  private calculateBusinessValue(assetData: unknown): number {
+    const asset = assetData as { criticality?: string; revenueImpact?: string; userImpact?: number; complianceRequired?: boolean };
     let value = 0.5; // Base value
 
     // Business criticality factors
-    if (assetData.criticality === 'HIGH') value += 0.3;
-    if (assetData.criticality === 'MEDIUM') value += 0.1;
-    
+    if (asset.criticality === 'HIGH') value += 0.3;
+    if (asset.criticality === 'MEDIUM') value += 0.1;
+
     // Revenue impact
-    if (assetData.revenueImpact === 'HIGH') value += 0.2;
-    
+    if (asset.revenueImpact === 'HIGH') value += 0.2;
+
     // User impact
-    if (assetData.userImpact > 1000) value += 0.2;
-    
+    if (asset.userImpact > 1000) value += 0.2;
+
     // Compliance requirements
-    if (assetData.complianceRequired) value += 0.1;
+    if (asset.complianceRequired) value += 0.1;
 
     return Math.min(1.0, value);
   }
 
-  private calculateAssetRiskScore(assetData: any): number {
+  private calculateAssetRiskScore(assetData: unknown): number {
+    const asset = assetData as { internetFacing?: boolean; vulnerabilities?: unknown[]; accessControls?: string; encryption?: boolean };
     let risk = 0.3; // Base risk
 
     // Exposure factors
-    if (assetData.internetFacing) risk += 0.3;
-    if (assetData.vulnerabilities?.length > 0) risk += 0.2;
-    if (assetData.accessControls === 'WEAK') risk += 0.2;
-    if (assetData.encryption === false) risk += 0.1;
+    if (asset.internetFacing) risk += 0.3;
+    if (asset.vulnerabilities?.length > 0) risk += 0.2;
+    if (asset.accessControls === 'WEAK') risk += 0.2;
+    if (asset.encryption === false) risk += 0.1;
 
     return Math.min(1.0, risk);
   }
@@ -677,12 +833,12 @@ class ContextAnalysisEngine {
 
   private calculateThreatTrend(threats: ActiveThreat[]): 'INCREASING' | 'STABLE' | 'DECREASING' {
     // Simple trend calculation based on recent activity
-    const recentThreats = threats.filter(t => 
+    const recentThreats = threats.filter(t =>
       Date.now() - t.firstDetected < 7 * 24 * 60 * 60 * 1000
     ).length;
-    
+
     const baseline = this.baselineMetrics.get('avgThreats') || 5;
-    
+
     if (recentThreats > baseline * 1.2) return 'INCREASING';
     if (recentThreats < baseline * 0.8) return 'DECREASING';
     return 'STABLE';
@@ -702,37 +858,40 @@ class ContextAnalysisEngine {
   private estimateEffort(mitigation: string): 'LOW' | 'MEDIUM' | 'HIGH' {
     const highEffortMitigations = ['Network Segmentation', 'System Replacement', 'Architecture Redesign'];
     const mediumEffortMitigations = ['Patch Management', 'Access Controls', 'Monitoring Enhancement'];
-    
+
     if (highEffortMitigations.some(m => mitigation.includes(m))) return 'HIGH';
     if (mediumEffortMitigations.some(m => mitigation.includes(m))) return 'MEDIUM';
     return 'LOW';
   }
 
   // Additional required methods for completeness
-  private analyzeDataClassification(data: any): DataClassification {
+  private analyzeDataClassification(data: unknown): DataClassification {
+    const d = data as { confidential?: number; restricted?: number; internal?: number; public?: number; totalClassified?: number };
     return {
-      confidential: data.confidential || 0,
-      restricted: data.restricted || 0,
-      internal: data.internal || 0,
-      public: data.public || 0,
-      totalClassified: data.totalClassified || 0
+      confidential: d.confidential || 0,
+      restricted: d.restricted || 0,
+      internal: d.internal || 0,
+      public: d.public || 0,
+      totalClassified: d.totalClassified || 0
     };
   }
 
-  private assessBusinessCriticality(business: any): BusinessCriticality {
+  private assessBusinessCriticality(business: unknown): BusinessCriticality {
+    const b = business as { level?: string; revenueImpact?: number; operationalImpact?: string; complianceImpact?: string };
     return {
-      level: business.level || 'MEDIUM',
-      revenueImpact: business.revenueImpact || 0,
-      operationalImpact: business.operationalImpact || 'MEDIUM',
-      complianceImpact: business.complianceImpact || 'LOW'
+      level: (b.level as 'LOW' | 'MEDIUM' | 'HIGH') || 'MEDIUM',
+      revenueImpact: b.revenueImpact || 0,
+      operationalImpact: (b.operationalImpact as 'LOW' | 'MEDIUM' | 'HIGH') || 'MEDIUM',
+      complianceImpact: (b.complianceImpact as 'LOW' | 'MEDIUM' | 'HIGH') || 'LOW'
     };
   }
 
-  private analyzeGeographicDistribution(geography: any): GeographicInfo {
+  private analyzeGeographicDistribution(geography: unknown): GeographicInfo {
+    const geo = geography as { regions?: string[]; dataResidency?: { [region: string]: string[] }; crossBorderFlows?: boolean };
     return {
-      regions: geography.regions || ['US-EAST'],
-      dataResidency: geography.dataResidency || {},
-      crossBorderFlows: geography.crossBorderFlows || false
+      regions: geo.regions || ['US-EAST'],
+      dataResidency: geo.dataResidency || {},
+      crossBorderFlows: geo.crossBorderFlows || false
     };
   }
 
@@ -762,7 +921,7 @@ class ContextAnalysisEngine {
   }
 
   // Additional stub implementations for required methods
-  private assessThreatLandscape(landscape: any): ThreatLandscape {
+  private assessThreatLandscape(landscape: unknown): ThreatLandscape {
     return {
       overallThreatLevel: 'MEDIUM',
       dominantThreats: ['Malware', 'Phishing'],
@@ -772,90 +931,106 @@ class ContextAnalysisEngine {
     };
   }
 
-  private calculateAttackSurface(surface: any): AttackSurface {
+  private calculateAttackSurface(surface: unknown): AttackSurface {
+    const surf = surface as { totalEndpoints?: number; internetFacingAssets?: number; vulnerableServices?: number; riskScore?: number };
     return {
-      totalEndpoints: surface.totalEndpoints || 100,
-      internetFacingAssets: surface.internetFacingAssets || 10,
-      vulnerableServices: surface.vulnerableServices || 5,
-      riskScore: surface.riskScore || 0.6
+      totalEndpoints: surf.totalEndpoints || 100,
+      internetFacingAssets: surf.internetFacingAssets || 10,
+      vulnerableServices: surf.vulnerableServices || 5,
+      riskScore: surf.riskScore || 0.6
     };
   }
 
-  private assessVulnerabilityExposure(vulnerabilities: any[]): VulnerabilityExposure {
+  private assessVulnerabilityExposure(vulnerabilities: unknown[]): VulnerabilityExposure {
     return {
       totalVulnerabilities: vulnerabilities.length,
-      criticalVulnerabilities: vulnerabilities.filter(v => v.severity === 'CRITICAL').length,
-      exploitableVulnerabilities: vulnerabilities.filter(v => v.exploitable).length,
+      criticalVulnerabilities: vulnerabilities.filter(v => (v as { severity?: string }).severity === 'CRITICAL').length,
+      exploitableVulnerabilities: vulnerabilities.filter(v => (v as { exploitable?: boolean }).exploitable).length,
       exposureScore: 0.4
     };
   }
 
-  private processThreatIntelligence(intelligence: any): ThreatIntelligence {
+  private processThreatIntelligence(intelligence: unknown): ThreatIntelligence {
+    const intel = intelligence as { feeds?: string[]; indicators?: string[] };
     return {
-      feeds: intelligence.feeds || [],
-      indicators: intelligence.indicators || [],
+      feeds: intel.feeds || [],
+      indicators: intel.indicators || [],
       lastUpdated: Date.now(),
       reliability: 0.8
     };
   }
 
-  private identifyEmergingThreats(emerging: any[]): EmergingThreat[] {
-    return emerging.map((threat, index) => ({
-      id: `emerging_${index}`,
-      name: threat.name || `Emerging Threat ${index}`,
-      description: threat.description || 'New threat detected',
-      confidence: threat.confidence || 0.7,
-      firstSeen: threat.firstSeen || Date.now(),
-      indicators: threat.indicators || []
-    }));
+  private identifyEmergingThreats(emerging: unknown[]): EmergingThreat[] {
+    return emerging.map((threat, index) => {
+      const t = threat as { name?: string; description?: string; confidence?: number; firstSeen?: number; indicators?: string[] };
+      return {
+        id: `emerging_${index}`,
+        name: t.name || `Emerging Threat ${index}`,
+        description: t.description || 'New threat detected',
+        confidence: t.confidence || 0.7,
+        firstSeen: t.firstSeen || Date.now(),
+        indicators: t.indicators || []
+      };
+    });
   }
 
-  private mapAssetRelationships(relationships: any[]): AssetRelationship[] {
-    return relationships.map((rel, index) => ({
-      id: `rel_${index}`,
-      sourceAsset: rel.source,
-      targetAsset: rel.target,
-      relationshipType: rel.type || 'DEPENDS_ON',
-      strength: rel.strength || 0.5
-    }));
+  private mapAssetRelationships(relationships: unknown[]): AssetRelationship[] {
+    return relationships.map((rel, index) => {
+      const r = rel as { source?: string; target?: string; type?: string; strength?: number };
+      return {
+        id: `rel_${index}`,
+        sourceAsset: r.source || '',
+        targetAsset: r.target || '',
+        relationshipType: r.type || 'DEPENDS_ON',
+        strength: r.strength || 0.5
+      };
+    });
   }
 
-  private assessBusinessImpact(impact: any): BusinessImpact {
+  private assessBusinessImpact(impact: unknown): BusinessImpact {
+    const imp = impact as { financial?: number; operational?: string; reputational?: string; regulatory?: string };
     return {
-      financial: impact.financial || 0,
-      operational: impact.operational || 'LOW',
-      reputational: impact.reputational || 'LOW',
-      regulatory: impact.regulatory || 'LOW'
+      financial: imp.financial || 0,
+      operational: (imp.operational as 'LOW' | 'MEDIUM' | 'HIGH') || 'LOW',
+      reputational: (imp.reputational as 'LOW' | 'MEDIUM' | 'HIGH') || 'LOW',
+      regulatory: (imp.regulatory as 'LOW' | 'MEDIUM' | 'HIGH') || 'LOW'
     };
   }
 
-  private analyzeDataFlows(flows: any[]): DataFlow[] {
-    return flows.map((flow, index) => ({
-      id: `flow_${index}`,
-      source: flow.source,
-      destination: flow.destination,
-      dataType: flow.dataType || 'Unknown',
-      volume: flow.volume || 0,
-      encrypted: flow.encrypted || false
-    }));
+  private analyzeDataFlows(flows: unknown[]): DataFlow[] {
+    return flows.map((flow, index) => {
+      const f = flow as { source?: string; destination?: string; dataType?: string; volume?: number; encrypted?: boolean };
+      return {
+        id: `flow_${index}`,
+        source: f.source || '',
+        destination: f.destination || '',
+        dataType: f.dataType || 'Unknown',
+        volume: f.volume || 0,
+        encrypted: f.encrypted || false
+      };
+    });
   }
 
-  private mapAssetDependencies(dependencies: any[]): AssetDependency[] {
-    return dependencies.map((dep, index) => ({
-      id: `dep_${index}`,
-      asset: dep.asset,
-      dependsOn: dep.dependsOn,
-      criticality: dep.criticality || 'MEDIUM',
-      type: dep.type || 'SERVICE'
-    }));
+  private mapAssetDependencies(dependencies: unknown[]): AssetDependency[] {
+    return dependencies.map((dep, index) => {
+      const d = dep as { asset?: string; dependsOn?: string; criticality?: string; type?: string };
+      return {
+        id: `dep_${index}`,
+        asset: d.asset || '',
+        dependsOn: d.dependsOn || '',
+        criticality: (d.criticality as 'LOW' | 'MEDIUM' | 'HIGH') || 'MEDIUM',
+        type: d.type || 'SERVICE'
+      };
+    });
   }
 
-  private assessAssetExposure(exposure: any): AssetExposure {
+  private assessAssetExposure(exposure: unknown): AssetExposure {
+    const exp = exposure as { internetFacing?: number; publicServices?: number; vulnerableServices?: number; exposureScore?: number };
     return {
-      internetFacing: exposure.internetFacing || 0,
-      publicServices: exposure.publicServices || 0,
-      vulnerableServices: exposure.vulnerableServices || 0,
-      exposureScore: exposure.exposureScore || 0.3
+      internetFacing: exp.internetFacing || 0,
+      publicServices: exp.publicServices || 0,
+      vulnerableServices: exp.vulnerableServices || 0,
+      exposureScore: exp.exposureScore || 0.3
     };
   }
 
@@ -899,7 +1074,7 @@ class ContextAnalysisEngine {
 
   private identifyCriticalEvents(threats: ThreatContext, assets: AssetContext): CriticalEvent[] {
     const events: CriticalEvent[] = [];
-    
+
     // Convert critical threats to events
     for (const threat of threats.currentThreats.filter(t => t.severity === 'CRITICAL')) {
       events.push({
@@ -994,15 +1169,15 @@ export class SecurityContextEngine extends EventEmitter {
   private async initialize(): Promise<void> {
     try {
       this.isInitialized = true;
-      
+
       // Start periodic context updates
       this.startPeriodicUpdates();
-      
+
       this.emit('initialized', {
         capabilities: this.getCapabilities(),
         timestamp: Date.now()
       });
-      
+
       console.log('🎯 Security Context Engine initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Context Engine:', error);
@@ -1010,7 +1185,7 @@ export class SecurityContextEngine extends EventEmitter {
     }
   }
 
-  async analyzeSecurityContext(data: any, contextId?: string): Promise<SecurityContext> {
+  async analyzeSecurityContext(data: ContextAnalysisData, contextId?: string): Promise<SecurityContext> {
     if (!this.isInitialized) {
       throw new Error('Context Engine not initialized');
     }
@@ -1048,7 +1223,7 @@ export class SecurityContextEngine extends EventEmitter {
 
       // Cache the context
       this.contextCache.set(id, context);
-      
+
       // Limit cache size
       if (this.contextCache.size > 50) {
         const firstKey = this.contextCache.keys().next().value;
@@ -1078,7 +1253,7 @@ export class SecurityContextEngine extends EventEmitter {
       .sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  compareContexts(contextId1: string, contextId2: string): any {
+  compareContexts(contextId1: string, contextId2: string): ContextComparison {
     const context1 = this.contextCache.get(contextId1);
     const context2 = this.contextCache.get(contextId2);
 
@@ -1101,7 +1276,7 @@ export class SecurityContextEngine extends EventEmitter {
     };
   }
 
-  getCapabilities(): any {
+  getCapabilities(): ContextEngineCapabilities {
     return {
       contextAnalysis: {
         environmentalAnalysis: true,
@@ -1133,7 +1308,7 @@ export class SecurityContextEngine extends EventEmitter {
     };
   }
 
-  getStatistics(): any {
+  getStatistics(): ContextEngineStatistics {
     const alertLevelDistribution: { [key: string]: number } = {
       'RED': 0, 'ORANGE': 0, 'YELLOW': 0, 'GREEN': 0
     };
@@ -1167,7 +1342,7 @@ export class SecurityContextEngine extends EventEmitter {
     }, 5 * 60 * 1000);
   }
 
-  private analyzeComplianceContext(complianceData: any): ComplianceContext {
+  private analyzeComplianceContext(complianceData: ComplianceData): ComplianceContext {
     return {
       frameworks: complianceData.frameworks || [],
       requirements: complianceData.requirements || [],
@@ -1177,7 +1352,7 @@ export class SecurityContextEngine extends EventEmitter {
     };
   }
 
-  private analyzeOperationalContext(operationalData: any): OperationalContext {
+  private analyzeOperationalContext(operationalData: OperationalData): OperationalContext {
     return {
       securityPosture: operationalData.securityPosture || { level: 'MEDIUM' },
       incidentHistory: operationalData.incidentHistory || { total: 0, recent: 0 },
@@ -1187,10 +1362,10 @@ export class SecurityContextEngine extends EventEmitter {
     };
   }
 
-  private compareRiskLevels(risk1: RiskAssessment, risk2: RiskAssessment): any {
+  private compareRiskLevels(risk1: RiskAssessment, risk2: RiskAssessment): RiskComparison {
     const riskOrder = { 'LOW': 1, 'MEDIUM': 2, 'HIGH': 3, 'CRITICAL': 4 };
     const change = riskOrder[risk2.overallRisk] - riskOrder[risk1.overallRisk];
-    
+
     return {
       from: risk1.overallRisk,
       to: risk2.overallRisk,
@@ -1199,19 +1374,19 @@ export class SecurityContextEngine extends EventEmitter {
     };
   }
 
-  private compareThreatLevels(threats1: ThreatContext, threats2: ThreatContext): any {
+  private compareThreatLevels(threats1: ThreatContext, threats2: ThreatContext): ThreatComparison {
     return {
       threatCountChange: threats2.currentThreats.length - threats1.currentThreats.length,
       criticalThreatChange: threats2.currentThreats.filter(t => t.severity === 'CRITICAL').length -
-                           threats1.currentThreats.filter(t => t.severity === 'CRITICAL').length,
+        threats1.currentThreats.filter(t => t.severity === 'CRITICAL').length,
       emergingThreatChange: threats2.emergingThreats.length - threats1.emergingThreats.length
     };
   }
 
-  private compareAlertLevels(alert1: AlertLevel, alert2: AlertLevel): any {
+  private compareAlertLevels(alert1: AlertLevel, alert2: AlertLevel): AlertComparison {
     const alertOrder = { 'GREEN': 1, 'YELLOW': 2, 'ORANGE': 3, 'RED': 4 };
     const change = alertOrder[alert2] - alertOrder[alert1];
-    
+
     return {
       from: alert1,
       to: alert2,
@@ -1392,8 +1567,12 @@ interface AuditStatus {
 interface ComplianceViolation {
   id: string;
   type: string;
-  severity: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   description: string;
+  framework?: string;
+  requirement?: string;
+  status?: 'OPEN' | 'RESOLVED' | 'MITIGATED';
+  timestamp?: number;
 }
 
 interface ControlEffectiveness {
@@ -1475,7 +1654,7 @@ interface ContextualAlert {
   title: string;
   message: string;
   timestamp: number;
-  context: any;
+  context: AlertContext;
   recommendations: string[];
 }
 

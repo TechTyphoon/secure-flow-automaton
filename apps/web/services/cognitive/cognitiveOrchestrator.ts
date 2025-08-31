@@ -1,3 +1,4 @@
+
 /**
  * Cognitive Security Orchestrator
  * Coordinates and orchestrates all cognitive security services for unified AI-driven operations
@@ -36,12 +37,21 @@ interface CognitiveInteraction {
   id: string;
   timestamp: number;
   type: InteractionType;
-  input: any;
-  output: any;
+  input: string | object;
+  output: string | object | SecurityReport;
   processingTime: number;
   servicesUsed: string[];
   confidence: number;
   feedback?: InteractionFeedback;
+}
+
+interface InteractionFeedback {
+  rating: number; // 1-5
+  helpful: boolean;
+  accurate: boolean;
+  complete: boolean;
+  comments?: string;
+  suggestions?: string[];
 }
 
 interface UserPreferences {
@@ -89,13 +99,129 @@ interface SessionMetadata {
   tags: string[];
 }
 
-interface InteractionFeedback {
-  rating: number; // 1-5
-  helpful: boolean;
-  accurate: boolean;
-  complete: boolean;
-  comments?: string;
-  suggestions?: string[];
+interface WorkflowParameters {
+  text?: string;
+  data?: unknown;
+  entities?: string[];
+  entity?: KnowledgeGraphEntity;
+  entityId?: string;
+  depth?: number;
+  query?: string;
+  reportType?: ReportType;
+  options?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface KnowledgeGraphEntity {
+  type: string;
+  id: string;
+  name?: string;
+}
+
+interface WorkflowContext {
+  [key: string]: unknown;
+  session?: CognitiveSession;
+}
+
+interface PipelineInput {
+  [key: string]: unknown;
+  timestamp?: number;
+  processed?: boolean;
+  inputType?: string;
+  threats?: unknown[];
+  query?: string;
+  analysisType?: string;
+  securityData?: unknown;
+  reportType?: string;
+  recipients?: string[];
+  format?: string[];
+  includeCharts?: boolean;
+  includeTables?: boolean;
+  threatId?: string;
+  threat?: { id: string; type?: string; severity?: string };
+  description?: string;
+  framework?: string;
+  workflowId?: string;
+  parameters?: WorkflowParameters;
+}
+
+interface PipelineOutput {
+  [key: string]: unknown;
+  executionId?: string;
+  result?: unknown;
+  processingTime?: number;
+  stepsExecuted?: number;
+  summary?: string;
+  details?: unknown;
+  metadata?: {
+    processingTime?: number;
+    confidence?: number;
+    version?: string;
+  };
+}
+
+interface ServiceStatus {
+  nlpEngine: string;
+  securityAssistant: string;
+  knowledgeGraph: string;
+  contextEngine: string;
+  reportGenerator: string;
+}
+
+interface OrchestratorCapabilities {
+  cognitiveServices: {
+    naturalLanguageProcessing: boolean;
+    conversationalAI: boolean;
+    knowledgeGraphQueries: boolean;
+    contextualAnalysis: boolean;
+    reportGeneration: boolean;
+  };
+  orchestrationFeatures: {
+    sessionManagement: boolean;
+    workflowExecution: boolean;
+    cognitivePipelines: boolean;
+    performanceMonitoring: boolean;
+    serviceIntegration: boolean;
+  };
+  interactionTypes: string[];
+  supportedFormats: string[];
+  securityClearanceLevels: string[];
+}
+
+interface OrchestratorStatistics {
+  activeSessions: number;
+  availableWorkflows: number;
+  performanceMetrics: Record<string, unknown>;
+  serviceStatus: ServiceStatus;
+  isInitialized: boolean;
+  timestamp: number;
+}
+
+interface ThreatInfo {
+  id?: string;
+  properties?: {
+    name?: string;
+  };
+}
+
+interface MitreInfo {
+  techniques?: string[];
+  tactics?: string[];
+  mitigations?: string[];
+}
+
+interface WorkflowResult {
+  stepId: string;
+  result: unknown;
+  duration: number;
+}
+
+interface PerformanceMetrics {
+  interactions_processed: number;
+  average_processing_time: number;
+  service_usage: Map<string, number>;
+  error_count: number;
+  session_count: number;
 }
 
 interface CognitiveWorkflow {
@@ -113,7 +239,7 @@ interface CognitiveWorkflow {
 interface WorkflowTrigger {
   type: 'EVENT' | 'SCHEDULE' | 'MANUAL' | 'THRESHOLD';
   condition: string;
-  parameters: { [key: string]: any };
+  parameters: WorkflowParameters;
 }
 
 interface WorkflowStep {
@@ -121,7 +247,7 @@ interface WorkflowStep {
   type: 'NLP' | 'CONTEXT_ANALYSIS' | 'KNOWLEDGE_QUERY' | 'REPORT_GENERATION' | 'NOTIFICATION';
   service: string;
   method: string;
-  parameters: { [key: string]: any };
+  parameters: WorkflowParameters;
   dependencies: string[];
   timeout: number;
 }
@@ -147,12 +273,12 @@ interface WorkflowSchedule {
   timezone: string;
 }
 
-type InteractionType = 
-  | 'QUERY' 
-  | 'ANALYSIS_REQUEST' 
-  | 'REPORT_GENERATION' 
-  | 'CONTEXT_UPDATE' 
-  | 'THREAT_INVESTIGATION' 
+type InteractionType =
+  | 'QUERY'
+  | 'ANALYSIS_REQUEST'
+  | 'REPORT_GENERATION'
+  | 'CONTEXT_UPDATE'
+  | 'THREAT_INVESTIGATION'
   | 'COMPLIANCE_CHECK'
   | 'WORKFLOW_EXECUTION';
 
@@ -171,7 +297,7 @@ class CognitivePipeline {
     this.initializePipelineSteps();
   }
 
-  async execute(input: any, selectedSteps?: string[]): Promise<any> {
+  async execute(input: PipelineInput, selectedSteps?: string[]): Promise<PipelineOutput> {
     if (this.isExecuting) {
       throw new Error('Pipeline is already executing');
     }
@@ -183,7 +309,7 @@ class CognitivePipeline {
 
     try {
       const stepsToExecute = selectedSteps || Array.from(this.steps.keys());
-      
+
       for (const stepId of stepsToExecute) {
         const step = this.steps.get(stepId);
         if (!step) continue;
@@ -218,11 +344,11 @@ class CognitivePipeline {
 }
 
 abstract class CognitivePipelineStep {
-  abstract execute(input: any): Promise<any>;
+  abstract execute(input: PipelineInput): Promise<PipelineOutput>;
 }
 
 class InputProcessingStep extends CognitivePipelineStep {
-  async execute(input: any): Promise<any> {
+  async execute(input: PipelineInput): Promise<PipelineOutput> {
     // Normalize and validate input data
     return {
       ...input,
@@ -232,17 +358,17 @@ class InputProcessingStep extends CognitivePipelineStep {
     };
   }
 
-  private detectInputType(input: any): string {
+  private detectInputType(input: PipelineInput): string {
     if (typeof input === 'string') return 'TEXT';
     if (input.query) return 'QUERY';
     if (input.threats) return 'THREAT_DATA';
-    if (input.assets) return 'ASSET_DATA';
+    if (input.securityData) return 'ASSET_DATA';
     return 'UNKNOWN';
   }
 }
 
 class ContextEnrichmentStep extends CognitivePipelineStep {
-  async execute(input: any): Promise<any> {
+  async execute(input: PipelineInput): Promise<PipelineOutput> {
     // Enrich input with contextual information
     return {
       ...input,
@@ -265,12 +391,12 @@ class ContextEnrichmentStep extends CognitivePipelineStep {
 }
 
 class ThreatAnalysisStep extends CognitivePipelineStep {
-  async execute(input: any): Promise<any> {
+  async execute(input: PipelineInput): Promise<PipelineOutput> {
     // Analyze threats in the input
     const threats = input.threats || [];
     const threatAnalysis = {
       totalThreats: threats.length,
-      criticalThreats: threats.filter((t: any) => t.severity === 'CRITICAL').length,
+      criticalThreats: threats.filter((t: unknown) => this.isCriticalThreat(t)).length,
       activeThreatTypes: this.analyzeThreatTypes(threats),
       threatTrend: 'STABLE' // Mock analysis
     };
@@ -281,17 +407,27 @@ class ThreatAnalysisStep extends CognitivePipelineStep {
     };
   }
 
-  private analyzeThreatTypes(threats: any[]): string[] {
+  private isCriticalThreat(threat: unknown): boolean {
+    if (typeof threat === 'object' && threat !== null && 'severity' in threat) {
+      return (threat as { severity: string }).severity === 'CRITICAL';
+    }
+    return false;
+  }
+
+  private analyzeThreatTypes(threats: unknown[]): string[] {
     const types = new Set<string>();
     for (const threat of threats) {
-      if (threat.type) types.add(threat.type);
+      if (typeof threat === 'object' && threat !== null && 'type' in threat) {
+        const threatType = (threat as { type?: string }).type;
+        if (threatType) types.add(threatType);
+      }
     }
     return Array.from(types);
   }
 }
 
 class RiskAssessmentStep extends CognitivePipelineStep {
-  async execute(input: any): Promise<any> {
+  async execute(input: PipelineInput): Promise<PipelineOutput> {
     // Assess risk based on input data
     const riskScore = this.calculateRiskScore(input);
     const riskLevel = this.determineRiskLevel(riskScore);
@@ -306,17 +442,24 @@ class RiskAssessmentStep extends CognitivePipelineStep {
     };
   }
 
-  private calculateRiskScore(input: any): number {
+  private calculateRiskScore(input: PipelineInput): number {
     let score = 0.3; // Base risk
 
-    if (input.threatAnalysis?.criticalThreats > 0) {
-      score += 0.4;
+    if (input.threatAnalysis && typeof input.threatAnalysis === 'object') {
+      const threatAnalysis = input.threatAnalysis as { criticalThreats?: number; totalThreats?: number };
+      if (threatAnalysis.criticalThreats && threatAnalysis.criticalThreats > 0) {
+        score += 0.4;
+      }
+      if (threatAnalysis.totalThreats && threatAnalysis.totalThreats > 10) {
+        score += 0.2;
+      }
     }
-    if (input.threatAnalysis?.totalThreats > 10) {
-      score += 0.2;
-    }
-    if (input.contextualData?.businessHours === false) {
-      score += 0.1; // Higher risk during off-hours
+
+    if (input.contextualData && typeof input.contextualData === 'object') {
+      const contextualData = input.contextualData as { businessHours?: boolean };
+      if (contextualData.businessHours === false) {
+        score += 0.1; // Higher risk during off-hours
+      }
     }
 
     return Math.min(1.0, score);
@@ -329,17 +472,24 @@ class RiskAssessmentStep extends CognitivePipelineStep {
     return 'LOW';
   }
 
-  private identifyRiskFactors(input: any): string[] {
+  private identifyRiskFactors(input: PipelineInput): string[] {
     const factors = [];
 
-    if (input.threatAnalysis?.criticalThreats > 0) {
-      factors.push('Critical threats present');
+    if (input.threatAnalysis && typeof input.threatAnalysis === 'object') {
+      const threatAnalysis = input.threatAnalysis as { criticalThreats?: number; totalThreats?: number };
+      if (threatAnalysis.criticalThreats && threatAnalysis.criticalThreats > 0) {
+        factors.push('Critical threats present');
+      }
+      if (threatAnalysis.totalThreats && threatAnalysis.totalThreats > 10) {
+        factors.push('High threat volume');
+      }
     }
-    if (input.threatAnalysis?.totalThreats > 10) {
-      factors.push('High threat volume');
-    }
-    if (!input.contextualData?.businessHours) {
-      factors.push('Off-hours operation');
+
+    if (input.contextualData && typeof input.contextualData === 'object') {
+      const contextualData = input.contextualData as { businessHours?: boolean };
+      if (!contextualData.businessHours) {
+        factors.push('Off-hours operation');
+      }
     }
 
     return factors;
@@ -347,7 +497,7 @@ class RiskAssessmentStep extends CognitivePipelineStep {
 }
 
 class RecommendationGenerationStep extends CognitivePipelineStep {
-  async execute(input: any): Promise<any> {
+  async execute(input: PipelineInput): Promise<PipelineOutput> {
     const recommendations = this.generateRecommendations(input);
 
     return {
@@ -356,34 +506,43 @@ class RecommendationGenerationStep extends CognitivePipelineStep {
     };
   }
 
-  private generateRecommendations(input: any): any[] {
+  private generateRecommendations(input: PipelineInput): unknown[] {
     const recommendations = [];
 
-    if (input.riskAssessment?.level === 'CRITICAL') {
-      recommendations.push({
-        priority: 'CRITICAL',
-        title: 'Immediate Threat Response',
-        description: 'Critical risk level detected - activate incident response procedures',
-        timeline: 'Immediate'
-      });
+    if (input.riskAssessment && typeof input.riskAssessment === 'object') {
+      const riskAssessment = input.riskAssessment as { level?: string };
+      if (riskAssessment.level === 'CRITICAL') {
+        recommendations.push({
+          priority: 'CRITICAL',
+          title: 'Immediate Threat Response',
+          description: 'Critical risk level detected - activate incident response procedures',
+          timeline: 'Immediate'
+        });
+      }
     }
 
-    if (input.threatAnalysis?.criticalThreats > 0) {
-      recommendations.push({
-        priority: 'HIGH',
-        title: 'Address Critical Threats',
-        description: `${input.threatAnalysis.criticalThreats} critical threats require immediate attention`,
-        timeline: '1-2 hours'
-      });
+    if (input.threatAnalysis && typeof input.threatAnalysis === 'object') {
+      const threatAnalysis = input.threatAnalysis as { criticalThreats?: number };
+      if (threatAnalysis.criticalThreats && threatAnalysis.criticalThreats > 0) {
+        recommendations.push({
+          priority: 'HIGH',
+          title: 'Address Critical Threats',
+          description: `${threatAnalysis.criticalThreats} critical threats require immediate attention`,
+          timeline: '1-2 hours'
+        });
+      }
     }
 
-    if (input.threatAnalysis?.totalThreats > 10) {
-      recommendations.push({
-        priority: 'MEDIUM',
-        title: 'Enhanced Monitoring',
-        description: 'High threat volume detected - increase monitoring frequency',
-        timeline: '4-8 hours'
-      });
+    if (input.threatAnalysis && typeof input.threatAnalysis === 'object') {
+      const threatAnalysis = input.threatAnalysis as { totalThreats?: number };
+      if (threatAnalysis.totalThreats && threatAnalysis.totalThreats > 10) {
+        recommendations.push({
+          priority: 'MEDIUM',
+          title: 'Enhanced Monitoring',
+          description: 'High threat volume detected - increase monitoring frequency',
+          timeline: '4-8 hours'
+        });
+      }
     }
 
     return recommendations;
@@ -391,7 +550,7 @@ class RecommendationGenerationStep extends CognitivePipelineStep {
 }
 
 class OutputFormattingStep extends CognitivePipelineStep {
-  async execute(input: any): Promise<any> {
+  async execute(input: PipelineInput): Promise<PipelineOutput> {
     return {
       summary: this.generateSummary(input),
       details: input,
@@ -403,25 +562,31 @@ class OutputFormattingStep extends CognitivePipelineStep {
     };
   }
 
-  private generateSummary(input: any): string {
+  private generateSummary(input: PipelineInput): string {
     const parts = [];
 
-    if (input.riskAssessment?.level) {
-      parts.push(`Risk level: ${input.riskAssessment.level}`);
+    if (input.riskAssessment && typeof input.riskAssessment === 'object') {
+      const riskAssessment = input.riskAssessment as { level?: string };
+      if (riskAssessment.level) {
+        parts.push(`Risk level: ${riskAssessment.level}`);
+      }
     }
 
-    if (input.threatAnalysis?.totalThreats) {
-      parts.push(`${input.threatAnalysis.totalThreats} threats analyzed`);
+    if (input.threatAnalysis && typeof input.threatAnalysis === 'object') {
+      const threatAnalysis = input.threatAnalysis as { totalThreats?: number };
+      if (threatAnalysis.totalThreats) {
+        parts.push(`${threatAnalysis.totalThreats} threats analyzed`);
+      }
     }
 
-    if (input.recommendations?.length) {
+    if (input.recommendations && Array.isArray(input.recommendations)) {
       parts.push(`${input.recommendations.length} recommendations generated`);
     }
 
     return parts.join('. ') + '.';
   }
 
-  private calculateConfidence(input: any): number {
+  private calculateConfidence(input: PipelineInput): number {
     let confidence = 0.7; // Base confidence
 
     if (input.threatAnalysis) confidence += 0.1;
@@ -444,7 +609,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
   private sessions: Map<string, CognitiveSession> = new Map();
   private workflows: Map<string, CognitiveWorkflow> = new Map();
   private isInitialized: boolean = false;
-  private performanceMetrics: Map<string, any> = new Map();
+  private performanceMetrics: Map<string, unknown> = new Map();
 
   constructor() {
     super();
@@ -487,7 +652,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
   }
 
   async createSession(
-    userId: string, 
+    userId: string,
     preferences?: UserPreferences,
     metadata?: Partial<SessionMetadata>
   ): Promise<string> {
@@ -535,9 +700,9 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
 
   async processInteraction(
     sessionId: string,
-    input: any,
+    input: PipelineInput,
     type: InteractionType = 'QUERY'
-  ): Promise<any> {
+  ): Promise<unknown> {
     const session = this.sessions.get(sessionId);
     if (!session) {
       throw new Error(`Session ${sessionId} not found`);
@@ -627,9 +792,9 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
 
   async executeWorkflow(
     workflowId: string,
-    parameters: any = {},
+    parameters: WorkflowParameters = {},
     session?: CognitiveSession
-  ): Promise<any> {
+  ): Promise<unknown> {
     const workflow = this.workflows.get(workflowId);
     if (!workflow) {
       throw new Error(`Workflow ${workflowId} not found`);
@@ -645,8 +810,8 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     try {
       console.log(`🔄 Executing workflow: ${workflow.name}`);
 
-      const results: any[] = [];
-      let context = { ...parameters, session };
+      const results: WorkflowResult[] = [];
+      let context: WorkflowContext = { ...parameters, session };
 
       for (const step of workflow.steps) {
         if (!this.shouldExecuteStep(step, context, workflow.conditions)) {
@@ -700,7 +865,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
   }
 
   // Service-specific processing methods
-  private async processQuery(input: any, session: CognitiveSession, servicesUsed: string[]): Promise<any> {
+  private async processQuery(input: PipelineInput, session: CognitiveSession, servicesUsed: string[]): Promise<unknown> {
     const query = typeof input === 'string' ? input : input.query;
 
     // Process with NLP Engine
@@ -738,7 +903,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     };
   }
 
-  private async processAnalysisRequest(input: any, session: CognitiveSession, servicesUsed: string[]): Promise<any> {
+  private async processAnalysisRequest(input: PipelineInput, session: CognitiveSession, servicesUsed: string[]): Promise<unknown> {
     // Use cognitive pipeline for comprehensive analysis
     const pipelineResult = await this.cognitivePipeline.execute(input);
     servicesUsed.push('CognitivePipeline');
@@ -757,18 +922,18 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     };
   }
 
-  private async processReportGeneration(input: any, session: CognitiveSession, servicesUsed: string[]): Promise<any> {
+  private async processReportGeneration(input: PipelineInput, session: CognitiveSession, servicesUsed: string[]): Promise<unknown> {
     if (!session.context.securityContext) {
       throw new Error('Security context required for report generation');
     }
 
-    const reportType: ReportType = input.reportType || 'SECURITY_POSTURE';
+    const reportType: ReportType = (input.reportType as ReportType) || 'SECURITY_POSTURE';
     const report = await this.reportGenerator.generateReport(
       session.context.securityContext,
       reportType,
       {
-        recipients: input.recipients,
-        format: input.format || ['HTML'],
+        recipients: input.recipients as string[],
+        format: (input.format as string[]) || ['HTML'],
         includeCharts: input.includeCharts !== false,
         includeTables: input.includeTables !== false
       }
@@ -785,21 +950,24 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     };
   }
 
-  private async processContextUpdate(input: any, session: CognitiveSession, servicesUsed: string[]): Promise<any> {
+  private async processContextUpdate(input: PipelineInput, session: CognitiveSession, servicesUsed: string[]): Promise<unknown> {
     const securityContext = await this.contextEngine.analyzeSecurityContext(input);
     session.context.securityContext = securityContext;
     servicesUsed.push('ContextEngine');
 
     // Update knowledge graph with new context - simplified approach
-    if (input.threats) {
+    if (input.threats && Array.isArray(input.threats)) {
       for (const threat of input.threats) {
-        try {
-          await this.knowledgeGraph.executeQuery({
-            query: `CREATE (t:Threat {id: '${threat.id}', name: '${threat.type || 'Unknown'}', severity: '${threat.severity || 'MEDIUM'}'})`,
-            parameters: { threat }
-          });
-        } catch (error) {
-          console.warn('Failed to add threat to knowledge graph:', error);
+        if (typeof threat === 'object' && threat !== null) {
+          const threatObj = threat as { id?: string; type?: string; severity?: string };
+          try {
+            await this.knowledgeGraph.executeQuery({
+              query: `CREATE (t:Threat {id: '${threatObj.id || 'unknown'}', name: '${threatObj.type || 'Unknown'}', severity: '${threatObj.severity || 'MEDIUM'}'})`,
+              parameters: { threat }
+            });
+          } catch (error) {
+            console.warn('Failed to add threat to knowledge graph:', error);
+          }
         }
       }
       servicesUsed.push('KnowledgeGraph');
@@ -814,7 +982,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     };
   }
 
-  private async processThreatInvestigation(input: any, session: CognitiveSession, servicesUsed: string[]): Promise<any> {
+  private async processThreatInvestigation(input: PipelineInput, session: CognitiveSession, servicesUsed: string[]): Promise<unknown> {
     const threatId = input.threatId || input.threat?.id;
     if (!threatId) {
       throw new Error('Threat ID required for investigation');
@@ -865,7 +1033,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     };
   }
 
-  private async processComplianceCheck(input: any, session: CognitiveSession, servicesUsed: string[]): Promise<any> {
+  private async processComplianceCheck(input: PipelineInput, session: CognitiveSession, servicesUsed: string[]): Promise<unknown> {
     if (!session.context.securityContext) {
       throw new Error('Security context required for compliance check');
     }
@@ -891,7 +1059,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     };
   }
 
-  private async executeWorkflowStep(step: WorkflowStep, context: any): Promise<any> {
+  private async executeWorkflowStep(step: WorkflowStep, context: WorkflowContext): Promise<unknown> {
     switch (step.service) {
       case 'NLPEngine':
         return await this.executeNLPStep(step, context);
@@ -908,36 +1076,38 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     }
   }
 
-  private async executeNLPStep(step: WorkflowStep, context: any): Promise<any> {
+  private async executeNLPStep(step: WorkflowStep, context: WorkflowContext): Promise<unknown> {
     const text = step.parameters.text || context.text;
-    return await this.nlpEngine.analyzeText(text, {
+    return await this.nlpEngine.analyzeText(text as string, {
       extractEntities: true,
       analyzeSentiment: true,
       extractThreatIntel: true
     });
   }
 
-  private async executeContextStep(step: WorkflowStep, context: any): Promise<any> {
+  private async executeContextStep(step: WorkflowStep, context: WorkflowContext): Promise<unknown> {
     const data = step.parameters.data || context.securityData;
     return await this.contextEngine.analyzeSecurityContext(data);
   }
 
-  private async executeKnowledgeStep(step: WorkflowStep, context: any): Promise<any> {
+  private async executeKnowledgeStep(step: WorkflowStep, context: WorkflowContext): Promise<unknown> {
     switch (step.method) {
-      case 'queryEntities':
+      case 'queryEntities': {
         const entities = step.parameters.entities || [];
         return await this.knowledgeGraph.executeQuery({
           query: `MATCH (n) WHERE n.name IN [${entities.map((e: string) => `'${e}'`).join(',')}] RETURN n LIMIT 10`,
           parameters: { entities },
           resultLimit: 10
         });
-      case 'addEntity':
+      }
+      case 'addEntity': {
         const entity = step.parameters.entity;
         return await this.knowledgeGraph.executeQuery({
           query: `CREATE (n:${entity.type} {id: '${entity.id}', name: '${entity.name || entity.id}'})`,
           parameters: { entity }
         });
-      case 'getRelatedEntities':
+      }
+      case 'getRelatedEntities': {
         const entityId = step.parameters.entityId;
         const depth = step.parameters.depth || 2;
         return await this.knowledgeGraph.executeQuery({
@@ -946,26 +1116,27 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
           resultLimit: 20,
           traversalDepth: depth
         });
+      }
       default:
         throw new Error(`Unknown knowledge graph method: ${step.method}`);
     }
   }
 
-  private async executeAssistantStep(step: WorkflowStep, context: any): Promise<any> {
+  private async executeAssistantStep(step: WorkflowStep, context: WorkflowContext): Promise<unknown> {
     const query = step.parameters.query || context.query;
-    return await this.securityAssistant.processQuery(query, context);
+    return await this.securityAssistant.processQuery(query as string, context.session?.id || 'workflow');
   }
 
-  private async executeReportStep(step: WorkflowStep, context: any): Promise<any> {
+  private async executeReportStep(step: WorkflowStep, context: WorkflowContext): Promise<unknown> {
     const securityContext = context.securityContext || context.session?.context.securityContext;
     if (!securityContext) {
       throw new Error('Security context required for report generation');
     }
 
     return await this.reportGenerator.generateReport(
-      securityContext,
-      step.parameters.reportType,
-      step.parameters.options
+      securityContext as SecurityContext,
+      step.parameters.reportType as ReportType,
+      step.parameters.options as Record<string, unknown>
     );
   }
 
@@ -982,7 +1153,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
 
     for (const { service, name } of services) {
       if (service && typeof service.on === 'function') {
-        service.on('error', (error: any) => {
+        service.on('error', (error: unknown) => {
           this.emit('service_error', { service: name, error, timestamp: Date.now() });
         });
       }
@@ -1087,7 +1258,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
   private initializePerformanceMonitoring(): void {
     this.performanceMetrics.set('interactions_processed', 0);
     this.performanceMetrics.set('average_processing_time', 0);
-    this.performanceMetrics.set('service_usage', new Map());
+    this.performanceMetrics.set('service_usage', new Map<string, number>());
     this.performanceMetrics.set('error_count', 0);
     this.performanceMetrics.set('session_count', 0);
   }
@@ -1098,22 +1269,23 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     servicesUsed: string[]
   ): void {
     // Update interaction count
-    const currentCount = this.performanceMetrics.get('interactions_processed') + 1;
+    const currentCount = (this.performanceMetrics.get('interactions_processed') as number || 0) + 1;
     this.performanceMetrics.set('interactions_processed', currentCount);
 
     // Update average processing time
-    const currentAvg = this.performanceMetrics.get('average_processing_time');
+    const currentAvg = this.performanceMetrics.get('average_processing_time') as number || 0;
     const newAvg = (currentAvg * (currentCount - 1) + processingTime) / currentCount;
     this.performanceMetrics.set('average_processing_time', newAvg);
 
     // Update service usage
-    const serviceUsage = this.performanceMetrics.get('service_usage');
+    const serviceUsage = this.performanceMetrics.get('service_usage') as Map<string, number> || new Map();
     for (const service of servicesUsed) {
       serviceUsage.set(service, (serviceUsage.get(service) || 0) + 1);
     }
+    this.performanceMetrics.set('service_usage', serviceUsage);
   }
 
-  private calculateInteractionConfidence(result: any, servicesUsed: string[]): number {
+  private calculateInteractionConfidence(result: unknown, servicesUsed: string[]): number {
     let confidence = 0.7; // Base confidence
 
     // Increase confidence based on services used
@@ -1123,9 +1295,12 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     if (servicesUsed.includes('SecurityAssistant')) confidence += 0.1;
 
     // Adjust based on result characteristics
-    if (result.recommendations?.length > 0) confidence += 0.05;
-    if (result.confidence && typeof result.confidence === 'number') {
-      confidence = (confidence + result.confidence) / 2;
+    if (result && typeof result === 'object') {
+      const resultObj = result as { recommendations?: unknown[]; confidence?: number };
+      if (resultObj.recommendations && Array.isArray(resultObj.recommendations) && resultObj.recommendations.length > 0) confidence += 0.05;
+      if (resultObj.confidence && typeof resultObj.confidence === 'number') {
+        confidence = (confidence + resultObj.confidence) / 2;
+      }
     }
 
     return Math.min(1.0, confidence);
@@ -1133,7 +1308,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
 
   private shouldExecuteStep(
     step: WorkflowStep,
-    context: any,
+    context: WorkflowContext,
     conditions: WorkflowCondition[]
   ): boolean {
     // Check dependencies
@@ -1153,7 +1328,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     return true;
   }
 
-  private evaluateCondition(condition: WorkflowCondition, context: any): boolean {
+  private evaluateCondition(condition: WorkflowCondition, context: WorkflowContext): boolean {
     // Simple condition evaluation - would be more sophisticated in production
     try {
       // Mock evaluation - in production would use a proper expression evaluator
@@ -1166,9 +1341,9 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
 
   private async processWorkflowOutputs(
     outputs: WorkflowOutput[],
-    context: any,
-    results: any[]
-  ): Promise<any[]> {
+    context: WorkflowContext,
+    results: WorkflowResult[]
+  ): Promise<unknown[]> {
     const processedOutputs = [];
 
     for (const output of outputs) {
@@ -1199,14 +1374,14 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     return processedOutputs;
   }
 
-  private async processReportOutput(output: WorkflowOutput, context: any, results: any[]): Promise<any> {
+  private async processReportOutput(output: WorkflowOutput, context: WorkflowContext, results: WorkflowResult[]): Promise<unknown> {
     // Find report generation result
     const reportResult = results.find(r => r.stepId === 'generate_report');
-    
+
     if (reportResult?.result) {
       return {
         type: 'REPORT',
-        reportId: reportResult.result.id,
+        reportId: (reportResult.result as { id?: string }).id,
         destinations: output.destination,
         format: output.format,
         status: 'generated'
@@ -1216,7 +1391,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     return { type: 'REPORT', status: 'not_found' };
   }
 
-  private async processAlertOutput(output: WorkflowOutput, context: any, results: any[]): Promise<any> {
+  private async processAlertOutput(output: WorkflowOutput, context: WorkflowContext, results: WorkflowResult[]): Promise<unknown> {
     return {
       type: 'ALERT',
       destinations: output.destination,
@@ -1225,7 +1400,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     };
   }
 
-  private async processNotificationOutput(output: WorkflowOutput, context: any, results: any[]): Promise<any> {
+  private async processNotificationOutput(output: WorkflowOutput, context: WorkflowContext, results: WorkflowResult[]): Promise<unknown> {
     return {
       type: 'NOTIFICATION',
       destinations: output.destination,
@@ -1234,7 +1409,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     };
   }
 
-  private generateInvestigationSummary(threatInfo: any, relatedEntities: any[], mitreInfo: any): string {
+  private generateInvestigationSummary(threatInfo: ThreatInfo, relatedEntities: unknown[], mitreInfo: MitreInfo): string {
     const parts = [];
 
     if (threatInfo) {
@@ -1310,7 +1485,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     ];
   }
 
-  private getServiceStatus(): any {
+  private getServiceStatus(): ServiceStatus {
     return {
       nlpEngine: this.nlpEngine ? 'initialized' : 'not_initialized',
       securityAssistant: this.securityAssistant ? 'initialized' : 'not_initialized',
@@ -1321,7 +1496,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
   }
 
   // Public interface methods
-  getCapabilities(): any {
+  getCapabilities(): OrchestratorCapabilities {
     return {
       cognitiveServices: {
         naturalLanguageProcessing: true,
@@ -1351,7 +1526,7 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     };
   }
 
-  getStatistics(): any {
+  getStatistics(): OrchestratorStatistics {
     return {
       activeSessions: this.sessions.size,
       availableWorkflows: this.workflows.size,
@@ -1405,11 +1580,11 @@ export class CognitiveSecurityOrchestrator extends EventEmitter {
     try {
       // Most services don't have destroy methods in our implementation
       // but we clean up their references
-      this.nlpEngine = null as any;
-      this.securityAssistant = null as any;
-      this.knowledgeGraph = null as any;
-      this.contextEngine = null as any;
-      this.reportGenerator = null as any;
+      this.nlpEngine = null!;
+      this.securityAssistant = null!;
+      this.knowledgeGraph = null!;
+      this.contextEngine = null!;
+      this.reportGenerator = null!;
     } catch (error) {
       console.warn('Error during service cleanup:', error);
     }

@@ -36,7 +36,7 @@ interface DemoScenario {
   duration: number;
   isRunning: boolean;
   progress: number;
-  results: any;
+  results: Record<string, unknown>;
 }
 
 const DemoScenarios: React.FC = () => {
@@ -395,7 +395,7 @@ const DemoScenarios: React.FC = () => {
               {Object.entries(scenarios.find(s => s.id === selectedScenario)?.results || {}).map(([key, value]) => (
                 <div key={key} className="text-center p-4 border rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
-                    {typeof value === 'number' ? value.toFixed(1) : value}
+                    {typeof value === 'number' ? value.toFixed(1) : String(value)}
                   </div>
                   <div className="text-sm text-gray-600 capitalize">
                     {key.replace(/([A-Z])/g, ' $1').trim()}

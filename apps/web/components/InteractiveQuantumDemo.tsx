@@ -25,7 +25,7 @@ import {
 interface QuantumDemoState {
   isRunning: boolean;
   progress: number;
-  results: any;
+  results: Record<string, unknown>;
   performance: {
     quantumSpeedup: number;
     classicalTime: number;
@@ -283,7 +283,7 @@ const InteractiveQuantumDemo: React.FC = () => {
                   <Activity className="h-4 w-4 text-green-600" />
                   <AlertTitle className="text-green-800">Quantum Computation Complete!</AlertTitle>
                   <AlertDescription className="text-green-700">
-                    {demoState.results.message}
+                    {String(demoState.results.message)}
                   </AlertDescription>
                 </Alert>
               )}

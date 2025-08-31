@@ -267,9 +267,9 @@ class QuantumResourceManager {
     const availableChannels = parseInt(node.allocatable['quantum.io/qkd-channels'] || '0');
     const availableMemory = parseInt(node.allocatable['quantum.io/quantum-memory'] || '0');
 
-    if (requiredQubits > availableQubits || 
-        requiredChannels > availableChannels || 
-        requiredMemory > availableMemory) {
+    if (requiredQubits > availableQubits ||
+      requiredChannels > availableChannels ||
+      requiredMemory > availableMemory) {
       return false;
     }
 
@@ -372,7 +372,7 @@ class QuantumResourceManager {
     for (const [nodeName, node] of this.nodeResources.entries()) {
       const capacity = this.getNodeQuantumCapacity(nodeName);
       const utilization = this.getNodeQuantumUtilization(nodeName);
-      
+
       if (capacity && utilization) {
         usage.set(nodeName, {
           qubitsUsed: capacity.qubits * (utilization.qubits / 100),
@@ -556,7 +556,7 @@ class QuantumHorizontalPodAutoscaler {
 
     // Check quantum resource utilization
     const quantumUtilization = (metrics.resourceUtilization.qubits + metrics.resourceUtilization.qkdChannels) / 2;
-    
+
     if (quantumUtilization > policy.targetQuantumUtilization * 1.2) {
       // Scale up if quantum utilization is 20% above target
       desiredReplicas = Math.min(policy.maxReplicas, Math.ceil(currentReplicas * 1.5));
@@ -589,7 +589,7 @@ class QuantumHorizontalPodAutoscaler {
 
   private getScalingReason(policy: QuantumScalingPolicy, metrics: QuantumMetrics, scaleUp: boolean): string {
     const quantumUtilization = (metrics.resourceUtilization.qubits + metrics.resourceUtilization.qkdChannels) / 2;
-    
+
     if (scaleUp) {
       if (quantumUtilization > policy.targetQuantumUtilization * 1.2) {
         return `High quantum resource utilization: ${quantumUtilization.toFixed(1)}%`;
@@ -651,6 +651,39 @@ class QuantumHorizontalPodAutoscaler {
   }
 }
 
+interface ScalingDecision {
+  currentReplicas: number;
+  desiredReplicas: number;
+  reason: string;
+  estimatedTime: number;
+  quantumResourcesRequired: Record<string, number>;
+}
+
+interface ControllerMetrics {
+  services: {
+    total: number;
+    running: number;
+    pending: number;
+    failed: number;
+  };
+  pods: {
+    total: number;
+    running: number;
+    pending: number;
+    failed: number;
+  };
+  nodes: {
+    total: number;
+    utilization: Map<string, Record<string, number>>;
+  };
+  autoScaling: {
+    policies: number;
+    history: Array<{ timestamp: number; resource: string; action: string; reason: string }>;
+  };
+  isInitialized: boolean;
+  timestamp: number;
+}
+
 interface QuantumScalingPolicy {
   enabled: boolean;
   minReplicas: number;
@@ -662,12 +695,29 @@ interface QuantumScalingPolicy {
   scaleDownCooldown: number;
 }
 
-interface ScalingDecision {
-  currentReplicas: number;
-  desiredReplicas: number;
-  reason: string;
-  estimatedTime: number;
-  quantumResourcesRequired: Record<string, number>;
+interface ControllerMetrics {
+  services: {
+    total: number;
+    running: number;
+    pending: number;
+    failed: number;
+  };
+  pods: {
+    total: number;
+    running: number;
+    pending: number;
+    failed: number;
+  };
+  nodes: {
+    total: number;
+    utilization: Map<string, Record<string, number>>;
+  };
+  autoScaling: {
+    policies: number;
+    history: Array<{ timestamp: number; resource: string; action: string; reason: string }>;
+  };
+  isInitialized: boolean;
+  timestamp: number;
 }
 
 // Main Quantum Kubernetes Controller
@@ -686,11 +736,11 @@ export class QuantumKubernetesController extends EventEmitter {
     private cryptoEngine: PostQuantumCryptoEngine
   ) {
     super();
-    
+
     this.resourceManager = new QuantumResourceManager();
     this.scheduler = new QuantumScheduler(this.resourceManager);
     this.autoScaler = new QuantumHorizontalPodAutoscaler();
-    
+
     this.initialize();
   }
 
@@ -708,7 +758,7 @@ export class QuantumKubernetesController extends EventEmitter {
       this.startControllerLoop();
 
       this.isInitialized = true;
-      
+
       this.emit('initialized', {
         timestamp: Date.now(),
         quantumNodes: this.resourceManager.getResourceUsage().size,
@@ -870,7 +920,7 @@ export class QuantumKubernetesController extends EventEmitter {
         .filter(pod => pod.name.startsWith(name));
 
       const runningPods = pods.filter(pod => pod.phase === 'Running');
-      const readyPods = runningPods.filter(pod => 
+      const readyPods = runningPods.filter(pod =>
         pod.conditions.some(c => c.type === 'Ready' && c.status === 'True')
       );
 
@@ -892,7 +942,7 @@ export class QuantumKubernetesController extends EventEmitter {
     if (runningPods === 0) return 'Pending';
     if (runningPods === desiredReplicas) return 'Running';
     if (runningPods !== desiredReplicas) return 'Scaling';
-    
+
     return 'Running';
   }
 
@@ -978,7 +1028,7 @@ export class QuantumKubernetesController extends EventEmitter {
 
   private async createQuantumPod(service: QuantumCustomResource, index: number): Promise<void> {
     const podName = `${service.metadata.name}-${index}-${Math.random().toString(36).substr(2, 6)}`;
-    
+
     const quantumPod: QuantumPod = {
       name: podName,
       namespace: service.metadata.namespace,
@@ -1023,11 +1073,11 @@ export class QuantumKubernetesController extends EventEmitter {
     if (schedulingResult) {
       quantumPod.nodeName = schedulingResult.selectedNode;
       quantumPod.phase = 'Running';
-      
+
       // Allocate quantum resources
       if (this.resourceManager.allocateQuantumResources(quantumPod)) {
         this.quantumPods.set(podName, quantumPod);
-        
+
         this.emit('pod_created', {
           podName,
           serviceName: service.metadata.name,
@@ -1051,7 +1101,7 @@ export class QuantumKubernetesController extends EventEmitter {
 
     // Release quantum resources
     this.resourceManager.releaseQuantumResources(podName);
-    
+
     // Remove pod
     this.quantumPods.delete(podName);
 
@@ -1071,7 +1121,7 @@ export class QuantumKubernetesController extends EventEmitter {
     }
 
     const serviceName = spec.metadata.name;
-    
+
     // Add default status
     spec.status = {
       phase: 'Pending',
@@ -1147,7 +1197,7 @@ export class QuantumKubernetesController extends EventEmitter {
 
   getNodeQuantumUtilization(): Map<string, Record<string, number>> {
     const utilization = new Map<string, Record<string, number>>();
-    
+
     for (const nodeName of this.resourceManager.getResourceUsage().keys()) {
       const nodeUtilization = this.resourceManager.getNodeQuantumUtilization(nodeName);
       if (nodeUtilization) {
@@ -1158,7 +1208,7 @@ export class QuantumKubernetesController extends EventEmitter {
     return utilization;
   }
 
-  getControllerMetrics(): any {
+  getControllerMetrics(): ControllerMetrics {
     return {
       services: {
         total: this.quantumServices.size,
