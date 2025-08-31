@@ -737,7 +737,7 @@ export class QuantumHealthcareAI {
     });
   }
 
-  private async analyzeQuantumPatientData(patient: PatientData): Promise<any> {
+  private async analyzeQuantumPatientData(patient: PatientData): Promise<QuantumPatientAnalysis> {
     // Perform quantum analysis of patient data
     const quantumAnalysis = await this.quantumCore.executeQuantumAlgorithm('QUANTUM_PATIENT_ANALYSIS', {
       patientData: patient,
@@ -748,9 +748,9 @@ export class QuantumHealthcareAI {
   }
 
   private async performQuantumClinicalReasoning(
-    patientAnalysis: any,
+    patientAnalysis: QuantumPatientAnalysis,
     context: ClinicalContext
-  ): Promise<any> {
+  ): Promise<QuantumClinicalReasoning> {
     // Perform quantum clinical reasoning
     const reasoning = await this.quantumCore.executeQuantumAlgorithm('QUANTUM_CLINICAL_REASONING', {
       patientAnalysis: patientAnalysis,
@@ -762,7 +762,7 @@ export class QuantumHealthcareAI {
   }
 
   private async generateQuantumRecommendations(
-    reasoning: any,
+    reasoning: QuantumClinicalReasoning,
     patient: PatientData,
     context: ClinicalContext
   ): Promise<ClinicalRecommendation[]> {
@@ -806,7 +806,7 @@ export class QuantumHealthcareAI {
     return validated;
   }
 
-  private async validateAgainstGuidelines(recommendation: ClinicalRecommendation): Promise<any> {
+  private async validateAgainstGuidelines(recommendation: ClinicalRecommendation): Promise<GuidelineValidation> {
     // Simplified validation - in practice, this would check against clinical guidelines
     return { confidence: 0.95, guidelines: ['Standard of Care'] };
   }
@@ -835,6 +835,32 @@ export interface HealthcareAIConfig {
   monitoringEnabled: boolean;
   nlpProcessing: boolean;
   complianceLevel: 'HIPAA' | 'FDA' | 'GLOBAL';
+}
+
+// Type definitions for quantum healthcare AI
+interface QuantumPatientAnalysis {
+  diagnosticUncertainty: number;
+  diagnosticConfidence: number;
+  quantumConfidence: number;
+  quantumEvidence: string;
+  entanglementPattern: string;
+  quantumAdvantage: number;
+  [key: string]: unknown;
+}
+
+interface QuantumClinicalReasoning {
+  diagnosticUncertainty: number;
+  diagnosticConfidence: number;
+  quantumConfidence: number;
+  quantumEvidence: string;
+  entanglementPattern: string;
+  quantumAdvantage: number;
+  [key: string]: unknown;
+}
+
+interface GuidelineValidation {
+  confidence: number;
+  guidelines: string[];
 }
 
 console.log('✅ Quantum Healthcare AI Platform module loaded successfully');

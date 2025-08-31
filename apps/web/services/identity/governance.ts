@@ -50,7 +50,7 @@ export interface Permission {
 export interface PermissionConstraint {
   type: 'time' | 'location' | 'device' | 'context';
   rule: string;
-  value: any;
+  value: ConstraintValue;
 }
 
 export interface AutoAssignmentRule {
@@ -65,7 +65,7 @@ export interface AutoAssignmentRule {
 export interface RuleCondition {
   attribute: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'matches' | 'in' | 'not_in';
-  value: any;
+  value: ConditionValue;
 }
 
 export interface AccessReview {
@@ -511,11 +511,11 @@ export class IdentityGovernanceAdmin {
     });
   }
 
-  private getAttributeValue(identity: IdentityProfile, attribute: string): any {
+  private getAttributeValue(identity: IdentityProfile, attribute: string): AttributeValue {
     return (identity as any)[attribute] || identity.attributes[attribute];
   }
 
-  private evaluateCondition(value: any, operator: string, expectedValue: any): boolean {
+  private evaluateCondition(value: ConditionValue, operator: string, expectedValue: ConditionValue): boolean {
     switch (operator) {
       case 'equals':
         return value === expectedValue;
@@ -830,7 +830,7 @@ export interface ComplianceReport {
   compliant: boolean;
   violations: ComplianceViolation[];
   recommendations: string[];
-  controlResults: any[];
+  controlResults: ControlResult[];
 }
 
 export interface IdentityAnalytics {
@@ -892,7 +892,7 @@ class ComplianceEngine {
 }
 
 class IgaAuditLogger {
-  async logIdentityLifecycle(identity: IdentityProfile, action: string, details: any): Promise<void> {
+  async logIdentityLifecycle(identity: IdentityProfile, action: string, details: LifecycleDetails): Promise<void> {
     const logEntry = {
       timestamp: new Date().toISOString(),
       event: 'identity_lifecycle',
@@ -949,6 +949,24 @@ class IgaAuditLogger {
     };
     console.log('IGA Audit:', logEntry);
   }
+}
+
+// Type definitions for identity governance
+type ConstraintValue = string | number | boolean | string[];
+
+type ConditionValue = string | number | boolean | string[];
+
+type AttributeValue = string | number | boolean | string[];
+
+interface ControlResult {
+  controlId: string;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface LifecycleDetails {
+  action: string;
+  [key: string]: unknown;
 }
 
 export default IdentityGovernanceAdmin;

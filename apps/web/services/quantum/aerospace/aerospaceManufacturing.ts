@@ -234,8 +234,8 @@ export class QuantumAerospaceManufacturing {
    */
   async optimizeProduction(
     components: ComponentSpecification[],
-    requirements: any,
-    constraints: any
+    requirements: ProductionRequirements,
+    constraints: ProductionConstraints
   ): Promise<QuantumManufacturingResult> {
     const startTime = performance.now();
 
@@ -323,8 +323,8 @@ export class QuantumAerospaceManufacturing {
    */
   private async createOptimalSchedule(
     components: ComponentSpecification[],
-    requirements: any,
-    constraints: any
+    requirements: ProductionRequirements,
+    constraints: ProductionConstraints
   ): Promise<ProductionSchedule> {
     // Quantum scheduling algorithm considering all constraints
     const schedule: ProductionSchedule = {
@@ -448,9 +448,9 @@ export class QuantumAerospaceManufacturing {
    */
   async monitorProduction(): Promise<{
     status: string;
-    production: any;
-    quality: any;
-    efficiency: any;
+    production: ProductionMetrics;
+    quality: QualityMetrics;
+    efficiency: EfficiencyMetrics;
     alerts: string[];
   }> {
     const currentTime = new Date();
@@ -528,10 +528,10 @@ export class QuantumAerospaceManufacturing {
    * Optimize supply chain integration
    */
   async optimizeSupplyChain(): Promise<{
-    suppliers: any;
-    inventory: any;
-    logistics: any;
-    cost: any;
+    suppliers: SupplierMetrics;
+    inventory: InventoryMetrics;
+    logistics: LogisticsMetrics;
+    cost: CostMetrics;
   }> {
     return {
       suppliers: {
@@ -624,7 +624,7 @@ export class QuantumAerospaceManufacturing {
     ];
   }
 
-  private calculateOptimalParameters(component: ComponentSpecification): any {
+  private calculateOptimalParameters(component: ComponentSpecification): OptimalParameters {
     return {
       speed: 1000 + Math.random() * 2000, // rpm
       feed: 0.1 + Math.random() * 0.5, // mm/rev
@@ -634,7 +634,7 @@ export class QuantumAerospaceManufacturing {
     };
   }
 
-  private optimizeTooling(component: ComponentSpecification): any {
+  private optimizeTooling(component: ComponentSpecification): ToolingOptimization {
     return {
       toolLife: 120 + Math.random() * 80, // minutes
       costPerPart: 0.5 + Math.random() * 2, // $
@@ -642,6 +642,85 @@ export class QuantumAerospaceManufacturing {
       accuracy: 5 + Math.random() * 5 // µm
     };
   }
+}
+
+// Type definitions for aerospace manufacturing
+interface ProductionRequirements {
+  quantity: number;
+  deadline: Date;
+  quality: string;
+  [key: string]: unknown;
+}
+
+interface ProductionConstraints {
+  machineCapacity: number;
+  materialAvailability: boolean;
+  laborHours: number;
+  [key: string]: unknown;
+}
+
+interface ProductionMetrics {
+  componentsInProgress: number;
+  completedToday: number;
+  onSchedule: number;
+  bottlenecks: number;
+}
+
+interface QualityMetrics {
+  firstPassYield: number;
+  defectRate: number;
+  reworkRate: number;
+  customerComplaints: number;
+}
+
+interface EfficiencyMetrics {
+  oee: number;
+  machineUtilization: number;
+  operatorEfficiency: number;
+  energyEfficiency: number;
+}
+
+interface SupplierMetrics {
+  evaluated: number;
+  qualified: number;
+  preferred: number;
+  performance: number;
+}
+
+interface InventoryMetrics {
+  totalItems: number;
+  value: number;
+  turnover: number;
+  accuracy: number;
+}
+
+interface LogisticsMetrics {
+  onTimeDelivery: number;
+  transitTime: number;
+  costPerDelivery: number;
+  sustainability: number;
+}
+
+interface CostMetrics {
+  materialCost: number;
+  reductionAchieved: number;
+  targetSavings: number;
+  roi: number;
+}
+
+interface OptimalParameters {
+  speed: number;
+  feed: number;
+  depth: number;
+  coolant: string;
+  temperature: number;
+}
+
+interface ToolingOptimization {
+  toolLife: number;
+  costPerPart: number;
+  surfaceFinish: number;
+  accuracy: number;
 }
 
 // Export for use in aerospace quantum applications

@@ -687,11 +687,11 @@ export class QuantumFlightOptimizer {
     return classicalTime / processingTime;
   }
 
-  private calculateFuelSavings(fuelOpt: any): number {
+  private calculateFuelSavings(fuelOpt: FuelOptimizationData): number {
     return fuelOpt.savings * 365; // Annual savings in liters
   }
 
-  private calculateEmissionReduction(fuelOpt: any, routeOpt: any): EmissionReductionMetrics {
+  private calculateEmissionReduction(fuelOpt: FuelOptimizationData, routeOpt: RouteOptimizationData): EmissionReductionMetrics {
     return {
       co2Reduction: fuelOpt.co2Savings + routeOpt.co2Savings,
       noxReduction: fuelOpt.noxSavings,
@@ -700,7 +700,7 @@ export class QuantumFlightOptimizer {
     };
   }
 
-  private calculateFlightHealth(monitoring: any): FlightHealth {
+  private calculateFlightHealth(monitoring: FlightMonitoringData): FlightHealth {
     return {
       overallScore: 97.5,
       routeHealthScore: monitoring.routePerformance.healthScore,
@@ -711,17 +711,17 @@ export class QuantumFlightOptimizer {
     };
   }
 
-  private identifyFlightAlerts(monitoring: any): FlightAlert[] {
+  private identifyFlightAlerts(monitoring: FlightMonitoringData): FlightAlert[] {
     // Implementation for alert identification
     return [];
   }
 
-  private generateFlightRecommendations(monitoring: any): FlightRecommendation[] {
+  private generateFlightRecommendations(monitoring: FlightMonitoringData): FlightRecommendation[] {
     // Implementation for recommendation generation
     return [];
   }
 
-  private assessEmergencyStatus(monitoring: any): EmergencyStatus {
+  private assessEmergencyStatus(monitoring: FlightMonitoringData): EmergencyStatus {
     return {
       level: 'normal',
       riskFactors: [],
@@ -733,7 +733,7 @@ export class QuantumFlightOptimizer {
 
 // Supporting Classes (Simplified for brevity)
 class QuantumRouteOptimizer {
-  async optimizeRoute(config: any): Promise<RouteOptimizationResult> {
+  async optimizeRoute(config: QuantumFlightConfig): Promise<RouteOptimizationResult> {
     return {
       optimizedRoute: config.route,
       flightPlan: {},
@@ -743,13 +743,13 @@ class QuantumRouteOptimizer {
     };
   }
   
-  async monitorRoute(flightId: string): Promise<any> {
+  async monitorRoute(flightId: string): Promise<{ healthScore: number }> {
     return { healthScore: 98.2 };
   }
 }
 
 class QuantumWeatherIntegrator {
-  async integrateWeather(config: any): Promise<WeatherIntegrationResult> {
+  async integrateWeather(config: QuantumFlightConfig): Promise<WeatherIntegrationResult> {
     return {
       weatherProfile: {},
       turbulenceAvoidance: [],
@@ -758,13 +758,13 @@ class QuantumWeatherIntegrator {
     };
   }
   
-  async monitorWeather(flightId: string): Promise<any> {
+  async monitorWeather(flightId: string): Promise<{ healthScore: number }> {
     return { healthScore: 96.7 };
   }
 }
 
 class QuantumTrafficManager {
-  async manageTraffic(config: any): Promise<TrafficManagementResult> {
+  async manageTraffic(config: QuantumFlightConfig): Promise<TrafficManagementResult> {
     return {
       trafficProfile: {},
       conflictResolutions: [],
@@ -773,13 +773,13 @@ class QuantumTrafficManager {
     };
   }
   
-  async monitorTraffic(flightId: string): Promise<any> {
+  async monitorTraffic(flightId: string): Promise<{ healthScore: number }> {
     return { healthScore: 94.8 };
   }
 }
 
 class QuantumFuelOptimizer {
-  async optimizeFuel(config: any): Promise<FuelOptimizationResult> {
+  async optimizeFuel(config: QuantumFlightConfig): Promise<FuelOptimizationResult> {
     return {
       optimalFuelLoad: 25000, // kg
       savings: 1200, // liters per flight
@@ -795,7 +795,7 @@ class QuantumFuelOptimizer {
 }
 
 class QuantumSafetyAnalyzer {
-  async analyzeSafety(config: any): Promise<SafetyAnalysisResult> {
+  async analyzeSafety(config: QuantumFlightConfig): Promise<SafetyAnalysisResult> {
     return {
       riskLevel: 'very_low',
       safetyScore: 99.99,
@@ -811,7 +811,7 @@ class QuantumSafetyAnalyzer {
 }
 
 class QuantumEmergencyHandler {
-  async handleEmergency(emergency: any): Promise<EmergencyFlightResponse> {
+  async handleEmergency(emergency: EmergencyData): Promise<EmergencyFlightResponse> {
     return {
       alternativeRoutes: [],
       nearestAirports: [],
@@ -1102,25 +1102,87 @@ interface FlightOptimizationResult {
   emissionReduction: EmissionReductionMetrics;
 }
 
+interface FlightPlan {
+  waypoints: GeographicCoordinate[];
+  altitudes: number[];
+  speeds: number[];
+  fuelConsumption: FuelConsumptionProfile;
+  estimatedDuration: number;
+  safetyMargins: Record<string, number>;
+}
+
 interface RouteOptimizationResult {
   optimizedRoute: FlightRoute;
-  flightPlan: any;
+  flightPlan: FlightPlan;
   estimatedTime: number;
   fuelSavings: number;
   co2Savings: number;
 }
 
+interface WeatherProfile {
+  temperature: number;
+  pressure: number;
+  humidity: number;
+  windSpeed: number;
+  windDirection: number;
+  visibility: number;
+  precipitation: number;
+}
+
+interface TurbulenceAvoidance {
+  region: GeographicCoordinate;
+  severity: 'light' | 'moderate' | 'severe';
+  altitude: number;
+  recommendedAction: string;
+}
+
+interface RouteAdjustment {
+  originalWaypoint: GeographicCoordinate;
+  adjustedWaypoint: GeographicCoordinate;
+  reason: string;
+  impact: 'minimal' | 'moderate' | 'significant';
+}
+
+interface SafetyMargin {
+  type: 'weather' | 'traffic' | 'terrain' | 'performance';
+  value: number;
+  unit: string;
+  description: string;
+}
+
 interface WeatherIntegrationResult {
-  weatherProfile: any;
-  turbulenceAvoidance: any[];
-  routeAdjustments: any[];
-  safetyMargins: any;
+  weatherProfile: WeatherProfile;
+  turbulenceAvoidance: TurbulenceAvoidance[];
+  routeAdjustments: RouteAdjustment[];
+  safetyMargins: SafetyMargin[];
+}
+
+interface TrafficProfile {
+  density: number;
+  congestionLevel: 'low' | 'medium' | 'high';
+  conflictZones: GeographicCoordinate[];
+  delayFactors: string[];
+}
+
+interface ConflictResolution {
+  conflictId: string;
+  aircraft1: string;
+  aircraft2: string;
+  resolution: 'altitude_change' | 'speed_adjustment' | 'route_modification';
+  newParameters: Record<string, number>;
+}
+
+interface DelayMinimization {
+  factor: string;
+  impact: number;
+  mitigation: string;
+  expectedReduction: number;
 }
 
 interface TrafficManagementResult {
-  trafficProfile: any;
-  conflictResolutions: any[];
-  delayMinimization: any[];
+  trafficProfile: TrafficProfile;
+  conflictResolutions: ConflictResolution[];
+  delayMinimization: DelayMinimization[];
   efficiencyGains: number;
 }
 
@@ -1132,11 +1194,27 @@ interface FuelOptimizationResult {
   noxSavings: number;
 }
 
+interface RiskFactor {
+  type: 'weather' | 'traffic' | 'technical' | 'human' | 'environmental';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  probability: number;
+  impact: number;
+}
+
+interface MitigationStrategy {
+  riskFactor: string;
+  strategy: string;
+  effectiveness: number;
+  implementationTime: number;
+  cost: number;
+}
+
 interface SafetyAnalysisResult {
   riskLevel: string;
   safetyScore: number;
-  riskFactors: any[];
-  mitigationStrategies: any[];
+  riskFactors: RiskFactor[];
+  mitigationStrategies: MitigationStrategy[];
   complianceStatus: string;
 }
 
@@ -1170,11 +1248,33 @@ interface FlightRecommendation {
   expectedImpact: number;
 }
 
+interface EmergencyRiskFactor {
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  immediateAction: string;
+}
+
+interface ContingencyPlan {
+  scenario: string;
+  actions: string[];
+  priority: number;
+  resources: string[];
+}
+
+interface EmergencyContact {
+  name: string;
+  role: string;
+  phone: string;
+  email: string;
+  availability: '24/7' | 'business_hours' | 'on_call';
+}
+
 interface EmergencyStatus {
   level: string;
-  riskFactors: any[];
-  contingencyPlans: any[];
-  emergencyContacts: any[];
+  riskFactors: EmergencyRiskFactor[];
+  contingencyPlans: ContingencyPlan[];
+  emergencyContacts: EmergencyContact[];
 }
 
 interface FlightMonitoringResult {
@@ -1184,20 +1284,83 @@ interface FlightMonitoringResult {
   emergencyStatus: EmergencyStatus;
 }
 
+interface EmergencyOption {
+  type: 'divert' | 'return' | 'continue' | 'land_immediately';
+  destination: GeographicCoordinate;
+  estimatedTime: number;
+  risk: number;
+  fuelRequired: number;
+}
+
 interface FlightEmergency {
   type: string;
   flightId: string;
   location: GeographicCoordinate;
   severity: number;
-  availableOptions: any[];
+  availableOptions: EmergencyOption[];
+}
+
+interface AlternativeRoute {
+  route: FlightRoute;
+  estimatedTime: number;
+  fuelRequired: number;
+  risk: number;
+  reason: string;
+}
+
+interface NearestAirport {
+  airport: GeographicCoordinate;
+  distance: number;
+  runwayLength: number;
+  services: string[];
+  availability: boolean;
+}
+
+interface EmergencyProcedure {
+  step: number;
+  action: string;
+  responsible: string;
+  timeRequired: number;
+  priority: 'immediate' | 'urgent' | 'normal';
+}
+
+interface EmergencyContingencyPlan {
+  scenario: string;
+  actions: string[];
+  resources: string[];
+  timeline: number;
 }
 
 interface EmergencyFlightResponse {
-  alternativeRoutes: any[];
-  nearestAirports: any[];
-  emergencyProcedures: any[];
+  alternativeRoutes: AlternativeRoute[];
+  nearestAirports: NearestAirport[];
+  emergencyProcedures: EmergencyProcedure[];
   estimatedResponseTime: number;
-  contingencyPlans: any[];
+  contingencyPlans: EmergencyContingencyPlan[];
+}
+
+// Method parameter interfaces
+interface FuelOptimizationData {
+  savings: number;
+  co2Savings: number;
+  noxSavings: number;
+}
+
+interface RouteOptimizationData {
+  co2Savings: number;
+}
+
+interface FlightMonitoringData {
+  routePerformance: { healthScore: number };
+  weatherUpdates: { healthScore: number };
+  trafficStatus: { healthScore: number };
+  fuelConsumption: { healthScore: number };
+  safetyStatus: { healthScore: number };
+}
+
+interface EmergencyData {
+  severity: string;
+  availableOptions: EmergencyOption[];
 }
 
 export { QuantumFlightOptimizer };

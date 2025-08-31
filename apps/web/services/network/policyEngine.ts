@@ -50,7 +50,7 @@ export interface PolicyRule {
 export interface PolicyContext {
   type: 'location' | 'device_posture' | 'behavior_pattern' | 'threat_level' | 'compliance_status';
   operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'matches_pattern';
-  value: any;
+  value: PolicyValue;
   weight: number; // 0-1 for policy evaluation weight
 }
 
@@ -593,7 +593,7 @@ export class DynamicPolicyEngine {
   /**
    * Get context value by type
    */
-  private getContextValue(type: PolicyContext['type'], context: Partial<PolicyEvaluation['context']>): any {
+  private getContextValue(type: PolicyContext['type'], context: Partial<PolicyEvaluation['context']>): PolicyValue {
     switch (type) {
       case 'location':
         return context.location?.trusted ? 'trusted' : 'untrusted';
@@ -613,7 +613,7 @@ export class DynamicPolicyEngine {
   /**
    * Evaluate condition operator
    */
-  private evaluateCondition(value: any, operator: PolicyContext['operator'], expected: any): boolean {
+  private evaluateCondition(value: PolicyValue, operator: PolicyContext['operator'], expected: PolicyValue): boolean {
     switch (operator) {
       case 'equals':
         return value === expected;
@@ -899,5 +899,8 @@ export class DynamicPolicyEngine {
     return newPolicy;
   }
 }
+
+// Type definitions for policy engine
+type PolicyValue = string | number | boolean | null;
 
 export default DynamicPolicyEngine;

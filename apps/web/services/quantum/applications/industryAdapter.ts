@@ -91,7 +91,7 @@ export interface IndustryOperation {
 
 export interface OperationResult {
   success: boolean;
-  result: any;
+  result: OperationResultData;
   executionTime: number;
   quantumAdvantage: number;
   complianceStatus: 'compliant' | 'non_compliant' | 'requires_review';
@@ -535,16 +535,16 @@ export class QuantumIndustryAdapter {
     return 100; // placeholder
   }
 
-  private async generateOptimizationRecommendations(operation: IndustryOperation, result: any): Promise<string[]> {
+  private async generateOptimizationRecommendations(operation: IndustryOperation, result: OperationResultData): Promise<string[]> {
     // Implementation for optimization recommendations
     return [];
   }
 
-  private async applyPerformanceOptimizations(serviceId: string, params: any): Promise<void> {
+  private async applyPerformanceOptimizations(serviceId: string, params: OptimizationParams): Promise<void> {
     // Implementation for applying optimizations
   }
 
-  private calculateImprovement(old: PerformanceMetrics, new_: PerformanceMetrics): any {
+  private calculateImprovement(old: PerformanceMetrics, new_: PerformanceMetrics): ImprovementMetrics {
     // Implementation for improvement calculation
     return { performance: 0, resources: 0, cost: 0, recommendations: [] };
   }
@@ -603,3 +603,21 @@ class PerformanceMonitor {
     };
   }
 }
+
+// Type definitions for industry adapter
+interface OperationResultData {
+  [key: string]: unknown;
+}
+
+interface OptimizationParams {
+  [key: string]: unknown;
+}
+
+interface ImprovementMetrics {
+  performance: number;
+  resources: number;
+  cost: number;
+  recommendations: string[];
+}
+
+export default IndustryAdapter;

@@ -33,7 +33,7 @@ class TestDataGenerator {
     return data;
   }
 
-  static generateTimeSeriesData(length: number = 100): any[] {
+  static generateTimeSeriesData(length: number = 100): TimeSeriesDataPoint[] {
     const baseTime = Date.now();
     const data = [];
     
@@ -52,7 +52,7 @@ class TestDataGenerator {
     return data;
   }
 
-  static generateMultivariateData(length: number = 100): any[] {
+  static generateMultivariateData(length: number = 100): MultivariateDataPoint[] {
     const data = [];
     
     for (let i = 0; i < length; i++) {
@@ -71,7 +71,7 @@ class TestDataGenerator {
     return data;
   }
 
-  static generateGraphData(nodeCount: number = 20, edgeCount: number = 30): any[] {
+  static generateGraphData(nodeCount: number = 20, edgeCount: number = 30): GraphDataPoint[] {
     const data = [];
     
     // Generate nodes
@@ -127,7 +127,7 @@ class TestDataGenerator {
 
 // Test suite
 class AnomalyDetectionTestSuite {
-  private results: any[] = [];
+  private results: TestResult[] = [];
 
   async runAllTests(): Promise<void> {
     console.log('🧪 Starting Phase 5.3 Advanced Anomaly Detection Test Suite');
@@ -478,6 +478,47 @@ class AnomalyDetectionTestSuite {
 
 // Export test utilities
 export { TestDataGenerator, AnomalyDetectionTestSuite };
+
+// Type definitions for anomaly detection tests
+interface TimeSeriesDataPoint {
+  timestamp: number;
+  value: number;
+}
+
+interface MultivariateDataPoint {
+  features: {
+    cpu_usage: number;
+    memory_usage: number;
+    network_io: number;
+    disk_io: number;
+    response_time: number;
+  };
+  timestamp: number;
+}
+
+interface GraphDataPoint {
+  id?: string;
+  type?: string;
+  attributes?: {
+    degree: number;
+    weight: number;
+  };
+  source?: string;
+  target?: string;
+  weight?: number;
+}
+
+interface TestResult {
+  test: string;
+  success: boolean;
+  duration?: number;
+  result?: unknown;
+  error?: string;
+  adaptationResults?: unknown[];
+  timeImprovement?: number;
+  averageTime?: number;
+  throughput?: number;
+}
 
 // Auto-run tests if this file is executed directly
 if (typeof window === 'undefined' && require.main === module) {

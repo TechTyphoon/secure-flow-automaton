@@ -111,7 +111,7 @@ interface TestStep {
 interface ExpectedResult {
     metric: string;
     operator: 'equals' | 'greater_than' | 'less_than' | 'contains';
-    value: any;
+    value: ExpectedResultValue;
     tolerance?: number;
 }
 
@@ -260,16 +260,16 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
             this.handleIncidentResolved(result);
         });
 
-        this.incidentResponse.on('incident_escalated', (incident: any) => {
+        this.incidentResponse.on('incident_escalated', (incident: EscalatedIncident) => {
             this.handleIncidentEscalated(incident);
         });
 
         // Self-Healing Events
-        this.selfHealing.on('healing_completed', (record: any) => {
+        this.selfHealing.on('healing_completed', (record: HealingRecord) => {
             this.handleHealingCompleted(record);
         });
 
-        this.selfHealing.on('health_check_completed', (health: any) => {
+        this.selfHealing.on('health_check_completed', (health: HealthCheckResult) => {
             this.handleHealthCheckCompleted(health);
         });
     }
@@ -1048,7 +1048,7 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
 
     // =================== TEST SIMULATION METHODS ===================
 
-    private async simulateLoadPolicies(params: any): Promise<StepResult> {
+    private async simulateLoadPolicies(params: LoadPoliciesParams): Promise<StepResult> {
         // Simulate policy loading
         await new Promise(resolve => setTimeout(resolve, 1000));
         return {
@@ -1060,7 +1060,7 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
         };
     }
 
-    private async simulateOptimizePolicies(params: any): Promise<StepResult> {
+    private async simulateOptimizePolicies(params: OptimizePoliciesParams): Promise<StepResult> {
         // Simulate policy optimization
         await new Promise(resolve => setTimeout(resolve, 3000));
         return {
@@ -1073,7 +1073,7 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
         };
     }
 
-    private async simulateCreateIncident(params: any): Promise<StepResult> {
+    private async simulateCreateIncident(params: CreateIncidentParams): Promise<StepResult> {
         await new Promise(resolve => setTimeout(resolve, 500));
         return {
             success: true,
@@ -1085,7 +1085,7 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
         };
     }
 
-    private async simulateClassifyIncident(params: any): Promise<StepResult> {
+    private async simulateClassifyIncident(params: ClassifyIncidentParams): Promise<StepResult> {
         await new Promise(resolve => setTimeout(resolve, 2000));
         return {
             success: true,
@@ -1097,7 +1097,7 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
         };
     }
 
-    private async simulateExecutePlaybook(params: any): Promise<StepResult> {
+    private async simulateExecutePlaybook(params: ExecutePlaybookParams): Promise<StepResult> {
         await new Promise(resolve => setTimeout(resolve, 5000));
         return {
             success: true,
@@ -1109,7 +1109,7 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
         };
     }
 
-    private async simulateModifyConfig(params: any): Promise<StepResult> {
+    private async simulateModifyConfig(params: ModifyConfigParams): Promise<StepResult> {
         await new Promise(resolve => setTimeout(resolve, 1000));
         return {
             success: true,
@@ -1120,7 +1120,7 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
         };
     }
 
-    private async simulateAnalyzeConfig(params: any): Promise<StepResult> {
+    private async simulateAnalyzeConfig(params: AnalyzeConfigParams): Promise<StepResult> {
         await new Promise(resolve => setTimeout(resolve, 2000));
         return {
             success: true,
@@ -1132,7 +1132,7 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
         };
     }
 
-    private async simulateHealConfig(params: any): Promise<StepResult> {
+    private async simulateHealConfig(params: HealConfigParams): Promise<StepResult> {
         await new Promise(resolve => setTimeout(resolve, 4000));
         return {
             success: true,
@@ -1144,7 +1144,7 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
         };
     }
 
-    private async simulateStartAutomation(params: any): Promise<StepResult> {
+    private async simulateStartAutomation(params: StartAutomationParams): Promise<StepResult> {
         await new Promise(resolve => setTimeout(resolve, 3000));
         return {
             success: true,
@@ -1156,7 +1156,7 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
         };
     }
 
-    private validateResult(actual: any, expected: ExpectedResult): boolean {
+    private validateResult(actual: TestResultValue, expected: ExpectedResult): boolean {
         switch (expected.operator) {
             case 'equals':
                 return actual === expected.value;
@@ -1217,19 +1217,19 @@ export class Phase5AutomationIntegrationService extends EventEmitter {
             (this.metrics.incidentResponse.averageResponseTime + result.resolutionTime) / 2;
     }
 
-    private handleIncidentEscalated(incident: any): void {
+    private handleIncidentEscalated(incident: EscalatedIncident): void {
         console.log(`🚨 Incident escalated: ${incident.id}`);
         this.metrics.incidentResponse.escalationRate++;
     }
 
-    private handleHealingCompleted(record: any): void {
+    private handleHealingCompleted(record: HealingRecord): void {
         console.log(`🔧 Configuration healing completed: ${record.configName}`);
         this.metrics.selfHealing.healingSuccess++;
         this.metrics.selfHealing.averageHealingTime = 
             (this.metrics.selfHealing.averageHealingTime + (record.duration || 0)) / 2;
     }
 
-    private handleHealthCheckCompleted(health: any): void {
+    private handleHealthCheckCompleted(health: HealthCheckResult): void {
         this.metrics.selfHealing.systemHealth = health.overallHealth;
         this.metrics.selfHealing.totalConfigurations = health.totalConfigurations;
     }
@@ -1457,6 +1457,92 @@ interface AutomationReport {
     }>;
     recommendations: string[];
     insights: string[];
+}
+
+// Type definitions for phase 5 integration service
+interface ExpectedResultValue {
+    value: string | number | boolean;
+    [key: string]: unknown;
+}
+
+interface EscalatedIncident {
+    id: string;
+    severity: string;
+    escalationReason: string;
+    timestamp: Date;
+}
+
+interface HealingRecord {
+    configName: string;
+    duration: number;
+    success: boolean;
+    changes: string[];
+}
+
+interface HealthCheckResult {
+    overallHealth: number;
+    totalConfigurations: number;
+    healthDetails: Record<string, unknown>;
+}
+
+interface LoadPoliciesParams {
+    count?: number;
+    type?: string;
+    [key: string]: unknown;
+}
+
+interface OptimizePoliciesParams {
+    optimizationLevel?: number;
+    targetMetrics?: string[];
+    [key: string]: unknown;
+}
+
+interface CreateIncidentParams {
+    severity?: string;
+    type?: string;
+    description?: string;
+    [key: string]: unknown;
+}
+
+interface ClassifyIncidentParams {
+    incidentData?: Record<string, unknown>;
+    classificationModel?: string;
+    [key: string]: unknown;
+}
+
+interface ExecutePlaybookParams {
+    playbookId?: string;
+    actions?: string[];
+    [key: string]: unknown;
+}
+
+interface ModifyConfigParams {
+    configId?: string;
+    changes?: Record<string, unknown>;
+    [key: string]: unknown;
+}
+
+interface AnalyzeConfigParams {
+    configId?: string;
+    analysisType?: string;
+    [key: string]: unknown;
+}
+
+interface HealConfigParams {
+    configId?: string;
+    healingStrategy?: string;
+    [key: string]: unknown;
+}
+
+interface StartAutomationParams {
+    components?: string[];
+    config?: Record<string, unknown>;
+    [key: string]: unknown;
+}
+
+interface TestResultValue {
+    value: string | number | boolean;
+    [key: string]: unknown;
 }
 
 export type { 

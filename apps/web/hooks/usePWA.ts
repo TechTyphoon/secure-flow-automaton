@@ -5,14 +5,14 @@ interface PWAState {
   isInstalled: boolean;
   isOffline: boolean;
   isUpdateAvailable: boolean;
-  installPrompt: any;
+  installPrompt: BeforeInstallPromptEvent | null;
   swRegistration: ServiceWorkerRegistration | null;
 }
 
 interface OfflineAction {
   id: string;
   type: 'security-scan' | 'vulnerability-report' | 'performance-metrics' | 'error-report';
-  data: any;
+  data: OfflineActionData;
   timestamp: number;
   retryCount: number;
 }
@@ -347,8 +347,8 @@ export const usePWA = () => {
   }, [pwaState, offlineActions]);
 
   // Performance monitoring
-  const measurePerformance = useCallback((name: string, fn: () => Promise<any>) => {
-    return async (...args: any[]) => {
+  const measurePerformance = useCallback((name: string, fn: () => Promise<unknown>) => {
+    return async (...args: unknown[]) => {
       const startTime = performance.now();
       
       try {
@@ -409,5 +409,19 @@ export const usePWA = () => {
     measurePerformance
   };
 };
+
+// Type definitions for PWA hook
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
+interface OfflineActionData {
+  [key: string]: unknown;
+}
 
 export default usePWA;

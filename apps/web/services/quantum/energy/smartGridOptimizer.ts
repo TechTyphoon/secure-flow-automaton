@@ -492,11 +492,11 @@ export class QuantumSmartGridOptimizer {
     return classicalTime / processingTime;
   }
 
-  private calculateEnergySavings(loadOpt: any, storageOpt: any): number {
+  private calculateEnergySavings(loadOpt: LoadOptimizationData, storageOpt: StorageOptimizationData): number {
     return (loadOpt.savings + storageOpt.savings) * 365; // Annual savings
   }
 
-  private calculateCarbonImpact(renewableOpt: any, loadOpt: any): CarbonImpactMetrics {
+  private calculateCarbonImpact(renewableOpt: RenewableOptimizationData, loadOpt: LoadOptimizationData): CarbonImpactMetrics {
     return {
       carbonReduction: renewableOpt.carbonSavings + loadOpt.carbonSavings,
       renewableIntegration: renewableOpt.integrationRate,
@@ -505,7 +505,7 @@ export class QuantumSmartGridOptimizer {
     };
   }
 
-  private getAllGridComponents(config: QuantumGridConfig): any[] {
+  private getAllGridComponents(config: QuantumGridConfig): (PowerSource | TransmissionLine | EnergyStorageDevice | RenewableEnergyAsset)[] {
     return [
       ...config.powerSources,
       ...config.transmissionLines,
@@ -514,32 +514,32 @@ export class QuantumSmartGridOptimizer {
     ];
   }
 
-  private async getRealTimeGridData(gridId: string): Promise<any> {
+  private async getRealTimeGridData(gridId: string): Promise<Record<string, unknown>> {
     // Implementation for real-time data retrieval
     return {};
   }
 
-  private async getPriceSignals(region: GeographicRegion): Promise<any> {
+  private async getPriceSignals(region: GeographicRegion): Promise<Record<string, unknown>> {
     // Implementation for price signal retrieval
     return {};
   }
 
-  private async getWeatherForecast(region: GeographicRegion): Promise<any> {
+  private async getWeatherForecast(region: GeographicRegion): Promise<Record<string, unknown>> {
     // Implementation for weather forecast retrieval
     return {};
   }
 
-  private async getHistoricalFaultData(gridId: string): Promise<any> {
+  private async getHistoricalFaultData(gridId: string): Promise<Record<string, unknown>> {
     // Implementation for historical fault data retrieval
     return {};
   }
 
-  private async getRealTimeMonitoring(gridId: string): Promise<any> {
+  private async getRealTimeMonitoring(gridId: string): Promise<Record<string, unknown>> {
     // Implementation for real-time monitoring data
     return {};
   }
 
-  private calculateGridHealth(monitoring: any): GridHealth {
+  private calculateGridHealth(monitoring: GridMonitoringData): GridHealth {
     return {
       overallScore: 98.7,
       loadHealthScore: monitoring.loadBalance.healthScore,
@@ -550,17 +550,17 @@ export class QuantumSmartGridOptimizer {
     };
   }
 
-  private identifyGridAlerts(monitoring: any): GridAlert[] {
+  private identifyGridAlerts(monitoring: GridMonitoringData): GridAlert[] {
     // Implementation for alert identification
     return [];
   }
 
-  private generateGridPredictions(monitoring: any): GridPrediction[] {
+  private generateGridPredictions(monitoring: GridMonitoringData): GridPrediction[] {
     // Implementation for prediction generation
     return [];
   }
 
-  private generateGridRecommendations(monitoring: any): GridRecommendation[] {
+  private generateGridRecommendations(monitoring: GridMonitoringData): GridRecommendation[] {
     // Implementation for recommendation generation
     return [];
   }
@@ -570,7 +570,7 @@ export class QuantumSmartGridOptimizer {
 class QuantumLoadBalancer {
   constructor(private quantumCore: QuantumCoreEngine) {}
   
-  async optimizeLoadDistribution(config: any): Promise<LoadOptimizationResult> {
+  async optimizeLoadDistribution(config: QuantumGridConfig): Promise<LoadOptimizationResult> {
     return {
       optimizedDistribution: [],
       savings: 3200000, // $3.2M daily savings
@@ -581,7 +581,7 @@ class QuantumLoadBalancer {
     };
   }
   
-  async monitorLoad(gridId: string): Promise<any> {
+  async monitorLoad(gridId: string): Promise<{ healthScore: number }> {
     return { healthScore: 98.5 };
   }
 }
@@ -589,7 +589,7 @@ class QuantumLoadBalancer {
 class QuantumDemandResponseManager {
   constructor(private quantumML: QuantumMLEngine) {}
   
-  async optimizeDemandResponse(config: any): Promise<DemandResponseResult> {
+  async optimizeDemandResponse(config: QuantumGridConfig): Promise<DemandResponseResult> {
     return {
       participationRate: 95.3,
       loadReduction: 250, // MW
@@ -598,7 +598,7 @@ class QuantumDemandResponseManager {
     };
   }
   
-  async monitorDemandResponse(gridId: string): Promise<any> {
+  async monitorDemandResponse(gridId: string): Promise<{ healthScore: number }> {
     return { healthScore: 94.7 };
   }
 }
@@ -606,7 +606,7 @@ class QuantumDemandResponseManager {
 class QuantumRenewableIntegrator {
   constructor(private quantumML: QuantumMLEngine) {}
   
-  async integrateRenewables(config: any): Promise<RenewableIntegrationResult> {
+  async integrateRenewables(config: QuantumGridConfig): Promise<RenewableIntegrationResult> {
     return {
       integrationRate: 85.7,
       forecastAccuracy: 95.2,
@@ -617,7 +617,7 @@ class QuantumRenewableIntegrator {
     };
   }
   
-  async monitorRenewables(gridId: string): Promise<any> {
+  async monitorRenewables(gridId: string): Promise<{ healthScore: number }> {
     return { healthScore: 96.3 };
   }
 }
@@ -625,7 +625,7 @@ class QuantumRenewableIntegrator {
 class QuantumStorageOptimizer {
   constructor(private quantumCore: QuantumCoreEngine) {}
   
-  async optimizeStorage(config: any): Promise<StorageOptimizationResult> {
+  async optimizeStorage(config: QuantumGridConfig): Promise<StorageOptimizationResult> {
     return {
       efficiency: 90.4,
       cycleLifeExtension: 25.7,
@@ -635,7 +635,7 @@ class QuantumStorageOptimizer {
     };
   }
   
-  async monitorStorage(gridId: string): Promise<any> {
+  async monitorStorage(gridId: string): Promise<{ healthScore: number }> {
     return { healthScore: 97.1 };
   }
 }
@@ -643,7 +643,7 @@ class QuantumStorageOptimizer {
 class QuantumFaultDetector {
   constructor(private quantumML: QuantumMLEngine) {}
   
-  async analyzeFaults(config: any): Promise<FaultAnalysisResult> {
+  async analyzeFaults(config: QuantumGridConfig): Promise<FaultAnalysisResult> {
     return {
       riskLevel: 'low',
       predictedFaults: [],
@@ -652,7 +652,7 @@ class QuantumFaultDetector {
     };
   }
   
-  async monitorFaults(gridId: string): Promise<any> {
+  async monitorFaults(gridId: string): Promise<{ healthScore: number }> {
     return { healthScore: 99.1 };
   }
 }
@@ -672,11 +672,11 @@ interface GridOptimizationResult {
 }
 
 interface LoadOptimizationResult {
-  optimizedDistribution: any[];
+  optimizedDistribution: OptimizedDistribution[];
   savings: number;
   efficiency: number;
-  stabilityMetrics: any;
-  gridConditions: any;
+  stabilityMetrics: StabilityMetrics;
+  gridConditions: GridConditions;
   availableCapacity: number;
 }
 
@@ -699,15 +699,15 @@ interface RenewableIntegrationResult {
 interface StorageOptimizationResult {
   efficiency: number;
   cycleLifeExtension: number;
-  gridServices: any[];
+  gridServices: GridService[];
   savings: number;
   reliability: number;
 }
 
 interface FaultAnalysisResult {
   riskLevel: string;
-  predictedFaults: any[];
-  preventiveActions: any[];
+  predictedFaults: PredictedFault[];
+  preventiveActions: PreventiveAction[];
   reliability: number;
 }
 
@@ -737,7 +737,7 @@ interface GridAlert {
 interface GridPrediction {
   type: string;
   timeframe: string;
-  prediction: any;
+  prediction: GridPredictionData;
   confidence: number;
 }
 
@@ -759,15 +759,129 @@ interface GridEmergency {
   type: string;
   affectedAreas: string[];
   severity: number;
-  availableResources: any[];
+  availableResources: AvailableResource[];
+}
+
+// Method parameter interfaces
+interface LoadOptimizationData {
+  savings: number;
+  carbonSavings: number;
+}
+
+interface StorageOptimizationData {
+  savings: number;
+}
+
+interface RenewableOptimizationData {
+  carbonSavings: number;
+  integrationRate: number;
+  emissionsAvoided: number;
+}
+
+interface GridMonitoringData {
+  loadBalance: { healthScore: number };
+  demandResponse: { healthScore: number };
+  renewableOutput: { healthScore: number };
+  storageStatus: { healthScore: number };
+  faultStatus: { healthScore: number };
+}
+
+interface OptimizedDistribution {
+  sourceId: string;
+  destinationId: string;
+  powerFlow: number;
+  efficiency: number;
+  cost: number;
+}
+
+interface StabilityMetrics {
+  voltageStability: number;
+  frequencyStability: number;
+  powerFactor: number;
+  harmonicContent: number;
+}
+
+interface GridConditions {
+  temperature: number;
+  humidity: number;
+  windSpeed: number;
+  solarIrradiance: number;
+  loadFactor: number;
+}
+
+interface GridService {
+  serviceType: 'frequency_regulation' | 'voltage_support' | 'peak_shaving' | 'valley_filling';
+  provider: string;
+  capacity: number;
+  duration: number;
+  cost: number;
+}
+
+interface PredictedFault {
+  componentId: string;
+  faultType: string;
+  probability: number;
+  estimatedTime: number;
+  impact: number;
+}
+
+interface PreventiveAction {
+  actionType: string;
+  targetComponent: string;
+  priority: number;
+  estimatedCost: number;
+  effectiveness: number;
+}
+
+interface GridPredictionData {
+  loadForecast: number[];
+  renewableForecast: number[];
+  priceForecast: number[];
+  reliabilityForecast: number[];
+}
+
+interface AvailableResource {
+  resourceId: string;
+  type: 'generation' | 'storage' | 'demand_response';
+  capacity: number;
+  availability: number;
+  cost: number;
+}
+
+interface LoadShedding {
+  affectedAreas: string[];
+  loadReduction: number;
+  duration: number;
+  priority: number;
+}
+
+interface GenerationDispatch {
+  sourceId: string;
+  output: number;
+  cost: number;
+  rampRate: number;
+}
+
+interface StorageDeployment {
+  storageId: string;
+  chargeRate: number;
+  dischargeRate: number;
+  stateOfCharge: number;
+}
+
+interface ContingencyAction {
+  actionType: string;
+  target: string;
+  parameters: Record<string, number>;
+  priority: number;
 }
 
 interface EmergencyResponse {
-  loadShedding: any;
-  generationDispatch: any;
-  storageDeployment: any;
+  loadShedding: LoadShedding;
+  generationDispatch: GenerationDispatch;
+  storageDeployment: StorageDeployment;
   estimatedRestoration: number;
-  contingencyActions: any[];
+  contingencyActions: ContingencyAction[];
 }
 
 export { QuantumSmartGridOptimizer };

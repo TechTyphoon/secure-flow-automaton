@@ -455,7 +455,7 @@ class QuantumNetworkMLEngine {
     return new Map(this.models);
   }
 
-  async retrainModel(modelId: string, trainingData: any[]): Promise<boolean> {
+  async retrainModel(modelId: string, trainingData: TrainingData[]): Promise<boolean> {
     const model = this.models.get(modelId);
     if (!model) return false;
 
@@ -826,7 +826,7 @@ export class QuantumNetworkAnalyticsEngine extends EventEmitter {
     return this.mlEngine.getModelStatus();
   }
 
-  async retrainMLModel(modelId: string, trainingData?: any[]): Promise<boolean> {
+  async retrainMLModel(modelId: string, trainingData?: TrainingData[]): Promise<boolean> {
     const data = trainingData || this.metricsHistory.slice(-100);
     return await this.mlEngine.retrainModel(modelId, data);
   }
@@ -871,7 +871,7 @@ export class QuantumNetworkAnalyticsEngine extends EventEmitter {
     return Math.round(overallScore);
   }
 
-  getAnalyticsSummary(): any {
+  getAnalyticsSummary(): AnalyticsSummary {
     const currentMetrics = this.getCurrentMetrics();
     const activeAlerts = this.getActiveAlerts();
     const healthScore = this.getNetworkHealthScore();
@@ -951,5 +951,26 @@ export type {
   AnalyticsAlert,
   MLModel
 };
+
+// Type definitions for quantum network analytics
+type TrainingData = QuantumNetworkMetrics;
+
+interface AnalyticsSummary {
+  healthScore: number;
+  totalNodes: number;
+  activeNodes: number;
+  totalServices: number;
+  healthyServices: number;
+  quantumReadiness: number;
+  averageLatency: number;
+  overallThroughput: number;
+  securityScore: number;
+  threatLevel: string;
+  activeAlerts: number;
+  criticalAlerts: number;
+  metricsHistorySize: number;
+  isCollecting: boolean;
+  timestamp: number;
+}
 
 export default QuantumNetworkAnalyticsEngine;

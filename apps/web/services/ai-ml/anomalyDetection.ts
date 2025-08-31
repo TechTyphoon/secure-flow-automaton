@@ -775,7 +775,7 @@ export class AnomalyDetectionService {
     };
   }
 
-  private calculateBaselineDeviation(features: Record<string, number>, baseline: any): number {
+  private calculateBaselineDeviation(features: Record<string, number>, baseline: BaselineData): number {
     const normalRanges = baseline.normalRanges;
     let totalDeviation = 0;
     let featureCount = 0;
@@ -1101,6 +1101,14 @@ export class AnomalyDetectionService {
       `cluster-${entityId.slice(-3)}`
     ];
   }
+}
+
+// Type definitions for anomaly detection
+interface BaselineData {
+  normalRanges: Record<string, { min: number; max: number }>;
+  meanValues: Record<string, number>;
+  standardDeviations: Record<string, number>;
+  lastUpdated: Date;
 }
 
 export default AnomalyDetectionService;

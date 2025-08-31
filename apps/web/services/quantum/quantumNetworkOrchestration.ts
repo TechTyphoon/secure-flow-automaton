@@ -199,7 +199,7 @@ interface QuantumNetworkEvent {
   serviceId?: string;
   severity: 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
   message: string;
-  data: any;
+  data: EventData;
   timestamp: number;
 }
 
@@ -245,7 +245,7 @@ class QuantumNetworkDiscovery {
     }
   }
 
-  private createDiscoveryPacket(): any {
+  private createDiscoveryPacket(): DiscoveryPacket {
     return {
       type: 'QUANTUM_DISCOVERY',
       nodeId: this.networkManager.getLocalNodeId(),
@@ -255,7 +255,7 @@ class QuantumNetworkDiscovery {
     };
   }
 
-  private async broadcastDiscovery(packet: any): Promise<void> {
+  private async broadcastDiscovery(packet: DiscoveryPacket): Promise<void> {
     // Simulate quantum discovery broadcast
     const networkInterfaces = this.getNetworkInterfaces();
     
@@ -268,7 +268,7 @@ class QuantumNetworkDiscovery {
     }
   }
 
-  private async sendDiscoveryPacket(address: string, packet: any): Promise<void> {
+  private async sendDiscoveryPacket(address: string, packet: DiscoveryPacket): Promise<void> {
     // Simulate sending discovery packet
     // In real implementation, this would use UDP multicast or quantum channels
     console.log(`📡 Sending discovery packet to ${address}`);
@@ -315,7 +315,7 @@ class QuantumNetworkDiscovery {
     return mockResponses;
   }
 
-  private async processDiscoveryResponse(response: any): Promise<void> {
+  private async processDiscoveryResponse(response: DiscoveryResponse): Promise<void> {
     const nodeId = response.nodeId;
     
     if (this.discoveredNodes.has(nodeId)) {
@@ -1004,7 +1004,7 @@ export class QuantumMeshNetworkManager extends EventEmitter {
     return this.routing.findRoute(sourceNodeId, targetNodeId);
   }
 
-  getNetworkStatistics(): any {
+  getNetworkStatistics(): NetworkStatistics {
     return {
       topology: {
         nodes: this.topology.metrics.totalNodes,
@@ -1031,7 +1031,7 @@ export class QuantumMeshNetworkManager extends EventEmitter {
     type: QuantumNetworkEvent['type'],
     severity: QuantumNetworkEvent['severity'],
     message: string,
-    data: any = {}
+    data: EventData = {}
   ): void {
     const event: QuantumNetworkEvent = {
       eventId: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -1092,5 +1092,51 @@ export type {
   QuantumCluster,
   QuantumNetworkEvent
 };
+
+// Type definitions for quantum network orchestration
+interface EventData {
+  [key: string]: unknown;
+}
+
+interface DiscoveryPacket {
+  type: string;
+  nodeId: string;
+  timestamp: number;
+  capabilities: Record<string, unknown>;
+  publicKey: Uint8Array;
+}
+
+interface DiscoveryResponse {
+  nodeId: string;
+  type: string;
+  address: {
+    ip: string;
+    port: number;
+    quantumPort?: number;
+  };
+  capabilities: {
+    qkdSupport: boolean;
+    maxQuantumChannels: number;
+    supportedAlgorithms: string[];
+    hardwareAcceleration: boolean;
+    quantumMemory: boolean;
+  };
+}
+
+interface NetworkStatistics {
+  topology: {
+    nodes: number;
+    activeConnections: number;
+    averageQBER: number;
+    totalKeyRate: number;
+    networkReliability: number;
+  };
+  events: number;
+  discoveredNodes: number;
+  routes: number;
+  uptime: number;
+  isInitialized: boolean;
+  timestamp: number;
+}
 
 export default QuantumMeshNetworkManager;

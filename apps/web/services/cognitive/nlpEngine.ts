@@ -12,7 +12,7 @@ interface SecurityEntity {
   confidence: number;
   context: string;
   position: { start: number; end: number };
-  attributes?: { [key: string]: any };
+  attributes?: { [key: string]: EntityAttribute };
 }
 
 interface ThreatIntelligence {
@@ -59,7 +59,7 @@ interface SecurityPattern {
   pattern: RegExp;
   type: SecurityEntity['type'];
   validator?: (match: string) => boolean;
-  extractor?: (match: string) => any;
+  extractor?: (match: string) => ExtractedData;
 }
 
 interface LanguageModel {
@@ -687,7 +687,7 @@ export class SecurityNLPEngine extends EventEmitter {
     }
   }
 
-  async batchAnalyze(texts: string[], options?: any): Promise<TextAnalysisResult[]> {
+  async batchAnalyze(texts: string[], options?: BatchAnalysisOptions): Promise<TextAnalysisResult[]> {
     const results = await Promise.all(
       texts.map(text => this.analyzeText(text, options))
     );
@@ -735,7 +735,7 @@ export class SecurityNLPEngine extends EventEmitter {
     });
   }
 
-  getCapabilities(): any {
+  getCapabilities(): EngineCapabilities {
     return {
       textAnalysis: {
         tokenization: true,
@@ -758,7 +758,7 @@ export class SecurityNLPEngine extends EventEmitter {
     };
   }
 
-  getProcessingStatistics(): any {
+  getProcessingStatistics(): ProcessingStatistics {
     return {
       ...this.processingStats,
       isInitialized: this.isInitialized,
@@ -801,6 +801,51 @@ export class SecurityNLPEngine extends EventEmitter {
       recommendations: []
     };
   }
+}
+
+// Type definitions for NLP engine
+type EntityAttribute = string | number | boolean | Record<string, unknown>;
+
+type ExtractedData = string | number | Record<string, unknown>;
+
+interface BatchAnalysisOptions {
+  language?: string;
+  includeSentiment?: boolean;
+  includeThreatIntel?: boolean;
+  [key: string]: unknown;
+}
+
+interface EngineCapabilities {
+  textAnalysis: {
+    tokenization: boolean;
+    posTagging: boolean;
+    dependencyParsing: boolean;
+    namedEntityRecognition: boolean;
+  };
+  securitySpecific: {
+    threatExtraction: boolean;
+    iocDetection: boolean;
+    vulnerabilityParsing: boolean;
+    attackTechniqueIdentification: boolean;
+  };
+  languageSupport: string[];
+  performanceTargets: {
+    processingSpeed: string;
+    accuracy: string;
+    multiLanguage: boolean;
+  };
+}
+
+interface ProcessingStatistics {
+  totalDocuments: number;
+  totalProcessingTime: number;
+  averageProcessingTime: number;
+  entityExtractionCount: number;
+  threatDetectionCount: number;
+  isInitialized: boolean;
+  languageModelsLoaded: number;
+  capabilities: EngineCapabilities;
+  timestamp: number;
 }
 
 export default SecurityNLPEngine;

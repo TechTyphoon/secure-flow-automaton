@@ -30,7 +30,7 @@ interface SecurityPolicy {
 interface PolicyCondition {
     field: string;
     operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'in_range' | 'matches_pattern';
-    value: any;
+    value: ConditionValue;
     confidence: number;
     source: 'static' | 'ml_prediction' | 'threat_intel' | 'behavioral_analysis';
 }
@@ -614,7 +614,7 @@ export class IntelligentPolicyOptimizer extends EventEmitter {
         };
     }
 
-    private analyzePerformanceMetrics(performance: PolicyPerformance): any {
+    private analyzePerformanceMetrics(performance: PolicyPerformance): PerformanceAnalysis {
         return {
             overallScore: (performance.accuracy + (1 - performance.falsePositiveRate) + (1 - performance.falseNegativeRate)) / 3,
             issues: [
@@ -870,12 +870,12 @@ export class IntelligentPolicyOptimizer extends EventEmitter {
 class AIModelRegistry {
     private models: Map<string, any> = new Map();
 
-    async loadModel(name: string, config: any): Promise<void> {
+    async loadModel(name: string, config: ModelConfig): Promise<void> {
         // Simulate model loading
         this.models.set(name, { ...config, loaded: true });
     }
 
-    async predict(modelName: string, features: any): Promise<any> {
+    async predict(modelName: string, features: ModelFeatures): Promise<ModelPrediction> {
         const model = this.models.get(modelName);
         if (!model) {
             throw new Error(`Model ${modelName} not found`);
@@ -885,7 +885,7 @@ class AIModelRegistry {
         return this.simulatePrediction(modelName, features);
     }
 
-    private simulatePrediction(modelName: string, features: any): any {
+    private simulatePrediction(modelName: string, features: ModelFeatures): ModelPrediction {
         // Simulate different model predictions
         switch (modelName) {
             case 'policy_optimizer':
@@ -1043,6 +1043,35 @@ interface ComplianceViolation {
     violation: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
     deadline: Date;
+}
+
+// Type definitions for intelligent policy optimizer
+type ConditionValue = string | number | boolean | string[] | Record<string, unknown>;
+
+interface PerformanceAnalysis {
+  overallScore: number;
+  issues: string[];
+  strengths: string[];
+}
+
+interface ModelConfig {
+  [key: string]: unknown;
+}
+
+interface ModelFeatures {
+  [key: string]: unknown;
+}
+
+interface ModelPrediction {
+  shouldOptimizeConditions?: boolean;
+  shouldOptimizeActions?: boolean;
+  conditionOptimizationConfidence?: number;
+  actionOptimizationConfidence?: number;
+  expectedConditionImprovement?: number;
+  expectedActionImprovement?: number;
+  effectiveness?: number;
+  riskScore?: number;
+  [key: string]: unknown;
 }
 
 export type { SecurityPolicy, OptimizationContext, OptimizationResult };

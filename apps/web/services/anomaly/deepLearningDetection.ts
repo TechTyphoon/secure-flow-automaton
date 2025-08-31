@@ -717,7 +717,7 @@ export class DeepLearningDetectionService extends EventEmitter {
     return anomalies;
   }
 
-  getModelStatistics(): any {
+  getModelStatistics(): ModelStatistics {
     return {
       totalModels: this.models.size,
       initializedModels: Array.from(this.models.keys()),
@@ -739,6 +739,16 @@ export class DeepLearningDetectionService extends EventEmitter {
       }
     });
   }
+}
+
+// Type definitions for deep learning detection
+interface ModelStatistics {
+  totalModels: number;
+  initializedModels: string[];
+  averageAccuracy: number;
+  averageInferenceTime: number;
+  isInitialized: boolean;
+  timestamp: number;
 }
 
 export default DeepLearningDetectionService;

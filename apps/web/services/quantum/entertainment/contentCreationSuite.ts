@@ -94,7 +94,7 @@ export interface ContentLayer {
 
 export interface Keyframe {
   time: number; // seconds
-  properties: Map<string, any>;
+  properties: Map<string, KeyframeProperty>;
   interpolation: 'linear' | 'bezier' | 'quantum_smooth';
   easing: string;
 }
@@ -248,7 +248,7 @@ export class QuantumContentCreationSuite {
   async createProject(
     creator: string,
     projectType: CreativeProject['type'],
-    specifications: any
+    specifications: ProjectSpecifications
   ): Promise<QuantumContentResult> {
     const startTime = performance.now();
 
@@ -320,7 +320,7 @@ export class QuantumContentCreationSuite {
   private async initializeQuantumProject(
     creator: string,
     type: CreativeProject['type'],
-    specifications: any
+    specifications: ProjectSpecifications
   ): Promise<CreativeProject> {
     const project: CreativeProject = {
       id: `project_${Date.now()}`,
@@ -480,7 +480,7 @@ export class QuantumContentCreationSuite {
     projectId: string,
     contentType: 'text' | 'image' | 'video' | 'audio' | '3d_model',
     prompt: string,
-    parameters: any
+    parameters: ContentGenerationParameters
   ): Promise<{
     asset: CreativeAsset;
     quality: number;
@@ -596,11 +596,11 @@ export class QuantumContentCreationSuite {
     userId: string,
     editType: 'create' | 'modify' | 'delete' | 'comment',
     target: string,
-    changes: any
+    changes: CollaborativeEditChanges
   ): Promise<{
     success: boolean;
-    conflicts: any[];
-    resolution: any;
+    conflicts: EditConflict[];
+    resolution: ConflictResolution;
     syncStatus: string;
   }> {
     const session = this.collaborationSessions.get(sessionId);
@@ -631,10 +631,10 @@ export class QuantumContentCreationSuite {
    */
   async monitorCreationPerformance(projectId: string): Promise<{
     status: string;
-    progress: any;
-    performance: any;
-    collaboration: any;
-    aiActivity: any;
+    progress: CreationProgress;
+    performance: CreationPerformance;
+    collaboration: CollaborationMetrics;
+    aiActivity: AIActivityMetrics;
   }> {
     const project = this.projects.get(projectId);
     if (!project) {
@@ -676,7 +676,7 @@ export class QuantumContentCreationSuite {
     console.log('Initializing quantum AI engines for content creation');
   }
 
-  private async quantumContentGeneration(type: string, prompt: string, params: any): Promise<any> {
+  private async quantumContentGeneration(type: string, prompt: string, params: ContentGenerationParameters): Promise<GeneratedContent> {
     // Quantum-enhanced content generation
     return {
       content: `Generated ${type} content based on: ${prompt}`,
@@ -686,7 +686,7 @@ export class QuantumContentCreationSuite {
     };
   }
 
-  private async createAssetFromGeneration(content: any, type: string): Promise<CreativeAsset> {
+  private async createAssetFromGeneration(content: GeneratedContent, type: string): Promise<CreativeAsset> {
     return {
       id: `asset_${Date.now()}`,
       name: `Generated ${type}`,
@@ -734,7 +734,7 @@ export class QuantumContentCreationSuite {
     return 0.92; // 92% style similarity
   }
 
-  private async quantumCompressionAlgorithm(asset: CreativeAsset): Promise<any> {
+  private async quantumCompressionAlgorithm(asset: CreativeAsset): Promise<CompressedAsset> {
     return {
       size: asset.size * 0.176, // 82.4% compression
       compressionLevel: 0.824,
@@ -742,11 +742,11 @@ export class QuantumContentCreationSuite {
     };
   }
 
-  private async assessCompressionQuality(original: CreativeAsset, compressed: any): Promise<number> {
+  private async assessCompressionQuality(original: CreativeAsset, compressed: CompressedAsset): Promise<number> {
     return 98.7; // % quality retention
   }
 
-  private async processQuantumEdit(type: string, target: string, changes: any): Promise<any> {
+  private async processQuantumEdit(type: string, target: string, changes: CollaborativeEditChanges): Promise<EditResult> {
     return {
       type,
       target,
@@ -756,12 +756,12 @@ export class QuantumContentCreationSuite {
     };
   }
 
-  private async detectEditConflicts(session: CollaborationSession, edit: any): Promise<any[]> {
+  private async detectEditConflicts(session: CollaborationSession, edit: EditResult): Promise<EditConflict[]> {
     // Conflict detection algorithm
     return []; // No conflicts in this example
   }
 
-  private async resolveConflictsQuantum(conflicts: any[]): Promise<any> {
+  private async resolveConflictsQuantum(conflicts: EditConflict[]): Promise<ConflictResolution> {
     return {
       method: 'quantum_merge',
       resolution: 'automatic',
@@ -769,9 +769,102 @@ export class QuantumContentCreationSuite {
     };
   }
 
-  private async syncCollaborativeChanges(session: CollaborationSession, resolution: any): Promise<string> {
+  private async syncCollaborativeChanges(session: CollaborationSession, resolution: ConflictResolution): Promise<string> {
     return 'synchronized';
   }
+}
+
+// Type definitions for content creation suite
+interface KeyframeProperty {
+  value: string | number | boolean;
+  unit?: string;
+  [key: string]: unknown;
+}
+
+interface ProjectSpecifications {
+  name: string;
+  duration?: number;
+  resolution?: string;
+  format?: string;
+  [key: string]: unknown;
+}
+
+interface ContentGenerationParameters {
+  style?: string;
+  quality?: number;
+  duration?: number;
+  resolution?: string;
+  [key: string]: unknown;
+}
+
+interface CollaborativeEditChanges {
+  type: string;
+  data: Record<string, unknown>;
+  timestamp: number;
+  userId: string;
+}
+
+interface EditConflict {
+  id: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high';
+  description: string;
+  resolution: string;
+}
+
+interface ConflictResolution {
+  method: string;
+  resolution: string;
+  success: boolean;
+}
+
+interface CreationProgress {
+  completion: number;
+  assetsCreated: number;
+  timelineEvents: number;
+  effectsApplied: number;
+}
+
+interface CreationPerformance {
+  renderingSpeed: number;
+  aiAcceleration: number;
+  compressionRatio: number;
+  qualityScore: number;
+}
+
+interface CollaborationMetrics {
+  activeUsers: number;
+  editsPerMinute: number;
+  conflictsResolved: number;
+  syncAccuracy: number;
+}
+
+interface AIActivityMetrics {
+  suggestionsGenerated: number;
+  autoEnhancements: number;
+  styleTransfers: number;
+  qualityOptimizations: number;
+}
+
+interface GeneratedContent {
+  content: string;
+  quality: number;
+  originality: number;
+  metadata: Record<string, unknown>;
+}
+
+interface CompressedAsset {
+  size: number;
+  compressionLevel: number;
+  quality: number;
+}
+
+interface EditResult {
+  type: string;
+  target: string;
+  changes: CollaborativeEditChanges;
+  timestamp: Date;
+  quantumSync: boolean;
 }
 
 // Export for use in entertainment quantum applications

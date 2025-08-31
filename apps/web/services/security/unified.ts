@@ -197,7 +197,7 @@ export class UnifiedSecurityService {
     sonarMetrics: SonarQubeMetrics | null,
     sonarIssues: SonarQubeIssue[],
     snykResults: SnykTestResult | null,
-    containerResults: any
+    containerResults: ContainerAnalysisResult
   ): UnifiedSecurityMetrics {
     // Calculate individual scores
     const sastScore = sonarMetrics ? sonarQubeService.calculateSecurityScore(sonarMetrics) : 50;
@@ -355,7 +355,7 @@ export class UnifiedSecurityService {
     return currentVulns - lastVulns;
   }
 
-  private generateMockScoreHistory(period: '7d' | '30d'): any[] {
+  private generateMockScoreHistory(period: '7d' | '30d'): ScoreHistoryEntry[] {
     const days = period === '7d' ? 7 : 30;
     const history = [];
     
@@ -371,7 +371,7 @@ export class UnifiedSecurityService {
     return history;
   }
 
-  private generateMockVulnHistory(period: '7d' | '30d'): any[] {
+  private generateMockVulnHistory(period: '7d' | '30d'): VulnerabilityHistoryEntry[] {
     const days = period === '7d' ? 7 : 30;
     const history = [];
     
@@ -416,7 +416,7 @@ export class UnifiedSecurityService {
     return recommendations;
   }
 
-  private assessCompliance(metrics: UnifiedSecurityMetrics): any {
+  private assessCompliance(metrics: UnifiedSecurityMetrics): ComplianceAssessment {
     return {
       overall: metrics.securityScore >= 80 ? 'compliant' : 'non-compliant',
       frameworks: {
@@ -436,6 +436,39 @@ export class UnifiedSecurityService {
   get lastScanTimestamp(): Date | null {
     return this.lastScanTime;
   }
+}
+
+// Type definitions for unified security service
+interface ContainerAnalysisResult {
+  overallScore?: number;
+  summary?: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+    total: number;
+  };
+  dockerfileIssues?: number;
+  [key: string]: unknown;
+}
+
+interface ScoreHistoryEntry {
+  date: string;
+  score: number;
+}
+
+interface VulnerabilityHistoryEntry {
+  date: string;
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+}
+
+interface ComplianceAssessment {
+  overall: 'compliant' | 'non-compliant';
+  frameworks: Record<string, boolean>;
+  lastAssessed: string;
 }
 
 export const unifiedSecurityService = UnifiedSecurityService.getInstance();

@@ -11,6 +11,15 @@ export default {
 		"./index.html",
 	],
 	prefix: "",
+	// Performance optimizations
+	safelist: [
+		// Critical classes that should never be purged
+		'bg-background',
+		'text-foreground',
+		'border-border',
+		'bg-primary',
+		'text-primary-foreground',
+	],
 	theme: {
 		container: {
 			center: true,
@@ -81,36 +90,20 @@ export default {
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
 				},
 				'pulse-security': {
-					'0%, 100%': {
-						opacity: '1'
-					},
-					'50%': {
-						opacity: '0.5'
-					}
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.5' }
 				},
 				'scan-line': {
-					'0%': {
-						transform: 'translateX(-100%)'
-					},
-					'100%': {
-						transform: 'translateX(100%)'
-					}
+					'0%': { transform: 'translateX(-100%)' },
+					'100%': { transform: 'translateX(100%)' }
 				}
 			},
 			animation: {
@@ -122,4 +115,22 @@ export default {
 		}
 	},
 	plugins: [tailwindcssAnimate],
+	// Performance optimizations
+	corePlugins: {
+		// Disable unused core plugins to reduce bundle size
+		preflight: true,
+		container: true,
+		accessibility: false, // Disable if not needed
+		appearance: false,
+		backdropBlur: false,
+		backdropBrightness: false,
+		backdropContrast: false,
+		backdropGrayscale: false,
+		backdropHueRotate: false,
+		backdropInvert: false,
+		backdropOpacity: false,
+		backdropSaturate: false,
+		backdropSepia: false,
+		// Keep only essential plugins
+	},
 } satisfies Config;

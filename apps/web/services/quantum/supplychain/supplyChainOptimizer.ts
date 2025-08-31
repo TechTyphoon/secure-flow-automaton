@@ -282,11 +282,11 @@ export class QuantumSupplyChainOptimizer {
     return classicalTime / processingTime;
   }
 
-  private calculateCostSavings(routeOpt: any, inventoryOpt: any): number {
+  private calculateCostSavings(routeOpt: RouteOptimizationData, inventoryOpt: InventoryOptimizationData): number {
     return (routeOpt.savings + inventoryOpt.savings) * 365; // Annual savings
   }
 
-  private calculateSustainabilityImpact(routeOpt: any, warehouseOpt: any): SustainabilityMetrics {
+  private calculateSustainabilityImpact(routeOpt: RouteOptimizationData, warehouseOpt: WarehouseOptimizationData): SustainabilityMetrics {
     return {
       carbonReduction: routeOpt.carbonSavings + warehouseOpt.energySavings,
       energyEfficiency: warehouseOpt.energyEfficiency,
@@ -295,7 +295,7 @@ export class QuantumSupplyChainOptimizer {
     };
   }
 
-  private calculateSupplyChainHealth(monitoring: any): SupplyChainHealth {
+  private calculateSupplyChainHealth(monitoring: SupplyChainMonitoringData): SupplyChainHealth {
     return {
       overallScore: 96.8,
       routeHealth: monitoring.routePerformance.healthScore,
@@ -305,17 +305,17 @@ export class QuantumSupplyChainOptimizer {
     };
   }
 
-  private identifySupplyChainAlerts(monitoring: any): SupplyChainAlert[] {
+  private identifySupplyChainAlerts(monitoring: SupplyChainMonitoringData): SupplyChainAlert[] {
     // Quantum ML-powered alert identification
     return [];
   }
 
-  private generateOptimizationRecommendations(monitoring: any): OptimizationRecommendation[] {
+  private generateOptimizationRecommendations(monitoring: SupplyChainMonitoringData): OptimizationRecommendation[] {
     // Quantum AI-powered recommendations
     return [];
   }
 
-  private predictSupplyChainDisruptions(monitoring: any): DisruptionPrediction[] {
+  private predictSupplyChainDisruptions(monitoring: SupplyChainMonitoringData): DisruptionPrediction[] {
     // Quantum predictive analytics
     return [];
   }
@@ -325,7 +325,7 @@ export class QuantumSupplyChainOptimizer {
 class QuantumRouteOptimizer {
   constructor(private quantumCore: QuantumCoreEngine) {}
   
-  async optimizeRoutes(config: any): Promise<RouteOptimizationResult> {
+  async optimizeRoutes(config: SupplyChainOptimizationConfig): Promise<RouteOptimizationResult> {
     return {
       optimizedRoutes: [],
       savings: 2500000, // $2.5M daily savings
@@ -334,7 +334,7 @@ class QuantumRouteOptimizer {
     };
   }
   
-  async monitorRoutes(): Promise<any> {
+  async monitorRoutes(): Promise<{ healthScore: number }> {
     return { healthScore: 98.5 };
   }
 }
@@ -342,7 +342,7 @@ class QuantumRouteOptimizer {
 class QuantumInventoryManager {
   constructor(private quantumML: QuantumMLEngine) {}
   
-  async optimizeInventory(config: any): Promise<InventoryOptimizationResult> {
+  async optimizeInventory(config: SupplyChainOptimizationConfig): Promise<InventoryOptimizationResult> {
     return {
       optimalLevels: [],
       savings: 1800000, // $1.8M daily savings
@@ -351,7 +351,7 @@ class QuantumInventoryManager {
     };
   }
   
-  async monitorInventory(): Promise<any> {
+  async monitorInventory(): Promise<{ healthScore: number }> {
     return { healthScore: 99.1 };
   }
 }
@@ -359,7 +359,7 @@ class QuantumInventoryManager {
 class QuantumWarehouseSystem {
   constructor(private quantumCore: QuantumCoreEngine) {}
   
-  async optimizeWarehouses(config: any): Promise<WarehouseOptimizationResult> {
+  async optimizeWarehouses(config: SupplyChainOptimizationConfig): Promise<WarehouseOptimizationResult> {
     return {
       layoutOptimization: [],
       energySavings: 40.5,
@@ -368,7 +368,7 @@ class QuantumWarehouseSystem {
     };
   }
   
-  async monitorWarehouses(): Promise<any> {
+  async monitorWarehouses(): Promise<{ healthScore: number }> {
     return { healthScore: 97.8 };
   }
 }
@@ -376,7 +376,7 @@ class QuantumWarehouseSystem {
 class QuantumSupplierIntelligence {
   constructor(private quantumML: QuantumMLEngine) {}
   
-  async optimizeSuppliers(config: any): Promise<SupplierOptimizationResult> {
+  async optimizeSuppliers(config: SupplyChainOptimizationConfig): Promise<SupplierOptimizationResult> {
     return {
       supplierRankings: [],
       reliabilityImprovement: 85.4,
@@ -385,7 +385,7 @@ class QuantumSupplierIntelligence {
     };
   }
   
-  async monitorSuppliers(): Promise<any> {
+  async monitorSuppliers(): Promise<{ healthScore: number }> {
     return { healthScore: 95.6 };
   }
 }
@@ -393,7 +393,7 @@ class QuantumSupplierIntelligence {
 class QuantumDemandForecaster {
   constructor(private quantumML: QuantumMLEngine) {}
   
-  async forecastDemand(config: any): Promise<DemandForecastResult> {
+  async forecastDemand(config: SupplyChainOptimizationConfig): Promise<DemandForecastResult> {
     return {
       predictions: [],
       accuracy: 94.7,
@@ -402,28 +402,161 @@ class QuantumDemandForecaster {
     };
   }
   
-  async monitorDemand(): Promise<any> {
+  async monitorDemand(): Promise<{ healthScore: number }> {
     return { healthScore: 93.4 };
   }
 }
 
+// Method parameter interfaces
+interface RouteOptimizationData {
+  savings: number;
+  carbonSavings: number;
+}
+
+interface InventoryOptimizationData {
+  savings: number;
+}
+
+interface WarehouseOptimizationData {
+  energySavings: number;
+  energyEfficiency: number;
+  wasteReduction: number;
+}
+
+interface SupplyChainMonitoringData {
+  routePerformance: { healthScore: number };
+  inventoryLevels: { healthScore: number };
+  warehouseOperations: { healthScore: number };
+  supplierPerformance: { healthScore: number };
+}
+
 // Type Definitions
+interface NetworkNode {
+  id: string;
+  type: 'warehouse' | 'distribution_center' | 'retail_store' | 'supplier';
+  location: GeographicCoordinate;
+  capacity: number;
+  throughput: number;
+}
+
+interface FleetVehicle {
+  id: string;
+  type: 'truck' | 'van' | 'ship' | 'plane';
+  capacity: number;
+  fuelEfficiency: number;
+  availability: boolean;
+}
+
+interface SupplyChainConstraints {
+  budget: number;
+  timeWindows: TimeWindow[];
+  regulatoryCompliance: string[];
+  environmentalRestrictions: string[];
+}
+
+interface Warehouse {
+  id: string;
+  location: GeographicCoordinate;
+  capacity: number;
+  currentUtilization: number;
+  equipment: string[];
+}
+
+interface DemandData {
+  productId: string;
+  quantity: number;
+  location: GeographicCoordinate;
+  timeframe: string;
+  seasonality: number;
+}
+
+interface Supplier {
+  id: string;
+  name: string;
+  reliability: number;
+  quality: number;
+  leadTime: number;
+}
+
+interface SeasonalityData {
+  pattern: 'yearly' | 'quarterly' | 'monthly' | 'weekly';
+  factors: Record<string, number>;
+  peakPeriods: string[];
+}
+
+interface ThroughputData {
+  current: number;
+  capacity: number;
+  bottlenecks: string[];
+  optimization: number;
+}
+
+interface AutomationData {
+  roboticsLevel: number;
+  aiIntegration: number;
+  efficiency: number;
+  costSavings: number;
+}
+
+interface SustainabilityData {
+  carbonFootprint: number;
+  energyUsage: number;
+  wasteGeneration: number;
+  recyclingRate: number;
+}
+
+interface RiskProfile {
+  financial: number;
+  operational: number;
+  reputational: number;
+  regulatory: number;
+  environmental: number;
+}
+
+interface QualityStandards {
+  iso9001: boolean;
+  iso14001: boolean;
+  industrySpecific: string[];
+  complianceScore: number;
+}
+
+interface HistoricalDemand {
+  periods: string[];
+  quantities: number[];
+  trends: string[];
+  seasonality: number[];
+}
+
+interface MarketConditions {
+  competition: number;
+  pricing: number;
+  demand: number;
+  supply: number;
+}
+
+interface ExternalInfluences {
+  economic: number;
+  political: number;
+  environmental: number;
+  technological: number;
+}
+
 interface SupplyChainOptimizationConfig {
-  networkNodes: any[];
-  fleet: any[];
-  constraints: any;
-  warehouses: any[];
-  demandData: any;
-  suppliers: any[];
-  seasonality: any;
-  throughput: any;
-  automation: any;
-  sustainability: any;
-  riskProfile: any;
-  qualityStandards: any;
-  historicalDemand: any;
-  marketConditions: any;
-  externalInfluences: any;
+  networkNodes: NetworkNode[];
+  fleet: FleetVehicle[];
+  constraints: SupplyChainConstraints;
+  warehouses: Warehouse[];
+  demandData: DemandData[];
+  suppliers: Supplier[];
+  seasonality: SeasonalityData;
+  throughput: ThroughputData;
+  automation: AutomationData;
+  sustainability: SustainabilityData;
+  riskProfile: RiskProfile;
+  qualityStandards: QualityStandards;
+  historicalDemand: HistoricalDemand;
+  marketConditions: MarketConditions;
+  externalInfluences: ExternalInfluences;
   planningHorizon: number;
 }
 

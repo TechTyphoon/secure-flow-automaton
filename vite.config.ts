@@ -53,24 +53,107 @@ export default defineConfig(({ mode }) => ({
         main: path.resolve(__dirname, 'index.html'),
       },
       output: {
-        // Platform-optimized chunking
+        // Enhanced chunk splitting for better caching and loading
         manualChunks: (id: string) => {
-          // React ecosystem
+          // React ecosystem - separate for better caching
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react-vendor';
+            return 'react-core';
           }
           
-          // UI libraries
-          if (id.includes('@radix-ui') || id.includes('lucide-react')) {
-            return 'ui-vendor';
+          // Radix UI components - separate for better caching
+          if (id.includes('@radix-ui')) {
+            return 'radix-ui';
+          }
+          
+          // Lucide icons - separate for better caching
+          if (id.includes('lucide-react')) {
+            return 'lucide-icons';
+          }
+          
+          // Supabase client - separate for better caching
+          if (id.includes('@supabase')) {
+            return 'supabase';
+          }
+          
+          // Octokit for GitHub integration
+          if (id.includes('@octokit')) {
+            return 'octokit';
+          }
+          
+          // Form handling libraries
+          if (id.includes('react-hook-form') || id.includes('@hookform')) {
+            return 'form-handling';
           }
           
           // Security and monitoring utilities
           if (id.includes('crypto') || id.includes('security') || id.includes('audit')) {
-            return 'security-vendor';
+            return 'security-utils';
           }
           
-          // Large third-party libraries
+          // Quantum computing services - split by domain for better caching
+          if (id.includes('quantum') && id.includes('services')) {
+            if (id.includes('quantum/aerospace')) {
+              return 'quantum-aerospace';
+            }
+            if (id.includes('quantum/healthcare')) {
+              return 'quantum-healthcare';
+            }
+            if (id.includes('quantum/financial')) {
+              return 'quantum-financial';
+            }
+            if (id.includes('quantum/entertainment')) {
+              return 'quantum-entertainment';
+            }
+            if (id.includes('quantum/energy')) {
+              return 'quantum-energy';
+            }
+            if (id.includes('quantum/supplychain')) {
+              return 'quantum-supplychain';
+            }
+            return 'quantum-core';
+          }
+          
+          // Anomaly detection services
+          if (id.includes('anomaly') && id.includes('services')) {
+            return 'anomaly-services';
+          }
+          
+          // AI/ML services
+          if (id.includes('ai-ml') && id.includes('services')) {
+            return 'ai-ml-services';
+          }
+          
+          // Identity and authentication services
+          if (id.includes('identity') && id.includes('services')) {
+            return 'identity-services';
+          }
+          
+          // CI/CD services
+          if (id.includes('cicd') && id.includes('services')) {
+            return 'cicd-services';
+          }
+          
+          // Application security services
+          if (id.includes('application') && id.includes('services')) {
+            return 'app-security-services';
+          }
+          
+          // Data services
+          if (id.includes('data') && id.includes('services')) {
+            return 'data-services';
+          }
+          
+          // Network services
+          if (id.includes('network') && id.includes('services')) {
+            return 'network-services';
+          }
+          
+          // Monitoring services
+          if (id.includes('monitoring') && id.includes('services')) {
+            return 'monitoring-services';
+          }
+          
+          // Other large third-party libraries
           if (id.includes('node_modules')) {
             return 'vendor';
           }

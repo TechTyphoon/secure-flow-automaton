@@ -9,7 +9,7 @@ import { EventEmitter } from 'events';
 interface MultivariateDataPoint {
   features: { [key: string]: number };
   timestamp?: number;
-  metadata?: any;
+  metadata?: DataPointMetadata;
 }
 
 interface CorrelationMatrix {
@@ -569,7 +569,7 @@ export class MultivariateDetectionService extends EventEmitter {
 
       for (let i = 0; i < dataMatrix.length; i++) {
         const point = dataMatrix[i];
-        const methodResults: { [key: string]: any } = {};
+        const methodResults: { [key: string]: DetectionMethodResult } = {};
 
         // PCA-based detection
         if (this.config.methods.includes('pca')) {
@@ -612,7 +612,7 @@ export class MultivariateDetectionService extends EventEmitter {
     }
   }
 
-  private pcaAnomalyDetection(point: number[]): any {
+  private pcaAnomalyDetection(point: number[]): DetectionMethodResult {
     const transformed = this.pca.transform([point]);
     const reconstructed = this.pca.inverseTransform(transformed)[0];
     
@@ -632,7 +632,7 @@ export class MultivariateDetectionService extends EventEmitter {
     };
   }
 
-  private mahalanobisAnomalyDetection(point: number[]): any {
+  private mahalanobisAnomalyDetection(point: number[]): DetectionMethodResult {
     const distance = this.mahalanobis.distance(point);
     
     // Convert to probability-like score (assuming chi-square distribution)
@@ -647,7 +647,7 @@ export class MultivariateDetectionService extends EventEmitter {
     };
   }
 
-  private icaAnomalyDetection(point: number[]): any {
+  private icaAnomalyDetection(point: number[]): DetectionMethodResult {
     const sources = this.ica.transform([point])[0];
     
     // Calculate non-Gaussianity measure
@@ -666,7 +666,7 @@ export class MultivariateDetectionService extends EventEmitter {
     };
   }
 
-  private correlationAnomalyDetection(point: number[], originalPoint: MultivariateDataPoint): any {
+  private correlationAnomalyDetection(point: number[], originalPoint: MultivariateDataPoint): DetectionMethodResult {
     // Calculate correlation with historical patterns
     const contributingFeatures: { [key: string]: number } = {};
     let maxCorrelationAnomaly = 0;
@@ -693,8 +693,8 @@ export class MultivariateDetectionService extends EventEmitter {
     };
   }
 
-  private combineMethodResults(methodResults: { [key: string]: any }, originalPoint: MultivariateDataPoint): MultivariateAnomalyResult {
-    const scores = Object.values(methodResults).map((result: any) => result.score);
+  private combineMethodResults(methodResults: { [key: string]: DetectionMethodResult }, originalPoint: MultivariateDataPoint): MultivariateAnomalyResult {
+    const scores = Object.values(methodResults).map((result: DetectionMethodResult) => result.score);
     const ensembleScore = MathUtils.mean(scores);
     const isAnomaly = ensembleScore > this.config.threshold;
 
@@ -836,7 +836,7 @@ export class MultivariateDetectionService extends EventEmitter {
     };
   }
 
-  getDetectionStatistics(): any {
+  getDetectionStatistics(): DetectionStatistics {
     return {
       config: this.config,
       featureNames: this.featureNames,
@@ -856,6 +856,31 @@ export class MultivariateDetectionService extends EventEmitter {
       }
     });
   }
+}
+
+// Type definitions for multivariate detection
+interface DataPointMetadata {
+  source: string;
+  timestamp: Date;
+  [key: string]: unknown;
+}
+
+interface DetectionMethodResult {
+  score: number;
+  isAnomaly: boolean;
+  reconstructionError?: number;
+  mahalanobisDistance?: number;
+  sources?: number[];
+  [key: string]: unknown;
+}
+
+interface DetectionStatistics {
+  config: DetectionConfig;
+  featureNames: string[];
+  trainingDataSize: number;
+  isInitialized: boolean;
+  supportedMethods: string[];
+  timestamp: number;
 }
 
 export default MultivariateDetectionService;

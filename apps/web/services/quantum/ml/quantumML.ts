@@ -97,7 +97,7 @@ export class QuantumMLEngine {
     return analysis;
   }
 
-  async predictReturns(assets: any[]): Promise<Record<string, number>> {
+  async predictReturns(assets: Asset[]): Promise<Record<string, number>> {
     if (!this.isInitialized) {
       await this.initialize();
     }
@@ -115,7 +115,7 @@ export class QuantumMLEngine {
   }
 
   async analyzeBehaviorPattern(
-    behaviorPattern: any,
+    behaviorPattern: BehaviorPattern,
     accountId: string
   ): Promise<{score: number, deviation: number, anomalies: string[]}> {
     if (!this.isInitialized) {
@@ -130,7 +130,7 @@ export class QuantumMLEngine {
     return { score, deviation, anomalies };
   }
 
-  async recognizeTransactionPatterns(transaction: any): Promise<{
+  async recognizeTransactionPatterns(transaction: Transaction): Promise<{
     patterns: string[],
     confidence: number,
     quantumFeatures: QuantumFeature[]
@@ -170,8 +170,8 @@ export class QuantumMLEngine {
 
   async trainQuantumModel(
     modelType: string,
-    trainingData: any[],
-    parameters: Record<string, any>
+    trainingData: TrainingData[],
+    parameters: Record<string, ModelParameter>
   ): Promise<MLModel> {
     if (!this.isInitialized) {
       await this.initialize();
@@ -197,7 +197,7 @@ export class QuantumMLEngine {
     return model;
   }
 
-  async predict(modelId: string, inputData: any): Promise<PredictionResult> {
+  async predict(modelId: string, inputData: InputData): Promise<PredictionResult> {
     const model = this.models.get(modelId);
     if (!model) {
       throw new Error(`Model ${modelId} not found`);
@@ -262,7 +262,7 @@ export class QuantumMLEngine {
     return choices[Math.floor(Math.random() * choices.length)];
   }
 
-  private generatePrediction(model: MLModel, inputData: any): any {
+  private generatePrediction(model: MLModel, inputData: InputData): PredictionValue {
     // Simulate prediction generation based on model type
     switch (model.modelType) {
       case 'classification':
@@ -278,3 +278,34 @@ export class QuantumMLEngine {
     }
   }
 }
+
+// Type definitions for quantum ML
+interface Asset {
+  symbol: string;
+  [key: string]: unknown;
+}
+
+interface BehaviorPattern {
+  pattern: string;
+  [key: string]: unknown;
+}
+
+interface Transaction {
+  amount: number;
+  [key: string]: unknown;
+}
+
+interface TrainingData {
+  features: number[];
+  label: number | string;
+  [key: string]: unknown;
+}
+
+type ModelParameter = number | string | boolean;
+
+interface InputData {
+  features: number[];
+  [key: string]: unknown;
+}
+
+type PredictionValue = string | number | boolean;

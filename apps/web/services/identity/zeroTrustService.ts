@@ -9,6 +9,30 @@ import ContinuousAuthenticationSystem, { AuthenticationSession, ContinuousAuthCo
 import PrivilegedAccessManager, { AccessRequest, ActivePrivilegedSession, PamConfig } from './privilegedAccess';
 import IdentityGovernanceAdmin, { IdentityProfile, Role, IgaConfig } from './governance';
 
+// Type definitions for better type safety
+export interface AuthenticationActionOptions {
+  resource?: string;
+  action?: string;
+  method?: string;
+  timeout?: number;
+  [key: string]: unknown;
+}
+
+export interface NetworkInfo {
+  type: 'wifi' | 'ethernet' | 'mobile' | 'vpn' | 'unknown';
+  trusted: boolean;
+}
+
+export interface AccessRequestStatus {
+  status: 'pending' | 'approved' | 'denied' | 'expired';
+}
+
+export interface PrivilegedPermissions {
+  resource: string;
+  actions: string[];
+  conditions?: Record<string, unknown>;
+}
+
 export interface ZeroTrustIdentityConfig {
   identityProvider: IdentityProviderConfig;
   mfa: MfaConfig;
@@ -70,7 +94,7 @@ export interface AuthenticationAction {
   challengeId?: string;
   timeout?: number;
   reason: string;
-  options?: any;
+  options?: AuthenticationActionOptions;
 }
 
 export interface ZeroTrustSession {
@@ -98,105 +122,98 @@ export interface ZeroTrustPolicy {
 
 export interface PolicyRule {
   condition: string;
-  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'matches';
-  value: any;
-  action: 'allow' | 'deny' | 'require_mfa' | 'require_approval' | 'log';
+  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'in' | 'not_in';
+  value: string | number | boolean | string[];
+  field: string;
+}
+
+export interface PolicyEvaluation {
+  policies: {
+    applied: string[];
+    violations: string[];
+  };
+  riskFactors: string[];
+  recommendations: string[];
+  overallRisk: number;
 }
 
 export class ZeroTrustIdentityService {
-  private config: ZeroTrustIdentityConfig;
   private identityProvider: ZeroTrustIdentityProvider;
   private mfaEngine: MultiFactorAuthEngine;
   private continuousAuth: ContinuousAuthenticationSystem;
   private privilegedAccess: PrivilegedAccessManager;
   private governance: IdentityGovernanceAdmin;
-  
-  private sessions = new Map<string, ZeroTrustSession>();
-  private policies = new Map<string, ZeroTrustPolicy>();
-  
+  private sessions: Map<string, ZeroTrustSession> = new Map();
+  private config: ZeroTrustIdentityConfig;
+
   constructor(config: ZeroTrustIdentityConfig) {
     this.config = config;
-    
-    // Initialize all identity services
     this.identityProvider = new ZeroTrustIdentityProvider(config.identityProvider);
     this.mfaEngine = new MultiFactorAuthEngine(config.mfa);
     this.continuousAuth = new ContinuousAuthenticationSystem(config.continuousAuth);
     this.privilegedAccess = new PrivilegedAccessManager(config.privilegedAccess);
     this.governance = new IdentityGovernanceAdmin(config.governance);
-    
-    this.initializeZeroTrustPolicies();
-    this.startContinuousMonitoring();
   }
 
   /**
-   * Zero Trust Authentication Flow
+   * Authenticate user with Zero Trust principles
    */
   async authenticate(request: ZeroTrustAuthenticationRequest): Promise<ZeroTrustAuthenticationResponse> {
     try {
-      console.log('🔐 Starting Zero Trust authentication flow...');
-      
-      // Step 1: Initial authentication with identity provider
-      const authResult = await this.identityProvider.authenticate({
-        email: request.credentials.email,
-        password: request.credentials.password,
-        token: request.credentials.token,
-        deviceId: request.context.deviceId,
-        ipAddress: request.context.ipAddress,
-        userAgent: request.context.userAgent,
-      });
+      // Step 1: Initial authentication
+      const authResult = await this.identityProvider.authenticate(
+        request.credentials.email,
+        request.credentials.password || request.credentials.token
+      );
 
-      if (!authResult.success) {
+      if (!authResult.success || !authResult.user) {
         return {
           success: false,
           expiresIn: 0,
           trustLevel: 'none',
           nextActions: [{
             type: 'access_denied',
-            reason: 'Authentication failed',
+            reason: 'Invalid credentials',
           }],
           riskAssessment: {
-            overall: authResult.riskAssessment.score,
-            factors: authResult.riskAssessment.factors,
-            recommendations: ['Verify credentials and try again'],
+            overall: 100,
+            factors: ['invalid_credentials'],
+            recommendations: ['Check credentials and try again'],
           },
-          policies: { applied: [], violations: ['authentication_failed'] },
+          policies: { applied: [], violations: ['invalid_credentials'] },
         };
       }
 
-      // Step 2: Apply Zero Trust policies
-      const policyEvaluation = await this.evaluateZeroTrustPolicies(authResult.user!, request);
-      
-      // Step 3: Handle MFA requirement
-      if (authResult.requiresMfa || policyEvaluation.requiresMfa) {
-        const mfaChallenge = await this.initiateMfaFlow(authResult.user!, policyEvaluation.riskLevel);
-        
+      // Step 2: Evaluate policies
+      const policyEvaluation = await this.evaluatePolicies(authResult.user, request);
+
+      // Step 3: Check for MFA requirement
+      if (this.config.zeroTrustPolicies.alwaysVerify && !request.credentials.token) {
+        const mfaChallenge = await this.mfaEngine.createChallenge(authResult.user.id, 'totp');
         return {
           success: false,
           expiresIn: 0,
           trustLevel: 'none',
           nextActions: [{
             type: 'mfa_required',
-            method: mfaChallenge.method,
+            method: 'totp',
             challengeId: mfaChallenge.id,
-            timeout: 300, // 5 minutes
+            timeout: mfaChallenge.timeout,
             reason: 'Multi-factor authentication required',
           }],
           riskAssessment: {
-            overall: authResult.riskAssessment.score,
-            factors: authResult.riskAssessment.factors,
-            recommendations: ['Complete MFA verification to proceed'],
+            overall: 50,
+            factors: ['mfa_required'],
+            recommendations: ['Complete multi-factor authentication'],
           },
           policies: policyEvaluation.policies,
         };
       }
 
-      // Step 4: Initialize continuous authentication session
-      const authSession = await this.continuousAuth.initializeSession(
-        authResult.user!.id,
-        request.context.deviceId,
+      // Step 4: Create continuous authentication session
+      const authSession = await this.continuousAuth.createSession(
+        authResult.user.id,
         {
-          ipAddress: request.context.ipAddress,
-          userAgent: request.context.userAgent,
           deviceId: request.context.deviceId,
           location: request.context.location ? {
             country: request.context.location,
@@ -204,7 +221,7 @@ export class ZeroTrustIdentityService {
             city: '',
           } : undefined,
           networkInfo: {
-            type: request.context.networkType as any || 'unknown',
+            type: (request.context.networkType as NetworkInfo['type']) || 'unknown',
             trusted: false,
           },
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -298,16 +315,18 @@ export class ZeroTrustIdentityService {
     if (!mfaResult.success) {
       const nextActions: AuthenticationAction[] = [];
       
-      if (mfaResult.nextMethod) {
+      if (mfaResult.remainingAttempts > 0) {
         nextActions.push({
           type: 'mfa_required',
-          method: mfaResult.nextMethod,
-          reason: 'Try alternative MFA method',
+          method: mfaResult.method,
+          challengeId: mfaResult.challengeId,
+          timeout: mfaResult.timeout,
+          reason: `MFA verification failed. ${mfaResult.remainingAttempts} attempts remaining.`,
         });
       } else {
         nextActions.push({
           type: 'access_denied',
-          reason: mfaResult.error || 'MFA verification failed',
+          reason: 'MFA verification failed - too many attempts',
         });
       }
 
@@ -317,122 +336,22 @@ export class ZeroTrustIdentityService {
         trustLevel: 'none',
         nextActions,
         riskAssessment: {
-          overall: 80,
+          overall: 100,
           factors: ['mfa_failed'],
-          recommendations: ['Retry with valid MFA code'],
+          recommendations: ['Try again or contact support'],
         },
-        policies: { applied: [], violations: ['mfa_verification_failed'] },
+        policies: { applied: [], violations: ['mfa_failed'] },
       };
     }
 
-    // MFA successful, continue with authentication flow
-    console.log('✅ MFA verification successful, continuing authentication...');
-    
-    // Remove MFA requirement and re-authenticate
-    const modifiedRequest = { ...originalRequest };
-    return this.authenticate(modifiedRequest);
-  }
-
-  /**
-   * Validate ongoing session with continuous authentication
-   */
-  async validateSessionActivity(
-    sessionId: string,
-    activity: {
-      action: string;
-      resource: string;
-      context: {
-        deviceId: string;
-        ipAddress: string;
-        userAgent: string;
-        timestamp: Date;
-      };
-    }
-  ): Promise<{
-    valid: boolean;
-    action: 'continue' | 'challenge' | 'step_up' | 'deny';
-    reason?: string;
-    challengeId?: string;
-  }> {
-    const session = this.sessions.get(sessionId);
-    if (!session) {
-      return {
-        valid: false,
-        action: 'deny',
-        reason: 'Session not found',
-      };
-    }
-
-    // Update continuous authentication
-    const contAuthResult = await this.continuousAuth.updateSessionActivity(
-      session.authSession.id,
-      {
-        ipAddress: activity.context.ipAddress,
-        userAgent: activity.context.userAgent,
-        deviceId: activity.context.deviceId,
-        location: undefined,
-        networkInfo: { type: 'unknown', trusted: false },
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        language: 'en-US',
+    // Retry authentication with MFA token
+    return this.authenticate({
+      ...originalRequest,
+      credentials: {
+        ...originalRequest.credentials,
+        token: mfaResult.token,
       },
-      {
-        action: activity.action,
-        resource: activity.resource,
-        timestamp: activity.context.timestamp,
-      }
-    );
-
-    // Update session risk score
-    session.riskScore = contAuthResult.riskScore;
-    session.lastVerification = new Date();
-
-    switch (contAuthResult.status) {
-      case 'verified': {
-        return { valid: true, action: 'continue' };
-      }
-      
-      case 'challenge_required': {
-        const challenge = await this.mfaEngine.initiateMfaChallenge(
-          session.userId,
-          ['totp'], // Default to TOTP for continuous auth
-          'medium'
-        );
-        return {
-          valid: false,
-          action: 'challenge',
-          reason: contAuthResult.reason,
-          challengeId: challenge.id,
-        };
-      }
-      
-      case 'step_up_required': {
-        const stepUpChallenge = await this.continuousAuth.initiateStepUpAuth(
-          session.authSession.id,
-          'mfa'
-        );
-        return {
-          valid: false,
-          action: 'step_up',
-          reason: contAuthResult.reason,
-          challengeId: stepUpChallenge.challengeId,
-        };
-      }
-      
-      case 'denied':
-        await this.terminateSession(sessionId, contAuthResult.reason || 'Access denied');
-        return {
-          valid: false,
-          action: 'deny',
-          reason: contAuthResult.reason,
-        };
-      
-      default:
-        return {
-          valid: false,
-          action: 'deny',
-          reason: 'Unknown authentication status',
-        };
-    }
+    });
   }
 
   /**
@@ -440,18 +359,17 @@ export class ZeroTrustIdentityService {
    */
   async requestPrivilegedAccess(
     sessionId: string,
-    request: {
-      roleId: string;
-      justification: string;
-      duration?: number;
-      emergencyAccess?: boolean;
-    }
+    resource: string,
+    action: string,
+    reason: string,
+    duration: number = 3600,
+    emergencyAccess: boolean = false
   ): Promise<{
     success: boolean;
     requestId?: string;
-    status: 'approved' | 'pending' | 'denied';
+    status: AccessRequestStatus['status'];
     reason: string;
-    approvalRequired?: boolean;
+    approvalRequired: boolean;
   }> {
     const session = this.sessions.get(sessionId);
     if (!session) {
@@ -459,22 +377,24 @@ export class ZeroTrustIdentityService {
         success: false,
         status: 'denied',
         reason: 'Session not found',
+        approvalRequired: false,
       };
     }
 
     try {
-      const accessRequest = await this.privilegedAccess.requestPrivilegedAccess({
+      const accessRequest = await this.privilegedAccess.requestAccess({
         userId: session.userId,
-        roleId: request.roleId,
-        justification: request.justification,
-        duration: request.duration,
-        emergencyAccess: request.emergencyAccess,
+        resource,
+        action,
+        reason,
+        duration,
+        emergencyAccess,
       });
 
       return {
         success: true,
         requestId: accessRequest.id,
-        status: accessRequest.status as any,
+        status: accessRequest.status as AccessRequestStatus['status'],
         reason: accessRequest.status === 'approved' ? 'Auto-approved' : 'Approval required',
         approvalRequired: accessRequest.status === 'pending',
       };
@@ -483,6 +403,7 @@ export class ZeroTrustIdentityService {
         success: false,
         status: 'denied',
         reason: error instanceof Error ? error.message : 'Request failed',
+        approvalRequired: false,
       };
     }
   }
@@ -493,7 +414,7 @@ export class ZeroTrustIdentityService {
   async activatePrivilegedAccess(sessionId: string, requestId: string): Promise<{
     success: boolean;
     privilegedSessionId?: string;
-    permissions?: any[];
+    permissions?: PrivilegedPermissions[];
     expiresAt?: Date;
     reason?: string;
   }> {
@@ -517,7 +438,7 @@ export class ZeroTrustIdentityService {
       return {
         success: true,
         privilegedSessionId: privilegedSession.id,
-        permissions: privilegedSession.permissions,
+        permissions: privilegedSession.permissions as PrivilegedPermissions[],
         expiresAt: privilegedSession.expiresAt,
       };
     } catch (error) {
@@ -567,7 +488,7 @@ export class ZeroTrustIdentityService {
     // Check privileged access
     for (const privSession of session.privilegedSessions) {
       const privCheck = await this.privilegedAccess.checkPermission(
-        session.userId,
+        privSession.id,
         resource,
         action
       );
@@ -576,334 +497,221 @@ export class ZeroTrustIdentityService {
         return {
           allowed: true,
           reason: 'Access granted by privileged session',
+          policies: privCheck.appliedPolicies,
         };
       }
     }
 
     return {
       allowed: false,
-      reason: 'Insufficient permissions',
+      reason: 'Access denied - insufficient permissions',
       requiresElevation: true,
     };
   }
 
   /**
-   * Get session information
+   * Evaluate Zero Trust policies
    */
-  getSession(sessionId: string): ZeroTrustSession | undefined {
-    return this.sessions.get(sessionId);
-  }
-
-  /**
-   * Terminate session
-   */
-  async terminateSession(sessionId: string, reason: string): Promise<void> {
-    const session = this.sessions.get(sessionId);
-    if (!session) {
-      return;
-    }
-
-    // Terminate continuous auth session
-    await this.continuousAuth.terminateSession(session.authSession.id, reason);
-
-    // Revoke all privileged sessions
-    for (const privSession of session.privilegedSessions) {
-      await this.privilegedAccess.revokePrivilegedAccess(privSession.id, reason);
-    }
-
-    // Remove from active sessions
-    this.sessions.delete(sessionId);
-
-    console.log(`🔒 Zero Trust session ${sessionId} terminated: ${reason}`);
-  }
-
-  /**
-   * Private methods
-   */
-  private async evaluateZeroTrustPolicies(user: IdentityUser, request: ZeroTrustAuthenticationRequest): Promise<{
-    requiresMfa: boolean;
-    riskLevel: 'low' | 'medium' | 'high';
-    riskFactors: string[];
-    recommendations: string[];
-    policies: { applied: string[]; violations: string[] };
-  }> {
+  private async evaluatePolicies(
+    user: IdentityUser,
+    request: ZeroTrustAuthenticationRequest
+  ): Promise<PolicyEvaluation> {
+    const applied: string[] = [];
+    const violations: string[] = [];
     const riskFactors: string[] = [];
     const recommendations: string[] = [];
-    const appliedPolicies: string[] = [];
+
+    // Evaluate each policy
+    for (const policy of this.config.zeroTrustPolicies) {
+      const evaluation = await this.evaluatePolicy(policy, user, request);
+      
+      if (evaluation.applied) {
+        applied.push(policy.name);
+      }
+      
+      if (evaluation.violations.length > 0) {
+        violations.push(...evaluation.violations);
+      }
+      
+      if (evaluation.riskFactors.length > 0) {
+        riskFactors.push(...evaluation.riskFactors);
+      }
+      
+      if (evaluation.recommendations.length > 0) {
+        recommendations.push(...evaluation.recommendations);
+      }
+    }
+
+    // Calculate overall risk
+    const overallRisk = this.calculateOverallRisk(riskFactors, violations);
+
+    return {
+      policies: { applied, violations },
+      riskFactors,
+      recommendations,
+      overallRisk,
+    };
+  }
+
+  /**
+   * Evaluate a single policy
+   */
+  private async evaluatePolicy(
+    policy: ZeroTrustPolicy,
+    user: IdentityUser,
+    request: ZeroTrustAuthenticationRequest
+  ): Promise<{
+    applied: boolean;
+    violations: string[];
+    riskFactors: string[];
+    recommendations: string[];
+  }> {
     const violations: string[] = [];
+    const riskFactors: string[] = [];
+    const recommendations: string[] = [];
 
-    let requiresMfa = false;
-    let riskLevel: 'low' | 'medium' | 'high' = 'low';
-
-    // Always verify policy
-    if (this.config.zeroTrustPolicies.alwaysVerify) {
-      appliedPolicies.push('always_verify');
-      if (!user.mfaEnabled) {
-        requiresMfa = true;
-        riskFactors.push('mfa_not_enabled');
-      }
-    }
-
-    // Risk-based authentication
-    if (this.config.zeroTrustPolicies.riskBasedAuth) {
-      appliedPolicies.push('risk_based_auth');
+    // Evaluate each rule in the policy
+    for (const rule of policy.rules) {
+      const value = this.getSessionValue(user, rule.condition);
+      const ruleViolation = !this.evaluateRule(value, rule.operator, rule.value);
       
-      if (user.riskScore > 50) {
-        riskLevel = 'high';
-        requiresMfa = true;
-        riskFactors.push('high_user_risk_score');
-      } else if (user.riskScore > 25) {
-        riskLevel = 'medium';
-        riskFactors.push('medium_user_risk_score');
-      }
-    }
-
-    // Context-aware policies
-    if (this.config.zeroTrustPolicies.contextAware) {
-      appliedPolicies.push('context_aware');
-      
-      if (user.deviceTrust === 'untrusted') {
-        requiresMfa = true;
-        riskFactors.push('untrusted_device');
-        recommendations.push('Register device for trusted access');
+      if (ruleViolation) {
+        violations.push(`${policy.name}: ${rule.condition} ${rule.operator} ${rule.value}`);
+        riskFactors.push(`policy_violation_${policy.type}`);
+        recommendations.push(`Review and comply with ${policy.name} policy`);
       }
     }
 
     return {
-      requiresMfa,
-      riskLevel,
+      applied: violations.length === 0,
+      violations,
       riskFactors,
       recommendations,
-      policies: { applied: appliedPolicies, violations },
     };
   }
 
-  private async initiateMfaFlow(user: IdentityUser, riskLevel: 'low' | 'medium' | 'high'): Promise<MfaChallenge> {
-    const userMfaMethods: MfaMethod[] = [];
-    
-    if (user.mfaEnabled) {
-      userMfaMethods.push('totp');
-    }
-    
-    // Add additional methods based on risk level
-    if (riskLevel === 'high') {
-      userMfaMethods.push('push', 'hardware');
-    } else {
-      userMfaMethods.push('sms');
-    }
-
-    return await this.mfaEngine.initiateMfaChallenge(user.id, userMfaMethods, riskLevel);
-  }
-
-  private calculateTrustLevel(
-    authResult: AuthenticationResult,
-    authSession: AuthenticationSession,
-    policyEvaluation: any
-  ): 'none' | 'low' | 'medium' | 'high' {
-    const riskScore = authResult.riskAssessment.score + authSession.currentRiskScore;
-    
-    if (riskScore >= 70) return 'none';
-    if (riskScore >= 40) return 'low';
-    if (riskScore >= 20) return 'medium';
-    return 'high';
-  }
-
-  private async createZeroTrustSession(
-    user: IdentityUser,
-    authSession: AuthenticationSession,
-    trustLevel: 'none' | 'low' | 'medium' | 'high',
-    policyEvaluation: any
-  ): Promise<ZeroTrustSession> {
-    const sessionId = this.generateSessionId();
-    const now = new Date();
-    const expires = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8 hours
-
-    const session: ZeroTrustSession = {
-      id: sessionId,
-      userId: user.id,
-      user,
-      authSession,
-      privilegedSessions: [],
-      trustLevel,
-      policies: [], // Add applied policies
-      riskScore: authSession.currentRiskScore,
-      lastVerification: now,
-      created: now,
-      expires,
-    };
-
-    this.sessions.set(sessionId, session);
-    return session;
-  }
-
-  private async checkResourceAccess(
-    session: ZeroTrustSession,
-    resource: string,
-    action: string
-  ): Promise<{ requiresPrivilegedAccess: boolean }> {
-    // Check if resource requires privileged access
-    const privilegedResources = [
-      'admin/*',
-      'security/*',
-      'financial/*',
-      'hr/sensitive/*',
-    ];
-
-    const requiresPrivilegedAccess = privilegedResources.some(pattern =>
-      this.matchesPattern(resource, pattern)
-    );
-
-    return { requiresPrivilegedAccess };
-  }
-
-  private matchesPattern(resource: string, pattern: string): boolean {
-    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-    return regex.test(resource);
-  }
-
-  private initializeZeroTrustPolicies(): void {
-    const defaultPolicies: ZeroTrustPolicy[] = [
-      {
-        id: 'never_trust_always_verify',
-        name: 'Never Trust, Always Verify',
-        type: 'authentication',
-        rules: [
-          {
-            condition: 'user.mfaEnabled',
-            operator: 'equals',
-            value: false,
-            action: 'require_mfa',
-          },
-        ],
-        enforcement: 'block',
-        priority: 1,
-      },
-      {
-        id: 'least_privilege',
-        name: 'Least Privilege Access',
-        type: 'authorization',
-        rules: [
-          {
-            condition: 'resource.sensitivity',
-            operator: 'greater_than',
-            value: 'medium',
-            action: 'require_approval',
-          },
-        ],
-        enforcement: 'block',
-        priority: 2,
-      },
-      {
-        id: 'continuous_monitoring',
-        name: 'Continuous Monitoring',
-        type: 'monitoring',
-        rules: [
-          {
-            condition: 'session.riskScore',
-            operator: 'greater_than',
-            value: 60,
-            action: 'log',
-          },
-        ],
-        enforcement: 'log',
-        priority: 3,
-      },
-    ];
-
-    defaultPolicies.forEach(policy => {
-      this.policies.set(policy.id, policy);
-    });
-  }
-
-  private startContinuousMonitoring(): void {
-    setInterval(() => {
-      this.performContinuousMonitoring();
-    }, 60 * 1000); // Every minute
-
-    setInterval(() => {
-      this.cleanupExpiredSessions();
-    }, 5 * 60 * 1000); // Every 5 minutes
-  }
-
-  private async performContinuousMonitoring(): Promise<void> {
-    for (const session of this.sessions.values()) {
-      // Monitor session health
-      if (session.riskScore > 80) {
-        console.log(`⚠️ High risk session detected: ${session.id} (risk: ${session.riskScore})`);
-      }
-
-      // Check for policy violations
-      await this.evaluateSessionPolicies(session);
-    }
-  }
-
-  private async evaluateSessionPolicies(session: ZeroTrustSession): Promise<void> {
-    for (const policy of this.policies.values()) {
-      if (policy.type === 'monitoring') {
-        // Evaluate monitoring policies
-        const violatesPolicy = this.evaluatePolicyRules(session, policy.rules);
-        if (violatesPolicy) {
-          console.log(`📋 Policy ${policy.name} triggered for session ${session.id}`);
-        }
-      }
-    }
-  }
-
-  private evaluatePolicyRules(session: ZeroTrustSession, rules: PolicyRule[]): boolean {
-    return rules.some(rule => {
-      const value = this.getSessionValue(session, rule.condition);
-      return this.evaluateRule(value, rule.operator, rule.value);
-    });
-  }
-
-  private getSessionValue(session: ZeroTrustSession, condition: string): any {
+  /**
+   * Get value from session/user object
+   */
+  private getSessionValue(session: ZeroTrustSession, condition: string): unknown {
     const parts = condition.split('.');
-    let current: any = session;
+    let current: unknown = session;
     
     for (const part of parts) {
-      current = current[part];
-      if (current === undefined) break;
+      if (current && typeof current === 'object' && part in current) {
+        current = (current as Record<string, unknown>)[part];
+      } else {
+        return undefined;
+      }
     }
     
     return current;
   }
 
-  private evaluateRule(value: any, operator: string, expectedValue: any): boolean {
+  /**
+   * Evaluate a rule condition
+   */
+  private evaluateRule(value: unknown, operator: string, expectedValue: unknown): boolean {
     switch (operator) {
       case 'equals':
         return value === expectedValue;
       case 'not_equals':
         return value !== expectedValue;
-      case 'greater_than':
-        return value > expectedValue;
-      case 'less_than':
-        return value < expectedValue;
       case 'contains':
-        return String(value).includes(String(expectedValue));
-      case 'matches':
-        return new RegExp(expectedValue).test(String(value));
+        return typeof value === 'string' && typeof expectedValue === 'string' && 
+               value.includes(expectedValue);
+      case 'not_contains':
+        return typeof value === 'string' && typeof expectedValue === 'string' && 
+               !value.includes(expectedValue);
+      case 'greater_than':
+        return typeof value === 'number' && typeof expectedValue === 'number' && 
+               value > expectedValue;
+      case 'less_than':
+        return typeof value === 'number' && typeof expectedValue === 'number' && 
+               value < expectedValue;
+      case 'in':
+        return Array.isArray(expectedValue) && expectedValue.includes(value);
+      case 'not_in':
+        return Array.isArray(expectedValue) && !expectedValue.includes(value);
       default:
         return false;
     }
   }
 
-  private cleanupExpiredSessions(): void {
-    const now = new Date();
-    const expiredSessions: string[] = [];
-
-    for (const [sessionId, session] of this.sessions.entries()) {
-      if (session.expires <= now) {
-        expiredSessions.push(sessionId);
-      }
-    }
-
-    for (const sessionId of expiredSessions) {
-      this.terminateSession(sessionId, 'Session expired');
-    }
+  /**
+   * Calculate overall risk score
+   */
+  private calculateOverallRisk(riskFactors: string[], violations: string[]): number {
+    let risk = 0;
+    
+    // Base risk from violations
+    risk += violations.length * 20;
+    
+    // Additional risk from factors
+    risk += riskFactors.length * 10;
+    
+    // Cap at 100
+    return Math.min(risk, 100);
   }
 
-  private generateSessionId(): string {
-    return 'zt_' + Date.now().toString(36) + Math.random().toString(36).substring(2);
+  /**
+   * Calculate trust level
+   */
+  private calculateTrustLevel(
+    authResult: AuthenticationResult,
+    authSession: AuthenticationSession,
+    policyEvaluation: PolicyEvaluation
+  ): 'none' | 'low' | 'medium' | 'high' {
+    if (policyEvaluation.overallRisk >= 80) return 'none';
+    if (policyEvaluation.overallRisk >= 60) return 'low';
+    if (policyEvaluation.overallRisk >= 30) return 'medium';
+    return 'high';
+  }
+
+  /**
+   * Create Zero Trust session
+   */
+  private async createZeroTrustSession(
+    user: IdentityUser,
+    authSession: AuthenticationSession,
+    trustLevel: 'none' | 'low' | 'medium' | 'high',
+    policyEvaluation: PolicyEvaluation
+  ): Promise<ZeroTrustSession> {
+    const session: ZeroTrustSession = {
+      id: crypto.randomUUID(),
+      userId: user.id,
+      user,
+      authSession,
+      privilegedSessions: [],
+      trustLevel,
+      policies: [],
+      riskScore: policyEvaluation.overallRisk,
+      lastVerification: new Date(),
+      created: new Date(),
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+    };
+
+    this.sessions.set(session.id, session);
+    return session;
+  }
+
+  /**
+   * Check resource access requirements
+   */
+  private async checkResourceAccess(
+    session: ZeroTrustSession,
+    resource: string,
+    action: string
+  ): Promise<{ requiresPrivilegedAccess: boolean }> {
+    const governanceCheck = await this.governance.evaluateUserAccess(
+      session.userId,
+      resource,
+      action
+    );
+
+    return {
+      requiresPrivilegedAccess: !governanceCheck.allowed,
+    };
   }
 }
 

@@ -44,7 +44,7 @@ export interface ComplianceCheck {
   method: 'api' | 'file-scan' | 'config-check' | 'log-analysis' | 'manual';
   endpoint?: string;
   query?: string;
-  expectedResult: any;
+  expectedResult: ExpectedResult;
   frequency: 'real-time' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
   timeout: number;
 }
@@ -421,7 +421,7 @@ class ComplianceEngine {
     }
   }
 
-  private async checkAPICompliance(endpoint: string, expectedResult: any): Promise<boolean> {
+  private async checkAPICompliance(endpoint: string, expectedResult: ExpectedResult): Promise<boolean> {
     try {
       const response = await fetch(endpoint);
       const data = await response.json();
@@ -431,25 +431,25 @@ class ComplianceEngine {
     }
   }
 
-  private async checkFileCompliance(pattern: string, expectedResult: any): Promise<boolean> {
+  private async checkFileCompliance(pattern: string, expectedResult: ExpectedResult): Promise<boolean> {
     // File system compliance checks
     // Implementation would depend on specific file patterns
     return true;
   }
 
-  private async checkConfigCompliance(configPath: string, expectedResult: any): Promise<boolean> {
+  private async checkConfigCompliance(configPath: string, expectedResult: ExpectedResult): Promise<boolean> {
     // Configuration compliance checks
     // Implementation would check configuration files
     return true;
   }
 
-  private async checkLogCompliance(logQuery: string, expectedResult: any): Promise<boolean> {
+  private async checkLogCompliance(logQuery: string, expectedResult: ExpectedResult): Promise<boolean> {
     // Log analysis compliance checks
     // Implementation would analyze logs for compliance patterns
     return true;
   }
 
-  private compareResults(actual: any, expected: any): boolean {
+  private compareResults(actual: ComplianceResult, expected: ExpectedResult): boolean {
     // Deep comparison logic for compliance results
     return JSON.stringify(actual) === JSON.stringify(expected);
   }
@@ -996,6 +996,11 @@ interface RemediationResult {
   error?: string;
   timestamp: string;
 }
+
+// Type definitions for compliance engine
+type ExpectedResult = string | number | boolean | Record<string, unknown>;
+
+type ComplianceResult = string | number | boolean | Record<string, unknown>;
 
 // Export singleton instance
 export const complianceEngine = new ComplianceEngine();

@@ -430,8 +430,8 @@ class DataCharacteristicsAnalyzer {
 
     for (let i = 0; i < features.length; i++) {
       for (let j = i + 1; j < features.length; j++) {
-        const values1 = data.map((d: any) => d.features[features[i]] || 0);
-        const values2 = data.map((d: any) => d.features[features[j]] || 0);
+        const values1 = data.map((d: DataPoint) => d.features[features[i]] || 0);
+        const values2 = data.map((d: DataPoint) => d.features[features[j]] || 0);
 
         const correlation = this.correlation(values1, values2);
         correlations.push(Math.abs(correlation));
@@ -931,7 +931,7 @@ export class DetectionOrchestrator extends EventEmitter {
     if (analysis.type === 'univariate' && Array.isArray(data)) {
       return await this.deepLearningService.detectAnomalies(data, 'autoencoder');
     } else if (analysis.type === 'timeseries') {
-      const values = (data as any[]).map((d: any) => d.value || 0);
+      const values = (data as TimeSeriesData[]).map((d: TimeSeriesData) => d.value || 0);
       return await this.deepLearningService.detectSequenceAnomaly([values]);
     } else {
       // Convert to numeric array for processing
@@ -1002,8 +1002,8 @@ export class DetectionOrchestrator extends EventEmitter {
 
   private async executePatternRecognition(data: DetectionData, analysis: AnalysisResult): Promise<unknown> {
     if (analysis.type === 'graph') {
-      const nodes = (data as any[]).filter((item: any) => item.id);
-      const edges = (data as any[]).filter((item: any) => item.source && item.target);
+      const nodes = (data as GraphNode[]).filter((item: GraphNode) => item.id);
+      const edges = (data as GraphEdge[]).filter((item: GraphEdge) => item.source && item.target);
 
       const results = await this.patternRecognitionEngine.analyzeGraphPatterns(nodes, edges);
 
@@ -1033,7 +1033,7 @@ export class DetectionOrchestrator extends EventEmitter {
         if (typeof item === 'object' && item.value) return item.value;
         if (typeof item === 'object' && item.features) {
           const values = Object.values(item.features);
-          return values.reduce((sum: number, val: any) => sum + (typeof val === 'number' ? val : 0), 0);
+          return values.reduce((sum: number, val: FeatureValue) => sum + (typeof val === 'number' ? val : 0), 0);
         }
         return 0;
       });
@@ -1136,5 +1136,29 @@ export class DetectionOrchestrator extends EventEmitter {
     });
   }
 }
+
+// Type definitions for anomaly detection orchestrator
+interface DataPoint {
+  features: Record<string, number>;
+  [key: string]: unknown;
+}
+
+interface TimeSeriesData {
+  value: number;
+  [key: string]: unknown;
+}
+
+interface GraphNode {
+  id: string;
+  [key: string]: unknown;
+}
+
+interface GraphEdge {
+  source: string;
+  target: string;
+  [key: string]: unknown;
+}
+
+type FeatureValue = string | number | boolean;
 
 export default DetectionOrchestrator;

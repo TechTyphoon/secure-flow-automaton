@@ -45,7 +45,7 @@ export interface DLPScope {
 export interface DLPChannel {
   type: 'email' | 'web' | 'file_share' | 'cloud_storage' | 'usb' | 'print' | 'clipboard' | 'screen_capture' | 'api' | 'database' | 'chat' | 'social_media';
   enabled: boolean;
-  configuration: Record<string, any>;
+  configuration: Record<string, ChannelConfig>;
   monitoring: {
     realTime: boolean;
     logging: boolean;
@@ -66,7 +66,7 @@ export interface DLPCondition {
 
 export interface DLPAction {
   type: 'block' | 'allow' | 'quarantine' | 'encrypt' | 'watermark' | 'redact' | 'monitor' | 'notify' | 'audit' | 'delay' | 'require_approval';
-  parameters: Record<string, any>;
+  parameters: Record<string, ActionParameter>;
   automatic: boolean;
   priority: number;
   conditions?: string[]; // Additional conditions for this action
@@ -849,7 +849,7 @@ export class DLPService {
     allowTransmission: boolean;
     requiredActions: string[];
   }> {
-    const violations: any[] = [];
+    const violations: PolicyViolation[] = [];
     let allowTransmission = true;
     const requiredActions: string[] = [];
 
@@ -892,7 +892,7 @@ export class DLPService {
   /**
    * Check if policy applies to the current context
    */
-  private isPolicyApplicable(policy: DLPPolicy, metadata: any): boolean {
+  private isPolicyApplicable(policy: DLPPolicy, metadata: TransmissionMetadata): boolean {
     const scope = policy.scope;
 
     // Check channel
@@ -924,7 +924,7 @@ export class DLPService {
   private async evaluatePolicy(
     policy: DLPPolicy, 
     content: string, 
-    metadata: any
+    metadata: TransmissionMetadata
   ): Promise<{
     isViolation: boolean;
     confidence: number;
@@ -969,7 +969,7 @@ export class DLPService {
   /**
    * Evaluate individual condition
    */
-  private evaluateCondition(condition: DLPCondition, content: string, metadata: any): boolean {
+  private evaluateCondition(condition: DLPCondition, content: string, metadata: TransmissionMetadata): boolean {
     switch (condition.type) {
       case 'content_match':
         return this.evaluateContentMatch(condition, content);
@@ -1104,9 +1104,9 @@ export class DLPService {
    */
   async createIncident(
     policyId: string,
-    content: any,
-    metadata: any,
-    violations: any[]
+    content: IncidentContent,
+    metadata: TransmissionMetadata,
+    violations: PolicyViolation[]
   ): Promise<string> {
     const policy = this.policies.get(policyId);
     if (!policy) {
@@ -1237,7 +1237,7 @@ export class DLPService {
     }, {} as Record<string, any>);
 
     const topUsers = Object.values(userIncidents)
-      .sort((a: any, b: any) => b.incidents - a.incidents)
+      .sort((a: UserIncidentStats, b: UserIncidentStats) => b.incidents - a.incidents)
       .slice(0, 10) as any[];
 
     // Generate trends (simplified)
@@ -1318,6 +1318,51 @@ export class DLPService {
       b.period.start.getTime() - a.period.start.getTime()
     );
   }
+}
+
+// Type definitions for DLP service
+interface ChannelConfig {
+  enabled: boolean;
+  settings: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface ActionParameter {
+  value: string | number | boolean;
+  [key: string]: unknown;
+}
+
+interface PolicyViolation {
+  policyId: string;
+  policyName: string;
+  severity: string;
+  confidence: number;
+  matchedRules: string[];
+  recommendedActions: string[];
+}
+
+interface TransmissionMetadata {
+  channel: string;
+  user: string;
+  device: string;
+  recipient?: string;
+  filename?: string;
+  fileSize?: number;
+  application?: string;
+  [key: string]: unknown;
+}
+
+interface IncidentContent {
+  type: string;
+  data: string;
+  [key: string]: unknown;
+}
+
+interface UserIncidentStats {
+  userId: string;
+  userName: string;
+  incidents: number;
+  severity: string;
 }
 
 export default DLPService;

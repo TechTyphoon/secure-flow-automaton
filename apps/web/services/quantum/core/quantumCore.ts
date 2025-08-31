@@ -28,12 +28,12 @@ export interface QuantumMeasurement {
 export interface QuantumAlgorithmRequest {
   algorithm: string;
   parameters: Record<string, any>;
-  resources?: any;
+  resources?: QuantumResources;
 }
 
 export interface QuantumResult {
   success: boolean;
-  result: any;
+  result: QuantumAlgorithmResult;
   fidelity: number;
   executionTime: number;
   quantumAdvantage: number;
@@ -65,7 +65,7 @@ export class QuantumCoreEngine {
     const startTime = performance.now();
 
     try {
-      let result: any;
+      let result: QuantumAlgorithmResult;
 
       switch (request.algorithm) {
         case 'quantum_optimization':
@@ -108,7 +108,7 @@ export class QuantumCoreEngine {
     }
   }
 
-  async calculateQuantumCorrelations(assets: any[]): Promise<number[][]> {
+  async calculateQuantumCorrelations(assets: QuantumAsset[]): Promise<number[][]> {
     // Simulate quantum correlation calculation
     const n = assets.length;
     const correlationMatrix: number[][] = [];
@@ -143,7 +143,7 @@ export class QuantumCoreEngine {
     await new Promise(resolve => setTimeout(resolve, 30));
   }
 
-  private async executeQuantumOptimization(parameters: any): Promise<any> {
+  private async executeQuantumOptimization(parameters: OptimizationParameters): Promise<OptimizationResult> {
     // Simulate quantum optimization algorithm
     await new Promise(resolve => setTimeout(resolve, 20));
     return {
@@ -153,7 +153,7 @@ export class QuantumCoreEngine {
     };
   }
 
-  private async executeQuantumML(parameters: any): Promise<any> {
+  private async executeQuantumML(parameters: MLParameters): Promise<MLResult> {
     // Simulate quantum machine learning
     await new Promise(resolve => setTimeout(resolve, 30));
     return {
@@ -163,7 +163,7 @@ export class QuantumCoreEngine {
     };
   }
 
-  private async executeQuantumSimulation(parameters: any): Promise<any> {
+  private async executeQuantumSimulation(parameters: SimulationParameters): Promise<SimulationResult> {
     // Simulate quantum simulation
     await new Promise(resolve => setTimeout(resolve, 40));
     return {
@@ -173,7 +173,7 @@ export class QuantumCoreEngine {
     };
   }
 
-  private async executePerformanceOptimization(parameters: any): Promise<any> {
+  private async executePerformanceOptimization(parameters: PerformanceParameters): Promise<PerformanceResult> {
     // Simulate performance optimization
     await new Promise(resolve => setTimeout(resolve, 15));
     return {
@@ -183,7 +183,7 @@ export class QuantumCoreEngine {
     };
   }
 
-  private async executeGenericQuantumAlgorithm(request: QuantumAlgorithmRequest): Promise<any> {
+  private async executeGenericQuantumAlgorithm(request: QuantumAlgorithmRequest): Promise<QuantumAlgorithmResult> {
     // Generic quantum algorithm execution
     await new Promise(resolve => setTimeout(resolve, 25));
     return {
@@ -199,4 +199,72 @@ export class QuantumCoreEngine {
     const complexityFactor = Object.keys(request.parameters).length;
     return baseTime * complexityFactor;
   }
+}
+
+// Type definitions for quantum core
+interface QuantumResources {
+  qubits: number;
+  memory: number;
+  [key: string]: unknown;
+}
+
+interface QuantumAlgorithmResult {
+  algorithm: string;
+  result: Record<string, unknown>;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface QuantumAsset {
+  id: string;
+  type: string;
+  value: number;
+  [key: string]: unknown;
+}
+
+interface OptimizationParameters {
+  objective: string;
+  constraints: string[];
+  [key: string]: unknown;
+}
+
+interface OptimizationResult {
+  optimizedParameters: OptimizationParameters;
+  convergenceSteps: number;
+  finalCost: number;
+}
+
+interface MLParameters {
+  model: string;
+  data: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface MLResult {
+  accuracy: number;
+  trainingTime: number;
+  modelParameters: MLParameters;
+}
+
+interface SimulationParameters {
+  system: string;
+  timeSteps: number;
+  [key: string]: unknown;
+}
+
+interface SimulationResult {
+  simulationResult: SimulationParameters;
+  accuracy: number;
+  timeEvolution: number[];
+}
+
+interface PerformanceParameters {
+  config: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface PerformanceResult {
+  optimizedConfig: PerformanceParameters;
+  performanceGain: number;
+  resourceReduction: number;
 }

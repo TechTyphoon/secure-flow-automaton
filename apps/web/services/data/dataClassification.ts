@@ -861,7 +861,7 @@ export class DataClassificationService {
   }
 
   private evaluateCondition(condition: ClassificationCondition, assetData: Partial<DataAsset>): number {
-    const getValue = (field: string): any => {
+    const getValue = (field: string): string | number => {
       switch (field) {
         case 'content':
           return assetData.content?.sampleData || '';

@@ -66,8 +66,8 @@ export interface QuantumNPC {
       traits: string[];
       emotions: Map<string, number>; // emotion -> intensity (0-1)
       memory: {
-        shortTerm: any[];
-        longTerm: any[];
+        shortTerm: MemoryEntry[];
+        longTerm: MemoryEntry[];
         associations: Map<string, string[]>;
       };
     };
@@ -169,7 +169,7 @@ export interface GameSession {
     position: { x: number; y: number; z: number };
     health: number;
     score: number;
-    inventory: any[];
+    inventory: InventoryItem[];
     achievements: string[];
   };
   interactions: {
@@ -252,8 +252,8 @@ export class QuantumGamingEngine {
    */
   async initializeGamingSession(
     playerId: string,
-    gameConfig: any,
-    worldSettings: any
+    gameConfig: GameConfiguration,
+    worldSettings: WorldSettings
   ): Promise<QuantumGamingResult> {
     const startTime = performance.now();
 
@@ -322,7 +322,7 @@ export class QuantumGamingEngine {
   /**
    * Create quantum-enhanced game world
    */
-  private async createQuantumWorld(settings: any): Promise<GameWorld> {
+  private async createQuantumWorld(settings: WorldSettings): Promise<GameWorld> {
     const world: GameWorld = {
       id: `world_${Date.now()}`,
       name: settings.name || 'Quantum Realm',
@@ -583,10 +583,10 @@ export class QuantumGamingEngine {
    */
   async updateGameSession(sessionId: string): Promise<{
     status: string;
-    performance: any;
-    world: any;
-    npcs: any;
-    player: any;
+    performance: SessionPerformance;
+    world: WorldState;
+    npcs: NPCState;
+    player: PlayerState;
   }> {
     const session = this.activeSessions.get(sessionId);
     if (!session) {
@@ -633,11 +633,11 @@ export class QuantumGamingEngine {
     sessionId: string,
     npcId: string,
     interactionType: 'conversation' | 'combat' | 'trade' | 'quest',
-    playerInput: any
+    playerInput: PlayerInteractionInput
   ): Promise<{
-    response: any;
-    npcState: any;
-    worldImpact: any;
+    response: NPCResponse;
+    npcState: NPCInteractionState;
+    worldImpact: WorldInteractionImpact;
   }> {
     const npc = this.npcs.get(npcId);
     if (!npc) {
@@ -731,7 +731,7 @@ export class QuantumGamingEngine {
     npc.consciousness.level = 'quantum_conscious';
   }
 
-  private async processQuantumConsciousResponse(npc: QuantumNPC, type: string, input: any): Promise<any> {
+  private async processQuantumConsciousResponse(npc: QuantumNPC, type: string, input: PlayerInteractionInput): Promise<NPCResponse> {
     return {
       content: `As a quantum-conscious being, I understand your ${type} request.`,
       emotion: 'curious',
@@ -739,13 +739,13 @@ export class QuantumGamingEngine {
     };
   }
 
-  private async updateNPCEmotionalState(npc: QuantumNPC, type: string, input: any): Promise<void> {
+  private async updateNPCEmotionalState(npc: QuantumNPC, type: string, input: PlayerInteractionInput): Promise<void> {
     // Update emotional state based on interaction
     const emotions = npc.consciousness.personality.emotions;
     emotions.set('curiosity', Math.min(1, emotions.get('curiosity')! + 0.1));
   }
 
-  private async updateNPCLearning(npc: QuantumNPC, type: string, input: any, response: any): Promise<void> {
+  private async updateNPCLearning(npc: QuantumNPC, type: string, input: PlayerInteractionInput, response: NPCResponse): Promise<void> {
     // Add to memory and update learning
     npc.consciousness.personality.memory.shortTerm.push({
       timestamp: new Date(),
@@ -774,6 +774,94 @@ export class QuantumGamingEngine {
     const gameHour = Math.floor(Math.random() * 24);
     return `${gameHour}:00`;
   }
+}
+
+// Type definitions for quantum gaming engine
+interface MemoryEntry {
+  timestamp: Date;
+  type: string;
+  input: Record<string, unknown>;
+  response: Record<string, unknown>;
+}
+
+interface InventoryItem {
+  id: string;
+  name: string;
+  type: string;
+  quantity: number;
+  properties: Record<string, unknown>;
+}
+
+interface GameConfiguration {
+  npcCount: number;
+  difficulty: string;
+  features: string[];
+  [key: string]: unknown;
+}
+
+interface WorldSettings {
+  name: string;
+  type: string;
+  width: number;
+  height: number;
+  depth: number;
+  gravity: number;
+  [key: string]: unknown;
+}
+
+interface SessionPerformance {
+  frameRate: number;
+  latency: number;
+  physicsUpdates: number;
+  aiDecisions: number;
+  quantumCalculations: number;
+}
+
+interface WorldState {
+  activeObjects: number;
+  quantumInteractions: number;
+  weatherSystems: string;
+  timeOfDay: string;
+}
+
+interface NPCState {
+  active: number;
+  conversing: number;
+  learning: number;
+  emotionalChanges: number;
+}
+
+interface PlayerState {
+  position: Record<string, number>;
+  health: number;
+  engagement: string;
+  immersion: number;
+}
+
+interface PlayerInteractionInput {
+  type: string;
+  data: Record<string, unknown>;
+  timestamp: number;
+}
+
+interface NPCResponse {
+  type: string;
+  content: string;
+  emotionalTone: string;
+  actions: string[];
+}
+
+interface NPCInteractionState {
+  consciousness: string;
+  emotion: string;
+  learning: number;
+  memory: number;
+}
+
+interface WorldInteractionImpact {
+  reputation: number;
+  storyProgression: boolean;
+  environmentalChange: boolean;
 }
 
 // Export for use in entertainment quantum applications

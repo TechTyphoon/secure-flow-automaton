@@ -9,7 +9,7 @@ import { EventEmitter } from 'events';
 interface TimeSeriesData {
   timestamp: number;
   value: number;
-  metadata?: any;
+  metadata?: TimeSeriesMetadata;
 }
 
 interface SeasonalComponents {
@@ -761,7 +761,7 @@ export class TimeSeriesAnalysisService extends EventEmitter {
     return forecast;
   }
 
-  getAnalysisStatistics(): any {
+  getAnalysisStatistics(): AnalysisStatistics {
     return {
       models: Array.from(this.models.keys()),
       parameters: this.parameters,
@@ -780,6 +780,19 @@ export class TimeSeriesAnalysisService extends EventEmitter {
       }
     });
   }
+}
+
+// Type definitions for time series analysis
+interface TimeSeriesMetadata {
+  [key: string]: unknown;
+}
+
+interface AnalysisStatistics {
+  models: string[];
+  parameters: ModelParameters;
+  isInitialized: boolean;
+  supportedMethods: string[];
+  timestamp: number;
 }
 
 export default TimeSeriesAnalysisService;

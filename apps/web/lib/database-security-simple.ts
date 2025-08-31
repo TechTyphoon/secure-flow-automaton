@@ -76,7 +76,7 @@ export class DatabaseAuditor {
   static logOperation(
     operation: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE',
     table: string,
-    data?: any,
+    data?: DatabaseOperationData,
     userId?: string
   ): void {
     SecurityLogger.logEvent('database_operation', {
@@ -329,5 +329,10 @@ export const DatabaseSecurity = {
   RateLimiter: SecurityRateLimiter,
   Checks: SecurityChecks,
 };
+
+// Type definitions for database security
+interface DatabaseOperationData {
+  [key: string]: string | number | boolean | null | undefined;
+}
 
 export default DatabaseSecurity;

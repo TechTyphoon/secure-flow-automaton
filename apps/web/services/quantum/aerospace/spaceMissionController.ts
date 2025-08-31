@@ -246,7 +246,7 @@ export class QuantumSpaceMissionController {
   async planMission(
     spacecraft: SpacecraftSpecification,
     objectives: MissionObjective[],
-    constraints: any,
+    constraints: MissionConstraints,
     launchWindow: { start: Date; end: Date }
   ): Promise<QuantumSpaceMissionResult> {
     const startTime = performance.now();
@@ -439,8 +439,8 @@ export class QuantumSpaceMissionController {
    */
   async monitorMission(missionId: string): Promise<{
     status: string;
-    health: any;
-    telemetry: any;
+    health: MissionHealth;
+    telemetry: MissionTelemetry;
     alerts: string[];
   }> {
     // Real-time quantum monitoring
@@ -478,7 +478,7 @@ export class QuantumSpaceMissionController {
     severity: 'low' | 'medium' | 'high' | 'critical'
   ): Promise<{
     action: string;
-    parameters: any;
+    parameters: AdjustmentParameters;
     success: boolean;
     impact: string;
   }> {
@@ -503,7 +503,7 @@ export class QuantumSpaceMissionController {
   }
 
   // Helper methods
-  private generateTrajectoryOptions(spacecraft: SpacecraftSpecification, objective: MissionObjective): any[] {
+  private generateTrajectoryOptions(spacecraft: SpacecraftSpecification, objective: MissionObjective): TrajectoryOption[] {
     // Generate multiple trajectory options for quantum optimization
     return [
       { type: 'direct', fuelCost: 0.8, time: 1.0, risk: 0.3 },
@@ -532,7 +532,7 @@ export class QuantumSpaceMissionController {
     return solarConstant / (distanceAU * distanceAU);
   }
 
-  private calculateCommunicationWindows(trajectory: OrbitalTrajectory): any[] {
+  private calculateCommunicationWindows(trajectory: OrbitalTrajectory): CommunicationWindow[] {
     // Calculate ground station visibility windows
     return [
       { start: new Date(), duration: 45, elevation: 25 },
@@ -582,6 +582,49 @@ export class QuantumSpaceMissionController {
   private estimateDataCollection(objectives: MissionObjective[]): number {
     return objectives.reduce((total, obj) => total + obj.requirements.dataVolume, 0);
   }
+}
+
+// Type definitions for space mission controller
+interface MissionConstraints {
+  budget: number;
+  timeline: number;
+  [key: string]: unknown;
+}
+
+interface MissionHealth {
+  power: number;
+  thermal: number;
+  communications: number;
+  propulsion: number;
+  instruments: number;
+}
+
+interface MissionTelemetry {
+  position: { x: number; y: number; z: number };
+  velocity: { x: number; y: number; z: number };
+  attitude: { roll: number; pitch: number; yaw: number };
+  temperature: number;
+  power: number;
+}
+
+interface AdjustmentParameters {
+  deltaV: number;
+  duration: number;
+  fuelCost: number;
+  accuracy: number;
+}
+
+interface TrajectoryOption {
+  type: string;
+  fuelCost: number;
+  time: number;
+  risk: number;
+}
+
+interface CommunicationWindow {
+  start: Date;
+  duration: number;
+  elevation: number;
 }
 
 // Export for use in aerospace quantum applications

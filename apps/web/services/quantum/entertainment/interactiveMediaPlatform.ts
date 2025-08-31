@@ -228,15 +228,15 @@ export interface UserSession {
     responseTime: number; // average ms
   };
   personalization: {
-    preferences: Map<string, any>;
+    preferences: Map<string, UserPreference>;
     adaptations: string[];
     customContent: string[];
-    learningData: any;
+    learningData: LearningData;
   };
   biometrics?: {
     heartRate: number[];
     skinConductance: number[];
-    eyeTracking: any[];
+    eyeTracking: EyeTrackingData[];
     emotionalState: string[];
   };
 }
@@ -297,8 +297,8 @@ export class InteractiveMediaPlatform {
   private experiences: Map<string, InteractiveExperience>;
   private sessions: Map<string, UserSession>;
   private characters: Map<string, InteractiveCharacter>;
-  private narrativeEngine: any;
-  private interactionProcessor: any;
+  private narrativeEngine: NarrativeEngine;
+  private interactionProcessor: InteractionProcessor;
 
   constructor() {
     this.quantumCore = new QuantumCoreEngine();
@@ -318,7 +318,7 @@ export class InteractiveMediaPlatform {
   async createInteractiveExperience(
     creator: string,
     type: InteractiveExperience['type'],
-    specifications: any
+    specifications: ExperienceSpecifications
   ): Promise<QuantumInteractionResult> {
     const startTime = performance.now();
 
@@ -393,7 +393,7 @@ export class InteractiveMediaPlatform {
   private async initializeQuantumExperience(
     creator: string,
     type: InteractiveExperience['type'],
-    specifications: any
+    specifications: ExperienceSpecifications
   ): Promise<InteractiveExperience> {
     const experience: InteractiveExperience = {
       id: `experience_${Date.now()}`,
@@ -578,7 +578,7 @@ export class InteractiveMediaPlatform {
   async startInteractiveSession(
     userId: string,
     experienceId: string,
-    preferences: any
+    preferences: UserPreferences
   ): Promise<UserSession> {
     const experience = this.experiences.get(experienceId);
     if (!experience) {
@@ -624,11 +624,11 @@ export class InteractiveMediaPlatform {
   async processInteraction(
     sessionId: string,
     interactionType: string,
-    inputData: any
+    inputData: InteractionInput
   ): Promise<{
-    response: any;
-    narrativeUpdate: any;
-    personalization: any;
+    response: InteractionResponse;
+    narrativeUpdate: NarrativeUpdate;
+    personalization: PersonalizationUpdate;
     engagement: number;
   }> {
     const session = this.sessions.get(sessionId);
@@ -699,10 +699,10 @@ export class InteractiveMediaPlatform {
    */
   async monitorExperiencePerformance(experienceId: string): Promise<{
     status: string;
-    analytics: any;
-    performance: any;
-    engagement: any;
-    optimization: any;
+    analytics: ExperienceAnalytics;
+    performance: ExperiencePerformance;
+    engagement: ExperienceEngagement;
+    optimization: ExperienceOptimization;
   }> {
     const experience = this.experiences.get(experienceId);
     if (!experience) {
@@ -753,7 +753,7 @@ export class InteractiveMediaPlatform {
     console.log(`Personalizing experience for session ${session.id}`);
   }
 
-  private async quantumInteractionProcessing(type: string, data: any, session: UserSession): Promise<any> {
+  private async quantumInteractionProcessing(type: string, data: InteractionInput, session: UserSession): Promise<InteractionResponse> {
     return {
       type: 'narrative_response',
       content: `Quantum-processed response to ${type} interaction`,
@@ -762,7 +762,7 @@ export class InteractiveMediaPlatform {
     };
   }
 
-  private async updateAdaptiveNarrative(session: UserSession, response: any): Promise<any> {
+  private async updateAdaptiveNarrative(session: UserSession, response: InteractionResponse): Promise<NarrativeUpdate> {
     return {
       sceneChanges: ['dialogue_adaptation', 'plot_branching'],
       characterDevelopment: ['personality_adjustment', 'relationship_update'],
@@ -770,7 +770,7 @@ export class InteractiveMediaPlatform {
     };
   }
 
-  private async updatePersonalization(session: UserSession, response: any): Promise<any> {
+  private async updatePersonalization(session: UserSession, response: InteractionResponse): Promise<PersonalizationUpdate> {
     return {
       preferences: ['visual_style', 'interaction_method', 'complexity_preference'],
       adaptations: ['content_difficulty', 'pacing_adjustment', 'style_matching'],
@@ -782,7 +782,7 @@ export class InteractiveMediaPlatform {
     return 89.3; // % engagement level
   }
 
-  private async analyzeUserBehavior(session: UserSession): Promise<any> {
+  private async analyzeUserBehavior(session: UserSession): Promise<UserBehaviorAnalysis> {
     return {
       patterns: ['exploration_focused', 'dialogue_heavy', 'quick_decision_maker'],
       preferences: ['visual_learner', 'interactive_elements', 'narrative_depth'],
@@ -790,7 +790,7 @@ export class InteractiveMediaPlatform {
     };
   }
 
-  private async generateContentAdaptations(analysis: any): Promise<string[]> {
+  private async generateContentAdaptations(analysis: UserBehaviorAnalysis): Promise<string[]> {
     return [
       'increase_visual_elements',
       'add_interactive_objects',
@@ -799,7 +799,7 @@ export class InteractiveMediaPlatform {
     ];
   }
 
-  private async applyQuantumAdaptations(session: UserSession, adaptations: string[]): Promise<any> {
+  private async applyQuantumAdaptations(session: UserSession, adaptations: string[]): Promise<AdaptationResult> {
     return {
       adaptations,
       confidence: 0.918,
@@ -807,6 +807,127 @@ export class InteractiveMediaPlatform {
       success: true
     };
   }
+}
+
+// Type definitions for interactive media platform
+interface UserPreference {
+  category: string;
+  value: string | number | boolean;
+  strength: number;
+  lastUpdated: Date;
+}
+
+interface LearningData {
+  behaviorPatterns: string[];
+  preferenceEvolution: Record<string, unknown>;
+  engagementOptimization: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface EyeTrackingData {
+  timestamp: number;
+  x: number;
+  y: number;
+  duration: number;
+  focusArea: string;
+}
+
+interface NarrativeEngine {
+  type: string;
+  capabilities: string[];
+  status: string;
+}
+
+interface InteractionProcessor {
+  type: string;
+  capabilities: string[];
+  status: string;
+}
+
+interface ExperienceSpecifications {
+  title: string;
+  description: string;
+  targetAudience: string[];
+  complexity: 'beginner' | 'intermediate' | 'advanced';
+  duration: number;
+  features: string[];
+  [key: string]: unknown;
+}
+
+interface UserPreferences {
+  preferredInput: string;
+  visualStyle: string;
+  interactionMethod: string;
+  complexityPreference: string;
+  [key: string]: unknown;
+}
+
+interface InteractionInput {
+  type: string;
+  data: Record<string, unknown>;
+  timestamp: number;
+  sessionId: string;
+}
+
+interface InteractionResponse {
+  type: string;
+  content: string;
+  confidence: number;
+  adaptations: string[];
+}
+
+interface NarrativeUpdate {
+  sceneChanges: string[];
+  characterDevelopment: string[];
+  environmentChanges: string[];
+}
+
+interface PersonalizationUpdate {
+  preferences: string[];
+  adaptations: string[];
+  learning: string[];
+}
+
+interface ExperienceAnalytics {
+  totalSessions: number;
+  averageEngagement: number;
+  completionRate: number;
+  userSatisfaction: number;
+  replayability: number;
+}
+
+interface ExperiencePerformance {
+  renderingQuality: number;
+  responseLatency: number;
+  adaptationAccuracy: number;
+  systemStability: number;
+}
+
+interface ExperienceEngagement {
+  peakEngagement: number;
+  averageDuration: number;
+  interactionDensity: number;
+  emotionalResonance: number;
+}
+
+interface ExperienceOptimization {
+  quantumSpeedup: number;
+  adaptationSpeed: number;
+  resourceEfficiency: number;
+  aiAccuracy: number;
+}
+
+interface UserBehaviorAnalysis {
+  patterns: string[];
+  preferences: string[];
+  engagement: string[];
+}
+
+interface AdaptationResult {
+  adaptations: string[];
+  confidence: number;
+  impact: string;
+  success: boolean;
 }
 
 // Export for use in entertainment quantum applications

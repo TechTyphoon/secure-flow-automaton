@@ -105,7 +105,7 @@ interface HealingTrigger {
 interface TriggerCondition {
     field: string;
     operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'matches';
-    value: any;
+    value: string | number | boolean | string[];
     weight: number;
 }
 
@@ -126,8 +126,17 @@ interface HealingConstraint {
 
 // =================== AI CONFIGURATION ANALYZER ===================
 
+interface ModelConfig {
+    type: string;
+    accuracy: number;
+    features: string[];
+    loaded?: boolean;
+    version?: string;
+    lastUpdated?: Date;
+}
+
 class AIConfigurationAnalyzer {
-    private models: Map<string, any> = new Map();
+    private models: Map<string, ModelConfig> = new Map();
 
     async loadModels(): Promise<void> {
         await this.loadModel('config_drift_detector', {
@@ -155,7 +164,7 @@ class AIConfigurationAnalyzer {
         });
     }
 
-    private async loadModel(name: string, config: any): Promise<void> {
+    private async loadModel(name: string, config: ModelConfig): Promise<void> {
         this.models.set(name, { ...config, loaded: true });
     }
 
@@ -268,8 +277,16 @@ class AIConfigurationAnalyzer {
             recommendations: this.generatePerformanceRecommendations(performanceScore)
         };
     }
+}
 
-    private async generateRecommendations(config: SecurityConfiguration, analysis: any): Promise<string[]> {
+interface AnalysisResult {
+    drift: { hasDrift: boolean; score: number };
+    vulnerabilities: { hasVulnerabilities: boolean; score: number };
+    compliance: { isCompliant: boolean; score: number };
+    performance: { score: number };
+}
+
+    private async generateRecommendations(config: SecurityConfiguration, analysis: AnalysisResult): Promise<string[]> {
         const recommendations: string[] = [];
 
         if (analysis.drift.hasDrift) {
@@ -291,7 +308,11 @@ class AIConfigurationAnalyzer {
         return recommendations;
     }
 
-    private calculateOverallScore(drift: any, vuln: any, comp: any, perf: any): number {
+interface ScoreComponents {
+    score: number;
+}
+
+    private calculateOverallScore(drift: ScoreComponents, vuln: ScoreComponents, comp: ScoreComponents, perf: ScoreComponents): number {
         const weights = { drift: 0.3, vulnerability: 0.4, compliance: 0.2, performance: 0.1 };
         return (
             (1 - drift.score) * weights.drift +
@@ -315,7 +336,15 @@ class AIConfigurationAnalyzer {
         return drifted;
     }
 
-    private generateVulnerabilities(): any[] {
+interface Vulnerability {
+    id: string;
+    type: string;
+    severity: string;
+    description: string;
+    cve?: string;
+}
+
+    private generateVulnerabilities(): Vulnerability[] {
         return [
             {
                 id: 'vuln-001',
@@ -327,7 +356,14 @@ class AIConfigurationAnalyzer {
         ];
     }
 
-    private generateComplianceViolations(config: SecurityConfiguration): any[] {
+interface ComplianceViolation {
+    framework: string;
+    requirement: string;
+    violation: string;
+    severity: string;
+}
+
+    private generateComplianceViolations(config: SecurityConfiguration): ComplianceViolation[] {
         return [
             {
                 framework: 'SOC2',
@@ -370,7 +406,7 @@ class AIConfigurationAnalyzer {
         return ['Configuration performance is acceptable'];
     }
 
-    private identifyRisks(vulnAnalysis: any, compAnalysis: any): string[] {
+    private identifyRisks(vulnAnalysis: ScoreComponents, compAnalysis: ScoreComponents): string[] {
         const risks: string[] = [];
         
         if (vulnAnalysis.hasVulnerabilities) {
@@ -1259,7 +1295,7 @@ interface StepExecutionResult {
     success: boolean;
     message: string;
     executionTime: number;
-    output: any;
+    output: Record<string, string | number | boolean | string[]>;
 }
 
 interface HealthCheckResult {

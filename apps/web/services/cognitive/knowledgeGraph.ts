@@ -9,7 +9,7 @@ import { EventEmitter } from 'events';
 interface SecurityEntity {
   id: string;
   type: EntityType;
-  properties: { [key: string]: any };
+  properties: { [key: string]: EntityProperty };
   metadata: EntityMetadata;
   timestamp: number;
 }
@@ -19,7 +19,7 @@ interface SecurityRelationship {
   source: string; // Entity ID
   target: string; // Entity ID
   type: RelationshipType;
-  properties: { [key: string]: any };
+  properties: { [key: string]: RelationshipProperty };
   confidence: number;
   temporal: TemporalInfo;
   metadata: RelationshipMetadata;
@@ -80,7 +80,7 @@ interface TemporalInfo {
 
 interface GraphQuery {
   query: string;
-  parameters?: { [key: string]: any };
+  parameters?: { [key: string]: QueryParameter };
   resultLimit?: number;
   includeRelationships?: boolean;
   traversalDepth?: number;
@@ -354,7 +354,7 @@ class GraphStorageEngine {
     return results;
   }
 
-  getStatistics(): any {
+  getStatistics(): GraphStatistics {
     const entityTypeCounts: { [key: string]: number } = {};
     const relationshipTypeCounts: { [key: string]: number } = {};
     
@@ -867,7 +867,7 @@ export class SecurityKnowledgeGraph extends EventEmitter {
   analyzeThreatLandscape(): {
     topThreats: ThreatIntelligenceEntry[];
     emergingPatterns: TemporalPattern[];
-    riskAssessment: any;
+    riskAssessment: RiskAssessment;
   } {
     const entities = Array.from(this.storage['entities'].values());
     const threatEntities = entities.filter(e => 
@@ -898,7 +898,7 @@ export class SecurityKnowledgeGraph extends EventEmitter {
     };
   }
 
-  getGraphStatistics(): any {
+  getGraphStatistics(): ExtendedGraphStatistics {
     const baseStats = this.storage.getStatistics();
     const centrality = this.analytics.calculateCentrality();
     const communities = this.analytics.detectCommunities();
@@ -1171,6 +1171,35 @@ export class SecurityKnowledgeGraph extends EventEmitter {
       percentage: vulnerabilities.length > 0 ? (exposedVulns.length / vulnerabilities.length) * 100 : 0
     };
   }
+}
+
+// Type definitions for knowledge graph
+type EntityProperty = string | number | boolean | string[] | Record<string, unknown>;
+
+type RelationshipProperty = string | number | boolean | string[] | Record<string, unknown>;
+
+type QueryParameter = string | number | boolean | string[];
+
+interface GraphStatistics {
+  totalEntities: number;
+  totalRelationships: number;
+  entityTypeCounts: Record<string, number>;
+  relationshipTypeCounts: Record<string, number>;
+  avgRelationshipsPerEntity: number;
+}
+
+interface RiskAssessment {
+  overallRiskLevel: string;
+  criticalAssets: string[];
+  vulnerabilityExposure: { exposed: number; total: number; percentage: number };
+}
+
+interface ExtendedGraphStatistics extends GraphStatistics {
+  topCentralEntities: [string, number][];
+  communityCount: number;
+  cacheSize: number;
+  isInitialized: boolean;
+  timestamp: number;
 }
 
 export default SecurityKnowledgeGraph;

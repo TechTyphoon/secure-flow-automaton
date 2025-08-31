@@ -491,7 +491,7 @@ export class QuantumDrugDiscoveryEngine {
 
   private classifyInteractionType(
     bindingEnergy: number,
-    prediction: any
+    prediction: DrugPrediction
   ): InteractionType {
     if (bindingEnergy < -10) return InteractionType.STRONG_BINDING;
     if (bindingEnergy < -5) return InteractionType.MODERATE_BINDING;
@@ -515,7 +515,7 @@ export interface QuantumSimulationResult {
 }
 
 export interface OptimizationMetrics {
-  optimizedParameters: any;
+  optimizedParameters: OptimizationParameters;
   quantumAdvantage: number;
   confidence: number;
 }
@@ -627,6 +627,11 @@ export interface SafetyAssessment {
   adverseEventRisk: number;
   contraindications: string[];
   warnings: string[];
+}
+
+// Type definitions for quantum drug discovery
+interface OptimizationParameters {
+  [key: string]: unknown;
 }
 
 console.log('✅ Quantum Drug Discovery Engine module loaded successfully');

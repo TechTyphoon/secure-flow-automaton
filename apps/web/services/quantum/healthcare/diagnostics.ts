@@ -165,7 +165,7 @@ export interface EnhancedImage {
 export interface Enhancement {
   type: 'NOISE_REDUCTION' | 'CONTRAST_ENHANCEMENT' | 'RESOLUTION_IMPROVEMENT' | 'ARTIFACT_REMOVAL';
   method: string;
-  parameters: any;
+  parameters: EnhancementParameters;
   improvement: number;
 }
 
@@ -246,7 +246,7 @@ export interface ScanProtocol {
 
 export interface ImagingSequence {
   name: string;
-  parameters: any;
+  parameters: SequenceParameters;
   duration: number;
   purpose: string;
 }
@@ -578,7 +578,7 @@ export class QuantumMedicalDiagnostics {
       featureTypes: ['TEXTURE', 'SHAPE', 'INTENSITY', 'QUANTUM_COHERENCE']
     });
 
-    return featureResult.quantumFeatures.map((feature: any) => ({
+    return featureResult.quantumFeatures.map((feature: QuantumFeature) => ({
       name: feature.name,
       value: feature.value,
       significance: feature.significance,
@@ -594,7 +594,7 @@ export class QuantumMedicalDiagnostics {
       quantumThreshold: 0.8
     });
 
-    const anomalies: Anomaly[] = anomalyResult.anomalies.map((anomaly: any) => ({
+    const anomalies: Anomaly[] = anomalyResult.anomalies.map((anomaly: AnomalyData) => ({
       id: anomaly.id,
       location: anomaly.location,
       type: anomaly.type,
@@ -603,7 +603,7 @@ export class QuantumMedicalDiagnostics {
       quantumSignature: anomaly.quantumSignature
     }));
 
-    const normalRegions: NormalRegion[] = anomalyResult.normalRegions.map((region: any) => ({
+    const normalRegions: NormalRegion[] = anomalyResult.normalRegions.map((region: NormalRegionData) => ({
       location: region.location,
       confidence: region.confidence,
       reference: region.reference
@@ -618,7 +618,7 @@ export class QuantumMedicalDiagnostics {
   }
 
   private async generateFindings(
-    diagnosticAnalysis: any,
+    diagnosticAnalysis: DiagnosticAnalysisData,
     anomalyDetection: AnomalyDetection
   ): Promise<Finding[]> {
     const findings: Finding[] = [];
@@ -642,7 +642,7 @@ export class QuantumMedicalDiagnostics {
 
   private async generateAssessment(
     findings: Finding[],
-    diagnosticAnalysis: any
+    diagnosticAnalysis: DiagnosticAnalysisData
   ): Promise<Assessment> {
     // Generate overall assessment based on findings
     const primaryDiagnosis = await this.determinePrimaryDiagnosis(findings);
@@ -734,6 +734,49 @@ export interface DiagnosticsConfig {
   processingAccuracy: 'HIGH' | 'MEDIUM' | 'FAST';
   complianceLevel: 'HIPAA' | 'FDA' | 'GLOBAL';
   privacyMode: 'STANDARD' | 'ENHANCED' | 'MAXIMUM';
+}
+
+// Type definitions for quantum healthcare diagnostics
+interface EnhancementParameters {
+  strength: number;
+  radius: number;
+  [key: string]: unknown;
+}
+
+interface SequenceParameters {
+  repetitionTime: number;
+  echoTime: number;
+  flipAngle: number;
+  [key: string]: unknown;
+}
+
+interface QuantumFeature {
+  name: string;
+  value: number;
+  significance: number;
+  [key: string]: unknown;
+}
+
+interface AnomalyData {
+  id: string;
+  location: AnatomicalLocation;
+  type: string;
+  severity: number;
+  confidence: number;
+  quantumSignature: string;
+}
+
+interface NormalRegionData {
+  location: AnatomicalLocation;
+  confidence: number;
+  reference: boolean;
+}
+
+interface DiagnosticAnalysisData {
+  scanAnalysis: ScanAnalysisResult[];
+  combinedFindings: Finding[];
+  overallAssessment: Assessment;
+  quantumIntegration: QuantumIntegrationMetrics;
 }
 
 console.log('✅ Quantum Medical Diagnostics module loaded successfully');

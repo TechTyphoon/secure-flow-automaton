@@ -26,7 +26,7 @@ export interface Permission {
 export interface PermissionCondition {
   type: 'time' | 'location' | 'device' | 'network';
   operator: 'equals' | 'not_equals' | 'in' | 'not_in';
-  value: any;
+  value: ConditionValue;
 }
 
 export interface TimeWindow {
@@ -73,7 +73,7 @@ export interface PrivilegedActivity {
   timestamp: Date;
   action: string;
   resource: string;
-  details: any;
+  details: ActivityDetails;
   riskScore: number;
   blocked: boolean;
   reason?: string;
@@ -283,7 +283,7 @@ export class PrivilegedAccessManager {
     userId: string,
     resource: string,
     action: string,
-    context?: any
+    context?: PermissionContext
   ): Promise<{
     allowed: boolean;
     sessionId?: string;
@@ -336,7 +336,7 @@ export class PrivilegedAccessManager {
     activity: {
       action: string;
       resource: string;
-      details: any;
+      details: ActivityDetails;
     }
   ): Promise<void> {
     const session = this.activeSessions.get(sessionId);
@@ -464,7 +464,7 @@ export class PrivilegedAccessManager {
   /**
    * Private methods
    */
-  private async validateAccessRequest(request: any): Promise<void> {
+  private async validateAccessRequest(request: AccessRequest): Promise<void> {
     if (!request.justification || request.justification.length < this.config.requiredJustificationLength) {
       throw new Error('Insufficient justification provided');
     }
@@ -476,7 +476,7 @@ export class PrivilegedAccessManager {
     // Additional validations...
   }
 
-  private async assessRequestRisk(request: any, role: PrivilegedRole): Promise<any> {
+  private async assessRequestRisk(request: AccessRequest, role: PrivilegedRole): Promise<RiskAssessmentResult> {
     const factors: string[] = [];
     let score = role.riskLevel === 'critical' ? 60 : 
                 role.riskLevel === 'high' ? 40 : 
@@ -526,7 +526,7 @@ export class PrivilegedAccessManager {
     return regex.test(resource);
   }
 
-  private async evaluateConditions(conditions: PermissionCondition[], context: any): Promise<boolean> {
+  private async evaluateConditions(conditions: PermissionCondition[], context: PermissionContext): Promise<boolean> {
     for (const condition of conditions) {
       if (!this.evaluateCondition(condition, context)) {
         return false;
@@ -535,7 +535,7 @@ export class PrivilegedAccessManager {
     return true;
   }
 
-  private evaluateCondition(condition: PermissionCondition, context: any): boolean {
+  private evaluateCondition(condition: PermissionCondition, context: PermissionContext): boolean {
     const contextValue = context[condition.type];
     
     switch (condition.operator) {
@@ -681,7 +681,7 @@ class PrivilegedActivityMonitor {
     console.log(`Stopped monitoring privileged session: ${session.id}`);
   }
 
-  async assessActivityRisk(activity: any, session: ActivePrivilegedSession): Promise<number> {
+  async assessActivityRisk(activity: PrivilegedActivity, session: ActivePrivilegedSession): Promise<number> {
     let risk = 0;
 
     // High-risk actions
@@ -828,6 +828,32 @@ class PamAuditLogger {
 
     console.log('PAM Audit:', logEntry);
   }
+}
+
+// Type definitions for privileged access
+interface ConditionValue {
+  value: string | number | boolean | string[];
+  [key: string]: unknown;
+}
+
+interface ActivityDetails {
+  action: string;
+  resource: string;
+  [key: string]: unknown;
+}
+
+interface PermissionContext {
+  time?: string;
+  location?: string;
+  device?: string;
+  network?: string;
+  [key: string]: unknown;
+}
+
+interface RiskAssessmentResult {
+  score: number;
+  factors: string[];
+  level: 'low' | 'medium' | 'high' | 'critical';
 }
 
 export default PrivilegedAccessManager;
