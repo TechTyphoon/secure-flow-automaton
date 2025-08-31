@@ -1,10 +1,33 @@
+export interface LegacyData {
+    id: string | number;
+    timestamp: string | number;
+    payload: Record<string, unknown>;
+    metadata?: {
+        source: string;
+        version: string;
+        format: string;
+    };
+}
+
+export interface MigratedData {
+    id: string;
+    timestamp: number;
+    payload: Record<string, unknown>;
+    metadata: {
+        source: string;
+        version: string;
+        migratedAt: number;
+        quantumProcessed: boolean;
+    };
+}
+
 export class MigrationTools {
     /**
      * Migrates data from legacy systems to the quantum edge platform.
      * @param legacyData - The data from the legacy system to be migrated.
      * @returns The migrated data formatted for the quantum edge platform.
      */
-    public static migrateData(legacyData: any): any {
+    public static migrateData(legacyData: LegacyData): MigratedData {
         // Implement data transformation logic here
         const migratedData = this.transformData(legacyData);
         return migratedData;
@@ -15,10 +38,20 @@ export class MigrationTools {
      * @param legacyData - The data from the legacy system.
      * @returns The transformed data.
      */
-    private static transformData(legacyData: any): any {
+    private static transformData(legacyData: LegacyData): MigratedData {
         // Placeholder for transformation logic
         // This should include mapping fields and converting data types as necessary
-        return legacyData; // Modify this to return the transformed data
+        return {
+            id: String(legacyData.id),
+            timestamp: typeof legacyData.timestamp === 'string' ? new Date(legacyData.timestamp).getTime() : legacyData.timestamp,
+            payload: legacyData.payload,
+            metadata: {
+                source: legacyData.metadata?.source || 'unknown',
+                version: legacyData.metadata?.version || '1.0',
+                migratedAt: Date.now(),
+                quantumProcessed: true
+            }
+        };
     }
 
     /**
@@ -26,9 +59,9 @@ export class MigrationTools {
      * @param migratedData - The data that has been migrated.
      * @returns True if the data is valid, false otherwise.
      */
-    public static validateMigratedData(migratedData: any): boolean {
+    public static validateMigratedData(migratedData: MigratedData): boolean {
         // Implement validation logic here
-        return true; // Modify this to include actual validation checks
+        return migratedData.id !== '' && migratedData.timestamp > 0 && Object.keys(migratedData.payload).length > 0;
     }
 
     /**

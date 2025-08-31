@@ -38,7 +38,7 @@
     "win32"
   ],
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 8080",
+    "dev": "vite --host localhost --port 8080",
     "dev:windows": "set NODE_OPTIONS=--max-old-space-size=4096 && vite --host 0.0.0.0 --port 8080",
     "dev:unix": "NODE_OPTIONS=--max-old-space-size=4096 vite --host 0.0.0.0 --port 8080",
     "build": "vite build",

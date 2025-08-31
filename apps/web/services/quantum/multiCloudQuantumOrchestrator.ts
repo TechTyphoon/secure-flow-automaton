@@ -641,6 +641,41 @@ interface TrafficMetrics {
   lastRequest: number;
 }
 
+interface CloudProviderStatusSummary {
+  clusters: number;
+  services: number;
+  quantumChannels: number;
+  lastHealthCheck: number;
+}
+
+interface OrchestratorMetrics {
+  deployments: {
+    total: number;
+    active: number;
+    deploying: number;
+  };
+  services: {
+    total: number;
+    byCloud: Record<string, number>;
+  };
+  quantumChannels: {
+    total: number;
+    active: number;
+    degraded: number;
+  };
+  cloudProviders: {
+    total: number;
+    connected: number;
+    clusters: number;
+  };
+  migrations: {
+    active: number;
+    completed: number;
+  };
+  isInitialized: boolean;
+  timestamp: number;
+}
+
 // Main Multi-Cloud Orchestrator
 export class MultiCloudQuantumOrchestrator extends EventEmitter {
   private cloudProviders: Map<string, any> = new Map();
@@ -1215,8 +1250,8 @@ export class MultiCloudQuantumOrchestrator extends EventEmitter {
     return Array.from(this.quantumChannels.values());
   }
 
-  getCloudProviderStatus(): Map<string, any> {
-    const status = new Map<string, any>();
+  getCloudProviderStatus(): Map<string, CloudProviderStatusSummary> {
+    const status = new Map<string, CloudProviderStatusSummary>();
     
     for (const [providerName] of this.cloudProviders.entries()) {
       const clusters = Array.from(this.cloudClusters.values())
@@ -1238,7 +1273,7 @@ export class MultiCloudQuantumOrchestrator extends EventEmitter {
     return status;
   }
 
-  getOrchestratorMetrics(): any {
+  getOrchestratorMetrics(): OrchestratorMetrics {
     const activeDeployments = Array.from(this.multiCloudDeployments.values())
       .filter(d => d.status === 'ACTIVE').length;
     

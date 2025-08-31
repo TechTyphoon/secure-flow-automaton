@@ -3,9 +3,27 @@
  * Security compliance validation and monitoring
  */
 
+export interface ComplianceStandard {
+  requirements: string[];
+  validationRules: string[];
+}
+
+export interface ValidationRecord {
+  standard: string;
+  status: string;
+  isValid: boolean;
+  timestamp: string;
+}
+
+export interface ComplianceData {
+  standard?: string;
+  status?: string;
+  additionalData?: Record<string, unknown>;
+}
+
 export class Compliance {
-  private complianceStandards: Map<string, any> = new Map();
-  private validationHistory: any[] = [];
+  private complianceStandards: Map<string, ComplianceStandard> = new Map();
+  private validationHistory: ValidationRecord[] = [];
 
   constructor() {
     this.initializeComplianceStandards();
@@ -16,22 +34,22 @@ export class Compliance {
       requirements: ['access_control', 'data_protection', 'incident_response'],
       validationRules: ['encryption_enabled', 'mfa_required', 'audit_logging']
     });
-    
+
     this.complianceStandards.set('SOC 2', {
       requirements: ['security', 'availability', 'processing_integrity'],
       validationRules: ['security_controls', 'availability_monitoring', 'data_integrity']
     });
-    
+
     this.complianceStandards.set('PCI DSS', {
       requirements: ['card_data_protection', 'vulnerability_management', 'access_control'],
       validationRules: ['encryption_standards', 'regular_scans', 'access_restrictions']
     });
   }
 
-  async validate(complianceData: any): Promise<boolean> {
+  async validate(complianceData: ComplianceData): Promise<boolean> {
     const standard = complianceData.standard || 'ISO 27001';
     const status = complianceData.status || 'unknown';
-    
+
     const standardConfig = this.complianceStandards.get(standard);
     if (!standardConfig) {
       return false;
@@ -39,7 +57,7 @@ export class Compliance {
 
     // Simulate compliance validation
     const isValid = this.performValidation(standard, status, standardConfig);
-    
+
     this.validationHistory.push({
       standard,
       status,
@@ -50,7 +68,7 @@ export class Compliance {
     return isValid;
   }
 
-  private performValidation(standard: string, status: string, config: any): boolean {
+  private performValidation(standard: string, status: string, config: ComplianceStandard): boolean {
     // Simulate validation logic
     if (status === 'compliant') {
       return true;
@@ -71,7 +89,7 @@ export class Compliance {
   }> {
     const targetStandard = standard || 'ISO 27001';
     const standardConfig = this.complianceStandards.get(targetStandard);
-    
+
     if (!standardConfig) {
       return {
         standard: targetStandard,
@@ -86,7 +104,7 @@ export class Compliance {
       .filter(v => v.standard === targetStandard)
       .slice(-10);
 
-    const complianceRate = recentValidations.length > 0 
+    const complianceRate = recentValidations.length > 0
       ? recentValidations.filter(v => v.isValid).length / recentValidations.length * 100
       : 0;
 
@@ -95,15 +113,15 @@ export class Compliance {
       complianceRate,
       violations: this.generateViolations(targetStandard),
       recommendations: this.generateRecommendations(targetStandard),
-      lastValidated: recentValidations.length > 0 
-        ? recentValidations[recentValidations.length - 1].timestamp 
+      lastValidated: recentValidations.length > 0
+        ? recentValidations[recentValidations.length - 1].timestamp
         : new Date().toISOString()
     };
   }
 
   private generateViolations(standard: string): string[] {
     const violations: string[] = [];
-    
+
     switch (standard) {
       case 'ISO 27001':
         violations.push('Access control policy needs review', 'Data encryption not fully implemented');
@@ -123,7 +141,7 @@ export class Compliance {
 
   private generateRecommendations(standard: string): string[] {
     const recommendations: string[] = [];
-    
+
     switch (standard) {
       case 'ISO 27001':
         recommendations.push('Implement multi-factor authentication', 'Enhance audit logging', 'Update security policies');
@@ -141,7 +159,7 @@ export class Compliance {
     return recommendations;
   }
 
-  getValidationHistory(): any[] {
+  getValidationHistory(): ValidationRecord[] {
     return [...this.validationHistory];
   }
 }

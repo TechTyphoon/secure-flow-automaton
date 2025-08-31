@@ -377,7 +377,7 @@ const AdvancedPerformanceAnalytics: React.FC = () => {
       });
     }
     return acc;
-  }, [] as any[]);
+  }, [] as { device: string; avgLcp: number; avgFid: number; userCount: number }[]);
 
   const satisfactionDistribution = userExperienceData.map(item => ({
     segment: `${item.device} - ${item.connection}`,

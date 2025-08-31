@@ -4,7 +4,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { SecurityContext, RiskLevel, AlertLevel } from './contextEngine';
+import { SecurityContext, RiskLevel, AlertLevel, ThreatContext } from './contextEngine';
 
 // Core interfaces for report generation
 interface SecurityReport {
@@ -87,7 +87,7 @@ interface ReportAttachment {
   path: string;
 }
 
-type ReportType = 
+type ReportType =
   | 'EXECUTIVE_SUMMARY'
   | 'SECURITY_POSTURE'
   | 'INCIDENT_REPORT'
@@ -144,6 +144,161 @@ interface ReportSchedule {
 
 type ReportFormat = 'HTML' | 'PDF' | 'JSON' | 'CSV' | 'DOCX';
 
+// Data structure interfaces for report generation
+interface ThreatData {
+  currentThreats: Threat[];
+  emergingThreats: EmergingThreat[];
+}
+
+interface Threat {
+  id: string;
+  type: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  status: 'ACTIVE' | 'CONTAINED' | 'RESOLVED';
+  affectedAssets: string[];
+  firstDetected: number;
+  lastActivity: number;
+  confidence: number;
+}
+
+interface VulnerabilityExposure {
+  totalVulnerabilities: number;
+  criticalVulnerabilities: number;
+  exploitableVulnerabilities: number;
+  exposureScore: number;
+}
+
+interface ComplianceContext {
+  frameworks: unknown[];
+  requirements: unknown[];
+  auditStatus: { overall: string };
+  violations: unknown[];
+  controlEffectiveness: { overall: number };
+}
+
+interface Incident {
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  status: string;
+  [key: string]: unknown;
+}
+
+interface Recommendation {
+  id: string;
+  type: string;
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  title: string;
+  description: string;
+  estimatedEffort: 'HIGH' | 'MEDIUM' | 'LOW';
+  expectedImpact: string;
+  timeline: string;
+  resources: string[];
+  dependencies: string[];
+}
+
+interface RecommendationPriorityDistribution {
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+}
+
+interface SeverityDistribution {
+  CRITICAL: number;
+  HIGH: number;
+  MEDIUM: number;
+  LOW: number;
+}
+
+interface VulnerabilityStatistics {
+  total: number;
+  critical: number;
+  high: number;
+  patchingStatus: string;
+  exposureLevel: string;
+  remediationTimeframe: string;
+}
+
+interface ComplianceStatistics {
+  overallStatus: string;
+  frameworksCount: number;
+  requirementsMet: number;
+  violationsCount: number;
+  controlEffectiveness: number;
+  nextAuditDate: string | null;
+}
+
+interface IncidentStatistics {
+  total: number;
+  critical: number;
+  resolved: number;
+  avgResolutionTime: string;
+  trend: string;
+  topTypes: string[];
+}
+
+interface EmergingThreat {
+  id: string;
+  name: string;
+  description: string;
+  confidence: number;
+  firstSeen: number;
+  indicators: string[];
+}
+
+interface ReportStatistics {
+  totalReports: number;
+  reportTypes: { [key: string]: number };
+  reportStatuses: { [key: string]: number };
+  averageGenerationTime: number;
+  lastGenerated: Date;
+  templatesAvailable: number;
+  isInitialized: boolean;
+  timestamp: number;
+}
+
+interface ReportGenerationOptions {
+  templateId?: string;
+  customSections?: SectionType[];
+  recipients?: string[];
+  format?: ReportFormat[];
+  includeCharts?: boolean;
+  includeTables?: boolean;
+  [key: string]: unknown;
+}
+
+interface ReportCapabilities {
+  reportGeneration: {
+    executiveSummaries: boolean;
+    securityPostureReports: boolean;
+    complianceReports: boolean;
+    incidentReports: boolean;
+    threatIntelligenceReports: boolean;
+    vulnerabilityReports: boolean;
+    riskAssessmentReports: boolean;
+    customReports: boolean;
+  };
+  narrativeGeneration: {
+    executiveSummaries: boolean;
+    threatAnalysis: boolean;
+    vulnerabilityAssessment: boolean;
+    complianceStatus: boolean;
+    riskAssessment: boolean;
+    recommendations: boolean;
+  };
+  visualizations: {
+    charts: string[];
+    tables: boolean;
+    trends: boolean;
+    distributions: boolean;
+  };
+  exportFormats: string[];
+  scheduling: {
+    automated: boolean;
+    frequencies: string[];
+    templates: boolean;
+  };
+}
+
 // Narrative Generation Engine
 class NarrativeGenerator {
   private templates: Map<string, string> = new Map();
@@ -159,7 +314,7 @@ class NarrativeGenerator {
     const riskDescription = this.getRiskDescription(context.risk.overallRisk);
     const alertDescription = this.getAlertDescription(context.situationalAwareness.alertLevel);
     const timeframe = this.getTimeframeDescription(context.timestamp);
-    
+
     const keyMetrics = this.extractKeyMetrics(context);
     const criticalIssues = this.identifyCriticalIssues(context);
     const recommendations = this.generateTopRecommendations(context);
@@ -178,7 +333,7 @@ class NarrativeGenerator {
     });
   }
 
-  generateThreatAnalysisNarrative(threats: any): string {
+  generateThreatAnalysisNarrative(threats: ThreatContext): string {
     const template = this.templates.get('threat_analysis') || '';
     const threatTypes = this.categorizeThreatTypes(threats.currentThreats);
     const severityDistribution = this.analyzeSeverityDistribution(threats.currentThreats);
@@ -186,8 +341,8 @@ class NarrativeGenerator {
 
     return this.interpolateTemplate(template, {
       totalThreats: threats.currentThreats.length,
-      criticalThreats: threats.currentThreats.filter((t: any) => t.severity === 'CRITICAL').length,
-      highThreats: threats.currentThreats.filter((t: any) => t.severity === 'HIGH').length,
+      criticalThreats: threats.currentThreats.filter((t: Threat) => t.severity === 'CRITICAL').length,
+      highThreats: threats.currentThreats.filter((t: Threat) => t.severity === 'HIGH').length,
       threatTypes: threatTypes.join(', '),
       dominantThreatType: threatTypes[0] || 'Unknown',
       trendAnalysis,
@@ -195,10 +350,10 @@ class NarrativeGenerator {
     });
   }
 
-  generateVulnerabilityNarrative(vulnerabilities: any): string {
+  generateVulnerabilityNarrative(vulnerabilities: VulnerabilityExposure): string {
     const template = this.templates.get('vulnerability_analysis') || '';
     const vulnStats = this.analyzeVulnerabilityStatistics(vulnerabilities);
-    
+
     return this.interpolateTemplate(template, {
       totalVulnerabilities: vulnStats.total,
       criticalVulnerabilities: vulnStats.critical,
@@ -209,10 +364,10 @@ class NarrativeGenerator {
     });
   }
 
-  generateComplianceNarrative(compliance: any): string {
+  generateComplianceNarrative(compliance: ComplianceContext): string {
     const template = this.templates.get('compliance_analysis') || '';
     const complianceStats = this.analyzeComplianceStatistics(compliance);
-    
+
     return this.interpolateTemplate(template, {
       overallStatus: complianceStats.overallStatus,
       frameworksCount: complianceStats.frameworksCount,
@@ -223,10 +378,10 @@ class NarrativeGenerator {
     });
   }
 
-  generateIncidentNarrative(incidents: any[]): string {
+  generateIncidentNarrative(incidents: Incident[]): string {
     const template = this.templates.get('incident_analysis') || '';
     const incidentStats = this.analyzeIncidentStatistics(incidents);
-    
+
     return this.interpolateTemplate(template, {
       totalIncidents: incidentStats.total,
       criticalIncidents: incidentStats.critical,
@@ -237,10 +392,10 @@ class NarrativeGenerator {
     });
   }
 
-  generateRecommendationsNarrative(recommendations: any[]): string {
+  generateRecommendationsNarrative(recommendations: Recommendation[]): string {
     const template = this.templates.get('recommendations') || '';
     const priorityDistribution = this.analyzeRecommendationPriorities(recommendations);
-    
+
     return this.interpolateTemplate(template, {
       totalRecommendations: recommendations.length,
       criticalRecommendations: priorityDistribution.critical,
@@ -333,7 +488,7 @@ class NarrativeGenerator {
   private getTimeframeDescription(timestamp: number): string {
     const now = Date.now();
     const diffHours = (now - timestamp) / (1000 * 60 * 60);
-    
+
     if (diffHours < 1) return 'within the last hour';
     if (diffHours < 24) return `${Math.floor(diffHours)} hours ago`;
     if (diffHours < 168) return `${Math.floor(diffHours / 24)} days ago`;
@@ -342,40 +497,40 @@ class NarrativeGenerator {
 
   private extractKeyMetrics(context: SecurityContext): string[] {
     const metrics = [];
-    
+
     if (context.threats.currentThreats.length > 0) {
       metrics.push(`${context.threats.currentThreats.length} active threats`);
     }
-    
+
     if (context.assets.criticalAssets.length > 0) {
       metrics.push(`${context.assets.criticalAssets.length} critical assets monitored`);
     }
-    
+
     const riskFactors = context.risk.riskFactors.filter(f => f.impact === 'HIGH');
     if (riskFactors.length > 0) {
       metrics.push(`${riskFactors.length} high-impact risk factors`);
     }
-    
+
     return metrics;
   }
 
   private identifyCriticalIssues(context: SecurityContext): string[] {
     const issues = [];
-    
+
     const criticalThreats = context.threats.currentThreats.filter(t => t.severity === 'CRITICAL');
     if (criticalThreats.length > 0) {
       issues.push(`${criticalThreats.length} critical threats active`);
     }
-    
+
     const highRiskAssets = context.assets.criticalAssets.filter(a => a.riskScore > 0.8);
     if (highRiskAssets.length > 0) {
       issues.push(`${highRiskAssets.length} critical assets at high risk`);
     }
-    
+
     if (context.situationalAwareness.alertLevel === 'RED') {
       issues.push('critical alert status in effect');
     }
-    
+
     return issues;
   }
 
@@ -386,14 +541,14 @@ class NarrativeGenerator {
       .map(r => r.title.toLowerCase());
   }
 
-  private interpolateTemplate(template: string, variables: { [key: string]: any }): string {
+  private interpolateTemplate(template: string, variables: Record<string, unknown>): string {
     let result = template;
-    
+
     for (const [key, value] of Object.entries(variables)) {
       const regex = new RegExp(`{${key}}`, 'g');
       result = result.replace(regex, String(value));
     }
-    
+
     return result.trim().replace(/\s+/g, ' ');
   }
 
@@ -401,47 +556,47 @@ class NarrativeGenerator {
     return phrases[Math.floor(Math.random() * phrases.length)];
   }
 
-  private categorizeThreatTypes(threats: any[]): string[] {
+  private categorizeThreatTypes(threats: Threat[]): string[] {
     const types = new Map<string, number>();
-    
+
     for (const threat of threats) {
       const type = threat.type || 'Unknown';
       types.set(type, (types.get(type) || 0) + 1);
     }
-    
+
     return Array.from(types.entries())
       .sort(([, a], [, b]) => b - a)
       .map(([type]) => type);
   }
 
-  private analyzeSeverityDistribution(threats: any[]): any {
+  private analyzeSeverityDistribution(threats: Threat[]): SeverityDistribution {
     const distribution = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
-    
+
     for (const threat of threats) {
       distribution[threat.severity as keyof typeof distribution]++;
     }
-    
+
     return distribution;
   }
 
-  private generateTrendAnalysis(threats: any): string {
+  private generateTrendAnalysis(threats: ThreatContext): string {
     // Mock trend analysis - would analyze historical data
     const phrases = this.phraseBank.get('trend_stable') || ['stable'];
     return `Threat levels are ${this.selectRandomPhrase(phrases)} compared to previous periods.`;
   }
 
-  private analyzeVulnerabilityStatistics(vulnerabilities: any): any {
+  private analyzeVulnerabilityStatistics(vulnerabilities: VulnerabilityExposure): VulnerabilityStatistics {
     return {
       total: vulnerabilities.totalVulnerabilities || 0,
       critical: vulnerabilities.criticalVulnerabilities || 0,
-      high: vulnerabilities.highVulnerabilities || 0,
+      high: vulnerabilities.exploitableVulnerabilities || 0, // Using exploitable as high
       patchingStatus: 'In progress',
-      exposureLevel: 'Moderate',
+      exposureLevel: vulnerabilities.exposureScore > 0.7 ? 'High' : vulnerabilities.exposureScore > 0.4 ? 'Medium' : 'Low',
       remediationTimeframe: '2-4 weeks'
     };
   }
 
-  private analyzeComplianceStatistics(compliance: any): any {
+  private analyzeComplianceStatistics(compliance: ComplianceContext): ComplianceStatistics {
     return {
       overallStatus: compliance.auditStatus?.overall || 'Compliant',
       frameworksCount: compliance.frameworks?.length || 0,
@@ -452,7 +607,7 @@ class NarrativeGenerator {
     };
   }
 
-  private analyzeIncidentStatistics(incidents: any[]): any {
+  private analyzeIncidentStatistics(incidents: Incident[]): IncidentStatistics {
     return {
       total: incidents.length,
       critical: incidents.filter(i => i.severity === 'CRITICAL').length,
@@ -463,7 +618,7 @@ class NarrativeGenerator {
     };
   }
 
-  private analyzeRecommendationPriorities(recommendations: any[]): any {
+  private analyzeRecommendationPriorities(recommendations: Recommendation[]): RecommendationPriorityDistribution {
     return {
       critical: recommendations.filter(r => r.priority === 'CRITICAL').length,
       high: recommendations.filter(r => r.priority === 'HIGH').length,
@@ -472,28 +627,28 @@ class NarrativeGenerator {
     };
   }
 
-  private calculateTotalEffort(recommendations: any[]): string {
+  private calculateTotalEffort(recommendations: Recommendation[]): string {
     const effortWeights = { HIGH: 3, MEDIUM: 2, LOW: 1 };
     const totalEffort = recommendations.reduce((sum, rec) => {
       return sum + (effortWeights[rec.estimatedEffort as keyof typeof effortWeights] || 2);
     }, 0);
-    
+
     if (totalEffort > 20) return 'High';
     if (totalEffort > 10) return 'Medium';
     return 'Low';
   }
 
-  private identifyQuickWins(recommendations: any[]): any[] {
-    return recommendations.filter(r => 
-      r.estimatedEffort === 'LOW' && 
+  private identifyQuickWins(recommendations: Recommendation[]): Recommendation[] {
+    return recommendations.filter(r =>
+      r.estimatedEffort === 'LOW' &&
       (r.priority === 'HIGH' || r.priority === 'MEDIUM')
     );
   }
 
-  private estimateImplementationTimeframe(recommendations: any[]): string {
+  private estimateImplementationTimeframe(recommendations: Recommendation[]): string {
     const criticalCount = recommendations.filter(r => r.priority === 'CRITICAL').length;
     const highCount = recommendations.filter(r => r.priority === 'HIGH').length;
-    
+
     if (criticalCount > 0) return 'Immediate (1-2 weeks)';
     if (highCount > 5) return 'Short-term (2-6 weeks)';
     return 'Medium-term (1-3 months)';
@@ -502,13 +657,13 @@ class NarrativeGenerator {
 
 // Chart and Visualization Engine
 class VisualizationEngine {
-  generateThreatChart(threats: any): ChartData {
+  generateThreatChart(threats: ThreatContext): ChartData {
     const severityData: { [key: string]: number } = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
-    
+
     for (const threat of threats.currentThreats) {
       severityData[threat.severity]++;
     }
-    
+
     return {
       id: 'threat_severity_distribution',
       title: 'Threat Severity Distribution',
@@ -520,13 +675,14 @@ class VisualizationEngine {
     };
   }
 
-  generateRiskChart(riskFactors: any[]): ChartData {
+  generateRiskChart(riskFactors: unknown[]): ChartData {
     const riskData: { [key: string]: number } = {};
-    
+
     for (const factor of riskFactors) {
-      riskData[factor.factor] = factor.currentValue * 100; // Convert to percentage
+      const f = factor as { factor: string; currentValue: number };
+      riskData[f.factor] = f.currentValue * 100; // Convert to percentage
     }
-    
+
     return {
       id: 'risk_factors_analysis',
       title: 'Risk Factors Analysis',
@@ -538,15 +694,16 @@ class VisualizationEngine {
     };
   }
 
-  generateAssetChart(assets: any[]): ChartData {
+  generateAssetChart(assets: unknown[]): ChartData {
     const riskDistribution: { [key: string]: number } = { 'Low Risk': 0, 'Medium Risk': 0, 'High Risk': 0 };
-    
+
     for (const asset of assets) {
-      if (asset.riskScore < 0.4) riskDistribution['Low Risk']++;
-      else if (asset.riskScore < 0.7) riskDistribution['Medium Risk']++;
+      const a = asset as { riskScore: number };
+      if (a.riskScore < 0.4) riskDistribution['Low Risk']++;
+      else if (a.riskScore < 0.7) riskDistribution['Medium Risk']++;
       else riskDistribution['High Risk']++;
     }
-    
+
     return {
       id: 'asset_risk_distribution',
       title: 'Critical Asset Risk Distribution',
@@ -558,18 +715,18 @@ class VisualizationEngine {
     };
   }
 
-  generateComplianceChart(compliance: any): ChartData {
+  generateComplianceChart(compliance: ComplianceContext): ChartData {
     const complianceData: { [key: string]: number } = {};
-    
+
     for (const framework of compliance.frameworks || []) {
-      // Mock compliance percentage for each framework
-      complianceData[framework.name] = 75 + Math.random() * 20; // 75-95%
+      const f = framework as { name: string };
+      complianceData[f.name] = 75 + Math.random() * 20; // 75-95%
     }
-    
+
     if (Object.keys(complianceData).length === 0) {
       complianceData['Overall Compliance'] = 85;
     }
-    
+
     return {
       id: 'compliance_status',
       title: 'Compliance Framework Status',
@@ -581,15 +738,15 @@ class VisualizationEngine {
     };
   }
 
-  generateTrendChart(historicalData: any[]): ChartData {
+  generateTrendChart(historicalData: unknown[]): ChartData {
     const trendData: { [key: string]: number } = {};
-    
+
     // Generate mock trend data
     const dates = this.getLastNDays(7);
     for (let i = 0; i < dates.length; i++) {
       trendData[dates[i]] = Math.floor(Math.random() * 20) + 10; // 10-30 threats
     }
-    
+
     return {
       id: 'threat_trend_analysis',
       title: 'Threat Activity Trend (7 Days)',
@@ -604,20 +761,20 @@ class VisualizationEngine {
   private getLastNDays(n: number): string[] {
     const dates = [];
     const today = new Date();
-    
+
     for (let i = n - 1; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       dates.push(date.toISOString().split('T')[0]);
     }
-    
+
     return dates;
   }
 }
 
 // Table Generation Engine
 class TableGenerator {
-  generateThreatTable(threats: any[]): TableData {
+  generateThreatTable(threats: Threat[]): TableData {
     const headers = ['Threat ID', 'Type', 'Severity', 'Status', 'Affected Assets', 'First Detected'];
     const rows = threats.slice(0, 10).map(threat => [
       threat.id,
@@ -627,7 +784,7 @@ class TableGenerator {
       threat.affectedAssets.length.toString(),
       new Date(threat.firstDetected).toLocaleDateString()
     ]);
-    
+
     return {
       id: 'active_threats_table',
       title: 'Active Threats Summary',
@@ -638,17 +795,20 @@ class TableGenerator {
     };
   }
 
-  generateAssetTable(assets: any[]): TableData {
+  generateAssetTable(assets: unknown[]): TableData {
     const headers = ['Asset Name', 'Type', 'Business Value', 'Risk Score', 'Security Level', 'Threats'];
-    const rows = assets.slice(0, 10).map(asset => [
-      asset.name,
-      asset.type,
-      (asset.businessValue * 100).toFixed(0) + '%',
-      (asset.riskScore * 100).toFixed(0) + '%',
-      asset.securityLevel,
-      asset.threats.length.toString()
-    ]);
-    
+    const rows = assets.slice(0, 10).map(asset => {
+      const a = asset as { name: string; type: string; businessValue: number; riskScore: number; securityLevel: string; threats: unknown[] };
+      return [
+        a.name,
+        a.type,
+        (a.businessValue * 100).toFixed(0) + '%',
+        (a.riskScore * 100).toFixed(0) + '%',
+        a.securityLevel,
+        a.threats.length.toString()
+      ];
+    });
+
     return {
       id: 'critical_assets_table',
       title: 'Critical Assets Overview',
@@ -659,7 +819,7 @@ class TableGenerator {
     };
   }
 
-  generateRecommendationsTable(recommendations: any[]): TableData {
+  generateRecommendationsTable(recommendations: Recommendation[]): TableData {
     const headers = ['Priority', 'Title', 'Estimated Effort', 'Expected Impact', 'Timeline'];
     const rows = recommendations.slice(0, 15).map(rec => [
       rec.priority,
@@ -668,7 +828,7 @@ class TableGenerator {
       rec.expectedImpact,
       rec.timeline
     ]);
-    
+
     return {
       id: 'recommendations_table',
       title: 'Security Recommendations',
@@ -679,24 +839,24 @@ class TableGenerator {
     };
   }
 
-  generateComplianceTable(compliance: any): TableData {
+  generateComplianceTable(compliance: ComplianceContext): TableData {
     const headers = ['Framework', 'Status', 'Requirements Met', 'Violations', 'Last Audit'];
     const rows = [];
-    
+
     for (const framework of compliance.frameworks || []) {
       rows.push([
-        framework.name,
+        (framework as { name: string }).name,
         'Compliant', // Mock status
         '85%', // Mock percentage
         '2', // Mock violations
         '2024-01-15' // Mock date
       ]);
     }
-    
+
     if (rows.length === 0) {
       rows.push(['Overall Compliance', 'Compliant', '85%', '5', '2024-01-15']);
     }
-    
+
     return {
       id: 'compliance_table',
       title: 'Compliance Framework Status',
@@ -707,17 +867,20 @@ class TableGenerator {
     };
   }
 
-  generateIncidentTable(incidents: any[]): TableData {
+  generateIncidentTable(incidents: unknown[]): TableData {
     const headers = ['Incident ID', 'Type', 'Severity', 'Status', 'Reported', 'Resolution Time'];
-    const rows = incidents.slice(0, 10).map(incident => [
-      incident.id || `INC-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-      incident.type || 'Security Incident',
-      incident.severity || 'MEDIUM',
-      incident.status || 'RESOLVED',
-      new Date(incident.timestamp || Date.now()).toLocaleDateString(),
-      incident.resolutionTime || '4.2 hours'
-    ]);
-    
+    const rows = incidents.slice(0, 10).map(incident => {
+      const inc = incident as { id?: string; type?: string; severity?: string; status?: string; timestamp?: number; resolutionTime?: string };
+      return [
+        inc.id || `INC-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+        inc.type || 'Security Incident',
+        inc.severity || 'MEDIUM',
+        inc.status || 'RESOLVED',
+        new Date(inc.timestamp || Date.now()).toLocaleDateString(),
+        inc.resolutionTime || '4.2 hours'
+      ];
+    });
+
     return {
       id: 'recent_incidents_table',
       title: 'Recent Security Incidents',
@@ -750,13 +913,13 @@ export class SecurityReportGenerator extends EventEmitter {
     try {
       this.initializeTemplates();
       this.isInitialized = true;
-      
+
       this.emit('initialized', {
         capabilities: this.getCapabilities(),
         templatesLoaded: this.templates.size,
         timestamp: Date.now()
       });
-      
+
       console.log('📊 Security Report Generator initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Report Generator:', error);
@@ -805,7 +968,7 @@ export class SecurityReportGenerator extends EventEmitter {
 
       // Cache the report
       this.reportHistory.set(reportId, report);
-      
+
       // Limit history size
       if (this.reportHistory.size > 100) {
         const firstKey = this.reportHistory.keys().next().value;
@@ -831,7 +994,7 @@ export class SecurityReportGenerator extends EventEmitter {
   async generateScheduledReports(): Promise<SecurityReport[]> {
     const reports = [];
     const now = new Date();
-    
+
     for (const template of this.templates.values()) {
       if (this.shouldGenerateScheduledReport(template, now)) {
         try {
@@ -848,7 +1011,7 @@ export class SecurityReportGenerator extends EventEmitter {
         }
       }
     }
-    
+
     return reports;
   }
 
@@ -895,7 +1058,7 @@ export class SecurityReportGenerator extends EventEmitter {
       .slice(0, limit);
   }
 
-  getReportStatistics(): any {
+  getReportStatistics(): ReportStatistics {
     const reportTypes: { [key: string]: number } = {};
     const reportStatuses: { [key: string]: number } = {};
 
@@ -908,6 +1071,8 @@ export class SecurityReportGenerator extends EventEmitter {
       totalReports: this.reportHistory.size,
       reportTypes,
       reportStatuses,
+      averageGenerationTime: 0, // Mock value
+      lastGenerated: new Date(),
       templatesAvailable: this.templates.size,
       isInitialized: this.isInitialized,
       timestamp: Date.now()
@@ -917,7 +1082,7 @@ export class SecurityReportGenerator extends EventEmitter {
   private async generateReportSections(
     context: SecurityContext,
     template: ReportTemplate,
-    options: any
+    options: ReportGenerationOptions
   ): Promise<ReportSection[]> {
     const sections: ReportSection[] = [];
 
@@ -935,7 +1100,7 @@ export class SecurityReportGenerator extends EventEmitter {
   private async generateReportSection(
     context: SecurityContext,
     config: TemplateSectionConfig,
-    options: any
+    options: ReportGenerationOptions
   ): Promise<ReportSection> {
     const section: ReportSection = {
       id: `section_${config.type.toLowerCase()}`,
@@ -953,7 +1118,7 @@ export class SecurityReportGenerator extends EventEmitter {
       case 'EXECUTIVE_SUMMARY':
         section.content = this.narrativeGenerator.generateExecutiveSummary(context);
         break;
-      
+
       case 'THREAT_LANDSCAPE':
         section.content = this.narrativeGenerator.generateThreatAnalysisNarrative(context.threats);
         if (config.includeCharts || options.includeCharts) {
@@ -1093,7 +1258,7 @@ export class SecurityReportGenerator extends EventEmitter {
     this.templates.set('security_posture', {
       id: 'security_posture',
       name: 'Comprehensive Security Posture',
-      type: 'SECURITY_POSTURE', 
+      type: 'SECURITY_POSTURE',
       description: 'Detailed security assessment for security teams',
       sections: [
         { type: 'EXECUTIVE_SUMMARY', title: 'Executive Summary', required: true, priority: 'HIGH', autoGenerate: true, includeCharts: false, includeTables: false },
@@ -1127,12 +1292,12 @@ export class SecurityReportGenerator extends EventEmitter {
 
   private shouldGenerateScheduledReport(template: ReportTemplate, now: Date): boolean {
     if (!template.schedule?.enabled) return false;
-    
+
     // Simple scheduling logic - would be more sophisticated in production
     const hour = now.getHours();
     const dayOfWeek = now.getDay();
     const dayOfMonth = now.getDate();
-    
+
     switch (template.schedule.frequency) {
       case 'DAILY':
         return hour === 8; // 8 AM daily
@@ -1296,7 +1461,7 @@ export class SecurityReportGenerator extends EventEmitter {
     return csv;
   }
 
-  getCapabilities(): any {
+  getCapabilities(): ReportCapabilities {
     return {
       reportGeneration: {
         executiveSummaries: true,
@@ -1304,6 +1469,8 @@ export class SecurityReportGenerator extends EventEmitter {
         complianceReports: true,
         incidentReports: true,
         threatIntelligenceReports: true,
+        vulnerabilityReports: true,
+        riskAssessmentReports: true,
         customReports: true
       },
       narrativeGeneration: {

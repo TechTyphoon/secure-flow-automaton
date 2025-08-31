@@ -108,22 +108,22 @@ class CRYSTALSKyber {
   async generateKeyPair(): Promise<{ publicKey: Uint8Array; privateKey: Uint8Array }> {
     // Simplified Kyber key generation (production would use full lattice-based implementation)
     const seed = this.generateSecureRandom(32);
-    
+
     // Generate polynomial matrix A from seed
     const A = this.generateMatrixA(seed);
-    
+
     // Generate small polynomials s, e
     const s = this.generateSmallPolynomial(this.k, this.eta1);
     const e = this.generateSmallPolynomial(this.k, this.eta1);
-    
+
     // Compute t = As + e
     const t = this.matrixVectorMultiply(A, s);
     this.addPolynomialVector(t, e);
-    
+
     // Pack keys
     const publicKey = this.packPublicKey(t, seed);
     const privateKey = this.packPrivateKey(s);
-    
+
     return { publicKey, privateKey };
   }
 
@@ -131,31 +131,31 @@ class CRYSTALSKyber {
     // Unpack public key
     const { t, rho } = this.unpackPublicKey(publicKey);
     const A = this.generateMatrixA(rho);
-    
+
     // Generate random message
     const m = this.generateSecureRandom(32);
-    
+
     // Generate small polynomials r, e1, e2
     const r = this.generateSmallPolynomial(this.k, this.eta1);
     const e1 = this.generateSmallPolynomial(this.k, this.eta2);
     const e2 = this.generateSmallPolynomial(1, this.eta2)[0];
-    
+
     // Compute u = A^T * r + e1
     const u = this.matrixVectorMultiply(this.transposeMatrix(A), r);
     this.addPolynomialVector(u, e1);
-    
+
     // Compute v = t^T * r + e2 + Decompress_q(Decode_1(m))
     const v = this.vectorDotProduct(t, r);
     this.addPolynomial(v, e2);
     const messagePolynomial = this.decodeMessage(m);
     this.addPolynomial(v, messagePolynomial);
-    
+
     // Pack ciphertext
     const ciphertext = this.packCiphertext(u, v);
-    
+
     // Derive shared secret
     const sharedSecret = this.sha3_256(m);
-    
+
     return { ciphertext, sharedSecret };
   }
 
@@ -163,16 +163,16 @@ class CRYSTALSKyber {
     // Unpack private key and ciphertext
     const s = this.unpackPrivateKey(privateKey);
     const { u, v } = this.unpackCiphertext(ciphertext);
-    
+
     // Compute m' = Encode_1(Compress_q(v - s^T * u))
     const sTu = this.vectorDotProduct(s, u);
     const diff = this.subtractPolynomial(v, sTu);
     const compressed = this.compressPolynomial(diff, 1);
     const m_prime = this.encodePolynomial(compressed);
-    
+
     // Hash to get shared secret
     const sharedSecret = this.sha3_256(m_prime);
-    
+
     return sharedSecret;
   }
 
@@ -207,19 +207,19 @@ class CRYSTALSKyber {
     // XOF (extendable output function) to generate polynomial coefficients
     const poly = new Array(this.n);
     const context = new Uint8Array([...seed, i, j]);
-    
+
     for (let k = 0; k < this.n; k++) {
       // Simplified coefficient generation (would use SHAKE-128 in production)
       const hash = this.simpleHash([...context, k]);
       poly[k] = hash % this.q;
     }
-    
+
     return poly;
   }
 
   private generateSmallPolynomial(count: number, eta: number): number[][] {
     const polynomials: number[][] = [];
-    
+
     for (let i = 0; i < count; i++) {
       const poly = new Array(this.n);
       for (let j = 0; j < this.n; j++) {
@@ -229,13 +229,13 @@ class CRYSTALSKyber {
       }
       polynomials.push(poly);
     }
-    
+
     return polynomials;
   }
 
   private matrixVectorMultiply(matrix: number[][][], vector: number[][]): number[][] {
     const result: number[][] = [];
-    
+
     for (let i = 0; i < matrix.length; i++) {
       const poly = new Array(this.n).fill(0);
       for (let j = 0; j < matrix[i].length; j++) {
@@ -244,20 +244,20 @@ class CRYSTALSKyber {
       }
       result.push(poly);
     }
-    
+
     return result;
   }
 
   private multiplyPolynomials(a: number[], b: number[]): number[] {
     const result = new Array(this.n).fill(0);
-    
+
     for (let i = 0; i < this.n; i++) {
       for (let j = 0; j < this.n; j++) {
         const k = (i + j) % this.n;
         result[k] = (result[k] + a[i] * b[j]) % this.q;
       }
     }
-    
+
     return result;
   }
 
@@ -283,55 +283,55 @@ class CRYSTALSKyber {
 
   private vectorDotProduct(a: number[][], b: number[][]): number[] {
     const result = new Array(this.n).fill(0);
-    
+
     for (let i = 0; i < a.length; i++) {
       const product = this.multiplyPolynomials(a[i], b[i]);
       this.addPolynomial(result, product);
     }
-    
+
     return result;
   }
 
   private transposeMatrix(matrix: number[][][]): number[][][] {
     const transposed: number[][][] = [];
-    
+
     for (let j = 0; j < matrix[0].length; j++) {
       transposed[j] = [];
       for (let i = 0; i < matrix.length; i++) {
         transposed[j][i] = matrix[i][j];
       }
     }
-    
+
     return transposed;
   }
 
   private compressPolynomial(poly: number[], d: number): number[] {
     const compressed = new Array(this.n);
     const divisor = Math.floor(this.q / Math.pow(2, d));
-    
+
     for (let i = 0; i < this.n; i++) {
       compressed[i] = Math.floor(poly[i] / divisor) % Math.pow(2, d);
     }
-    
+
     return compressed;
   }
 
   private decodeMessage(message: Uint8Array): number[] {
     const poly = new Array(this.n).fill(0);
-    
+
     for (let i = 0; i < message.length && i < this.n / 8; i++) {
       for (let j = 0; j < 8 && i * 8 + j < this.n; j++) {
         poly[i * 8 + j] = (message[i] >> j) & 1;
         poly[i * 8 + j] *= Math.floor(this.q / 2);
       }
     }
-    
+
     return poly;
   }
 
   private encodePolynomial(poly: number[]): Uint8Array {
     const encoded = new Uint8Array(32);
-    
+
     for (let i = 0; i < 32; i++) {
       let byte = 0;
       for (let j = 0; j < 8 && i * 8 + j < this.n; j++) {
@@ -341,7 +341,7 @@ class CRYSTALSKyber {
       }
       encoded[i] = byte;
     }
-    
+
     return encoded;
   }
 
@@ -349,7 +349,7 @@ class CRYSTALSKyber {
     // Simplified key packing
     const packed = new Uint8Array(32 + this.k * this.n * 2);
     packed.set(rho, 0);
-    
+
     let offset = 32;
     for (let i = 0; i < this.k; i++) {
       for (let j = 0; j < this.n; j++) {
@@ -357,13 +357,13 @@ class CRYSTALSKyber {
         packed[offset++] = (t[i][j] >> 8) & 0xFF;
       }
     }
-    
+
     return packed;
   }
 
   private packPrivateKey(s: number[][]): Uint8Array {
     const packed = new Uint8Array(this.k * this.n * 2);
-    
+
     let offset = 0;
     for (let i = 0; i < this.k; i++) {
       for (let j = 0; j < this.n; j++) {
@@ -371,13 +371,13 @@ class CRYSTALSKyber {
         packed[offset++] = (s[i][j] >> 8) & 0xFF;
       }
     }
-    
+
     return packed;
   }
 
   private packCiphertext(u: number[][], v: number[]): Uint8Array {
     const packed = new Uint8Array(this.k * this.n * 2 + this.n * 2);
-    
+
     let offset = 0;
     for (let i = 0; i < this.k; i++) {
       for (let j = 0; j < this.n; j++) {
@@ -385,19 +385,19 @@ class CRYSTALSKyber {
         packed[offset++] = (u[i][j] >> 8) & 0xFF;
       }
     }
-    
+
     for (let j = 0; j < this.n; j++) {
       packed[offset++] = v[j] & 0xFF;
       packed[offset++] = (v[j] >> 8) & 0xFF;
     }
-    
+
     return packed;
   }
 
   private unpackPublicKey(packed: Uint8Array): { t: number[][]; rho: Uint8Array } {
     const rho = packed.slice(0, 32);
     const t: number[][] = [];
-    
+
     let offset = 32;
     for (let i = 0; i < this.k; i++) {
       t[i] = [];
@@ -405,13 +405,13 @@ class CRYSTALSKyber {
         t[i][j] = packed[offset++] | (packed[offset++] << 8);
       }
     }
-    
+
     return { t, rho };
   }
 
   private unpackPrivateKey(packed: Uint8Array): number[][] {
     const s: number[][] = [];
-    
+
     let offset = 0;
     for (let i = 0; i < this.k; i++) {
       s[i] = [];
@@ -419,13 +419,13 @@ class CRYSTALSKyber {
         s[i][j] = packed[offset++] | (packed[offset++] << 8);
       }
     }
-    
+
     return s;
   }
 
   private unpackCiphertext(packed: Uint8Array): { u: number[][]; v: number[] } {
     const u: number[][] = [];
-    
+
     let offset = 0;
     for (let i = 0; i < this.k; i++) {
       u[i] = [];
@@ -433,12 +433,12 @@ class CRYSTALSKyber {
         u[i][j] = packed[offset++] | (packed[offset++] << 8);
       }
     }
-    
+
     const v: number[] = [];
     for (let j = 0; j < this.n; j++) {
       v[j] = packed[offset++] | (packed[offset++] << 8);
     }
-    
+
     return { u, v };
   }
 
@@ -493,25 +493,25 @@ class CRYSTALSDilithium {
   async generateKeyPair(): Promise<{ publicKey: Uint8Array; privateKey: Uint8Array }> {
     // Generate random seed
     const zeta = this.generateSecureRandom(32);
-    
+
     // Expand seed to get matrix A
     const A = this.expandA(zeta);
-    
+
     // Generate secret vectors s1, s2
     const s1 = this.generateSecretVector(this.l, this.eta);
     const s2 = this.generateSecretVector(this.k, this.eta);
-    
+
     // Compute t = As1 + s2
     const t = this.matrixVectorMultiply(A, s1);
     const t_final = this.addVectors(t, s2);
-    
+
     // Decompose t
     const { t1, t0 } = this.highBitsDecompose(t_final, this.d);
-    
+
     // Pack keys
     const publicKey = this.packPublicKey(zeta, t1);
     const privateKey = this.packPrivateKey(zeta, s1, s2, t0);
-    
+
     return { publicKey, privateKey };
   }
 
@@ -519,57 +519,57 @@ class CRYSTALSDilithium {
     // Unpack private key
     const { zeta, s1, s2, t0 } = this.unpackPrivateKey(privateKey);
     const A = this.expandA(zeta);
-    
+
     // Compute message representative
     const mu = this.sha3_256([...message, ...zeta]);
-    
+
     let attempts = 0;
     const maxAttempts = 1000;
-    
+
     while (attempts < maxAttempts) {
       // Sample y uniformly from [-gamma1, gamma1]
       const y = this.sampleUniform(this.l, this.gamma1);
-      
+
       // Compute w = Ay
       const w = this.matrixVectorMultiply(A, y);
-      
+
       // Decompose w
       const { w1 } = this.powerOfTwoDecompose(w, this.gamma2);
-      
+
       // Compute challenge
       const c = this.sampleChallenge(mu, w1);
-      
+
       // Compute z = y + cs1
       const cs1 = this.scalarVectorMultiply(c, s1);
       const z = this.addVectors(y, cs1);
-      
+
       // Check ||z||∞ < gamma1 - beta
       if (this.infinityNorm(z) >= this.gamma1 - this.beta) {
         attempts++;
         continue;
       }
-      
+
       // Compute r0 = w - cs2
       const cs2 = this.scalarVectorMultiply(c, s2);
       const r0 = this.subtractVectors(w, cs2);
-      
+
       // Check ||r0||∞ < gamma2 - beta
       if (this.infinityNorm(r0) >= this.gamma2 - this.beta) {
         attempts++;
         continue;
       }
-      
+
       // Check that ct0 has small coefficients
       const ct0 = this.scalarVectorMultiply(c, t0);
       if (this.infinityNorm(ct0) >= this.gamma2) {
         attempts++;
         continue;
       }
-      
+
       // Pack signature
       return this.packSignature(c, z);
     }
-    
+
     throw new Error('Signature generation failed after maximum attempts');
   }
 
@@ -579,28 +579,28 @@ class CRYSTALSDilithium {
       const { zeta, t1 } = this.unpackPublicKey(publicKey);
       const { c, z } = this.unpackSignature(signature);
       const A = this.expandA(zeta);
-      
+
       // Check ||z||∞ < gamma1 - beta
       if (this.infinityNorm(z) >= this.gamma1 - this.beta) {
         return false;
       }
-      
+
       // Compute message representative
       const mu = this.sha3_256([...message, ...zeta]);
-      
+
       // Compute w' = Az - ct1 * 2^d
       const Az = this.matrixVectorMultiply(A, z);
-      const ct1_2d = this.scalarVectorMultiply(c, t1.map(poly => 
+      const ct1_2d = this.scalarVectorMultiply(c, t1.map(poly =>
         poly.map(coeff => (coeff * (1 << this.d)) % this.q)
       ));
       const w_prime = this.subtractVectors(Az, ct1_2d);
-      
+
       // Decompose w'
       const { w1: w1_prime } = this.powerOfTwoDecompose(w_prime, this.gamma2);
-      
+
       // Recompute challenge
       const c_prime = this.sampleChallenge(mu, w1_prime);
-      
+
       // Verify c = c'
       return this.comparePolynomials(c, c_prime);
     } catch (error) {
@@ -623,32 +623,32 @@ class CRYSTALSDilithium {
 
   private expandA(seed: Uint8Array): number[][][] {
     const A: number[][][] = [];
-    
+
     for (let i = 0; i < this.k; i++) {
       A[i] = [];
       for (let j = 0; j < this.l; j++) {
         A[i][j] = this.samplePolynomial(seed, i, j);
       }
     }
-    
+
     return A;
   }
 
   private samplePolynomial(seed: Uint8Array, i: number, j: number): number[] {
     const poly = new Array(this.n);
     const context = new Uint8Array([...seed, i, j]);
-    
+
     for (let k = 0; k < this.n; k++) {
       const hash = this.simpleHash([...context, k]);
       poly[k] = hash % this.q;
     }
-    
+
     return poly;
   }
 
   private generateSecretVector(length: number, eta: number): number[][] {
     const vector: number[][] = [];
-    
+
     for (let i = 0; i < length; i++) {
       const poly = new Array(this.n);
       for (let j = 0; j < this.n; j++) {
@@ -657,13 +657,13 @@ class CRYSTALSDilithium {
       }
       vector.push(poly);
     }
-    
+
     return vector;
   }
 
   private matrixVectorMultiply(matrix: number[][][], vector: number[][]): number[][] {
     const result: number[][] = [];
-    
+
     for (let i = 0; i < matrix.length; i++) {
       const poly = new Array(this.n).fill(0);
       for (let j = 0; j < matrix[i].length; j++) {
@@ -672,20 +672,20 @@ class CRYSTALSDilithium {
       }
       result.push(poly);
     }
-    
+
     return result;
   }
 
   private multiplyPolynomials(a: number[], b: number[]): number[] {
     const result = new Array(this.n).fill(0);
-    
+
     for (let i = 0; i < this.n; i++) {
       for (let j = 0; j < this.n; j++) {
         const k = (i + j) % this.n;
         result[k] = (result[k] + a[i] * b[j]) % this.q;
       }
     }
-    
+
     return result;
   }
 
@@ -697,7 +697,7 @@ class CRYSTALSDilithium {
 
   private addVectors(a: number[][], b: number[][]): number[][] {
     const result: number[][] = [];
-    
+
     for (let i = 0; i < a.length; i++) {
       const poly = new Array(this.n);
       for (let j = 0; j < this.n; j++) {
@@ -705,13 +705,13 @@ class CRYSTALSDilithium {
       }
       result.push(poly);
     }
-    
+
     return result;
   }
 
   private subtractVectors(a: number[][], b: number[][]): number[][] {
     const result: number[][] = [];
-    
+
     for (let i = 0; i < a.length; i++) {
       const poly = new Array(this.n);
       for (let j = 0; j < this.n; j++) {
@@ -719,29 +719,29 @@ class CRYSTALSDilithium {
       }
       result.push(poly);
     }
-    
+
     return result;
   }
 
   private scalarVectorMultiply(scalar: number[], vector: number[][]): number[][] {
     const result: number[][] = [];
-    
+
     for (let i = 0; i < vector.length; i++) {
       const product = this.multiplyPolynomials(scalar, vector[i]);
       result.push(product);
     }
-    
+
     return result;
   }
 
   private powerOfTwoDecompose(vector: number[][], alpha: number): { w1: number[][]; w0: number[][] } {
     const w1: number[][] = [];
     const w0: number[][] = [];
-    
+
     for (let i = 0; i < vector.length; i++) {
       const poly1 = new Array(this.n);
       const poly0 = new Array(this.n);
-      
+
       for (let j = 0; j < this.n; j++) {
         const val = vector[i][j];
         const r = val % (2 * alpha);
@@ -753,38 +753,38 @@ class CRYSTALSDilithium {
           poly1[j] = (val - r + 2 * alpha) / (2 * alpha);
         }
       }
-      
+
       w1.push(poly1);
       w0.push(poly0);
     }
-    
+
     return { w1, w0 };
   }
 
   private highBitsDecompose(vector: number[][], alpha: number): { t1: number[][]; t0: number[][] } {
     const t1: number[][] = [];
     const t0: number[][] = [];
-    
+
     for (let i = 0; i < vector.length; i++) {
       const poly1 = new Array(this.n);
       const poly0 = new Array(this.n);
-      
+
       for (let j = 0; j < this.n; j++) {
         const val = vector[i][j];
         poly1[j] = Math.floor(val / (1 << alpha));
         poly0[j] = val - poly1[j] * (1 << alpha);
       }
-      
+
       t1.push(poly1);
       t0.push(poly0);
     }
-    
+
     return { t1, t0 };
   }
 
   private sampleUniform(length: number, bound: number): number[][] {
     const vector: number[][] = [];
-    
+
     for (let i = 0; i < length; i++) {
       const poly = new Array(this.n);
       for (let j = 0; j < this.n; j++) {
@@ -793,7 +793,7 @@ class CRYSTALSDilithium {
       }
       vector.push(poly);
     }
-    
+
     return vector;
   }
 
@@ -801,48 +801,48 @@ class CRYSTALSDilithium {
     // Sample challenge polynomial with exactly tau non-zero coefficients
     const c = new Array(this.n).fill(0);
     const context = [...mu, ...this.packVector(w1)];
-    
+
     const positions = new Set<number>();
     while (positions.size < this.tau) {
       const hash = this.simpleHash([...context, positions.size]);
       positions.add(hash % this.n);
     }
-    
+
     for (const pos of positions) {
       c[pos] = Math.random() < 0.5 ? 1 : -1;
       if (c[pos] < 0) c[pos] += this.q;
     }
-    
+
     return c;
   }
 
   private infinityNorm(vector: number[][]): number {
     let maxNorm = 0;
-    
+
     for (let i = 0; i < vector.length; i++) {
       for (let j = 0; j < this.n; j++) {
         const val = Math.min(vector[i][j], this.q - vector[i][j]);
         maxNorm = Math.max(maxNorm, val);
       }
     }
-    
+
     return maxNorm;
   }
 
   private comparePolynomials(a: number[], b: number[]): boolean {
     if (a.length !== b.length) return false;
-    
+
     for (let i = 0; i < a.length; i++) {
       if (a[i] !== b[i]) return false;
     }
-    
+
     return true;
   }
 
   private packPublicKey(zeta: Uint8Array, t1: number[][]): Uint8Array {
     const packed = new Uint8Array(32 + this.k * this.n * 4);
     packed.set(zeta, 0);
-    
+
     let offset = 32;
     for (let i = 0; i < this.k; i++) {
       for (let j = 0; j < this.n; j++) {
@@ -853,16 +853,16 @@ class CRYSTALSDilithium {
         packed[offset++] = (val >> 24) & 0xFF;
       }
     }
-    
+
     return packed;
   }
 
   private packPrivateKey(zeta: Uint8Array, s1: number[][], s2: number[][], t0: number[][]): Uint8Array {
     const packed = new Uint8Array(32 + (this.l + this.k + this.k) * this.n * 4);
     packed.set(zeta, 0);
-    
+
     let offset = 32;
-    
+
     // Pack s1
     for (let i = 0; i < this.l; i++) {
       for (let j = 0; j < this.n; j++) {
@@ -873,7 +873,7 @@ class CRYSTALSDilithium {
         packed[offset++] = (val >> 24) & 0xFF;
       }
     }
-    
+
     // Pack s2
     for (let i = 0; i < this.k; i++) {
       for (let j = 0; j < this.n; j++) {
@@ -884,7 +884,7 @@ class CRYSTALSDilithium {
         packed[offset++] = (val >> 24) & 0xFF;
       }
     }
-    
+
     // Pack t0
     for (let i = 0; i < this.k; i++) {
       for (let j = 0; j < this.n; j++) {
@@ -895,18 +895,18 @@ class CRYSTALSDilithium {
         packed[offset++] = (val >> 24) & 0xFF;
       }
     }
-    
+
     return packed;
   }
 
   private packSignature(c: number[], z: number[][]): Uint8Array {
     const packed = new Uint8Array(this.n + this.l * this.n * 4);
-    
+
     // Pack challenge
     for (let i = 0; i < this.n; i++) {
       packed[i] = c[i] & 0xFF;
     }
-    
+
     // Pack z
     let offset = this.n;
     for (let i = 0; i < this.l; i++) {
@@ -918,25 +918,25 @@ class CRYSTALSDilithium {
         packed[offset++] = (val >> 24) & 0xFF;
       }
     }
-    
+
     return packed;
   }
 
   private unpackPublicKey(packed: Uint8Array): { zeta: Uint8Array; t1: number[][] } {
     const zeta = packed.slice(0, 32);
     const t1: number[][] = [];
-    
+
     let offset = 32;
     for (let i = 0; i < this.k; i++) {
       t1[i] = [];
       for (let j = 0; j < this.n; j++) {
-        t1[i][j] = packed[offset++] | 
-                   (packed[offset++] << 8) | 
-                   (packed[offset++] << 16) | 
-                   (packed[offset++] << 24);
+        t1[i][j] = packed[offset++] |
+          (packed[offset++] << 8) |
+          (packed[offset++] << 16) |
+          (packed[offset++] << 24);
       }
     }
-    
+
     return { zeta, t1 };
   }
 
@@ -945,42 +945,42 @@ class CRYSTALSDilithium {
     const s1: number[][] = [];
     const s2: number[][] = [];
     const t0: number[][] = [];
-    
+
     let offset = 32;
-    
+
     // Unpack s1
     for (let i = 0; i < this.l; i++) {
       s1[i] = [];
       for (let j = 0; j < this.n; j++) {
-        s1[i][j] = packed[offset++] | 
-                   (packed[offset++] << 8) | 
-                   (packed[offset++] << 16) | 
-                   (packed[offset++] << 24);
+        s1[i][j] = packed[offset++] |
+          (packed[offset++] << 8) |
+          (packed[offset++] << 16) |
+          (packed[offset++] << 24);
       }
     }
-    
+
     // Unpack s2
     for (let i = 0; i < this.k; i++) {
       s2[i] = [];
       for (let j = 0; j < this.n; j++) {
-        s2[i][j] = packed[offset++] | 
-                   (packed[offset++] << 8) | 
-                   (packed[offset++] << 16) | 
-                   (packed[offset++] << 24);
+        s2[i][j] = packed[offset++] |
+          (packed[offset++] << 8) |
+          (packed[offset++] << 16) |
+          (packed[offset++] << 24);
       }
     }
-    
+
     // Unpack t0
     for (let i = 0; i < this.k; i++) {
       t0[i] = [];
       for (let j = 0; j < this.n; j++) {
-        t0[i][j] = packed[offset++] | 
-                   (packed[offset++] << 8) | 
-                   (packed[offset++] << 16) | 
-                   (packed[offset++] << 24);
+        t0[i][j] = packed[offset++] |
+          (packed[offset++] << 8) |
+          (packed[offset++] << 16) |
+          (packed[offset++] << 24);
       }
     }
-    
+
     return { zeta, s1, s2, t0 };
   }
 
@@ -989,20 +989,20 @@ class CRYSTALSDilithium {
     for (let i = 0; i < this.n; i++) {
       c[i] = packed[i];
     }
-    
+
     const z: number[][] = [];
     let offset = this.n;
-    
+
     for (let i = 0; i < this.l; i++) {
       z[i] = [];
       for (let j = 0; j < this.n; j++) {
-        z[i][j] = packed[offset++] | 
-                  (packed[offset++] << 8) | 
-                  (packed[offset++] << 16) | 
-                  (packed[offset++] << 24);
+        z[i][j] = packed[offset++] |
+          (packed[offset++] << 8) |
+          (packed[offset++] << 16) |
+          (packed[offset++] << 24);
       }
     }
-    
+
     return { c, z };
   }
 
@@ -1295,14 +1295,14 @@ export class PostQuantumCryptoEngine extends EventEmitter {
   private generateMockKeyPair(algorithm: string): { publicKey: Uint8Array; privateKey: Uint8Array } {
     // Generate cryptographically secure random key pairs for unsupported algorithms
     const keySize = this.getKeySizeForAlgorithm(algorithm);
-    
+
     const publicKey = new Uint8Array(keySize.publicKey);
     const privateKey = new Uint8Array(keySize.privateKey);
-    
+
     // Fill with cryptographically secure random data
     crypto.getRandomValues(publicKey);
     crypto.getRandomValues(privateKey);
-    
+
     return { publicKey, privateKey };
   }
 
@@ -1320,7 +1320,7 @@ export class PostQuantumCryptoEngine extends EventEmitter {
       'SPHINCS+-SHA256-192F-SIMPLE': { publicKey: 48, privateKey: 96 },
       'SPHINCS+-SHA256-256F-SIMPLE': { publicKey: 64, privateKey: 128 }
     };
-    
+
     return sizes[algorithm] || { publicKey: 1024, privateKey: 2048 };
   }
 
@@ -1437,7 +1437,7 @@ export class PostQuantumCryptoEngine extends EventEmitter {
 
     const privateKey = this.keyStorage.get(`${privateKeyId}_private`);
     const publicKey = this.keyStorage.get(`${privateKeyId}_public`);
-    
+
     if (!privateKey || !publicKey) {
       throw new Error(`Key pair not found: ${privateKeyId}`);
     }
@@ -1559,23 +1559,49 @@ export class PostQuantumCryptoEngine extends EventEmitter {
   deleteKey(keyId: string): boolean {
     const publicDeleted = this.keyStorage.delete(`${keyId}_public`);
     const privateDeleted = this.keyStorage.delete(`${keyId}_private`);
-    
+
     if (publicDeleted || privateDeleted) {
       this.emit('key_deleted', { keyId, timestamp: Date.now() });
       return true;
     }
-    
+
     return false;
   }
 
-  getPerformanceMetrics(): any {
+  getPerformanceMetrics(): Record<string, {
+    keyGenTime: number;
+    encryptTime: number;
+    decryptTime: number;
+    signTime?: number;
+    verifyTime?: number;
+    totalOperations: number;
+    averageTime: number;
+  }> {
     return Object.fromEntries(this.performanceMetrics);
   }
 
-  getStatistics(): any {
+  getStatistics(): {
+    totalKeys: number;
+    algorithmsSupported: number;
+    algorithmUsage: Record<string, number>;
+    keyTypes: Record<string, number>;
+    performanceMetrics: Record<string, {
+      keyGenTime: number;
+      encryptTime: number;
+      decryptTime: number;
+      signTime?: number;
+      verifyTime?: number;
+      totalOperations: number;
+      averageTime: number;
+    }>;
+    isInitialized: boolean;
+    uptime: number;
+    lastActivity: number;
+    timestamp: number;
+  } {
     const algorithmUsage: { [key: string]: number } = {};
     const keyTypes: { [key: string]: number } = {};
-    
+
     for (const key of this.keyStorage.values()) {
       algorithmUsage[key.algorithm] = (algorithmUsage[key.algorithm] || 0) + 1;
       keyTypes[key.keyType] = (keyTypes[key.keyType] || 0) + 1;
@@ -1588,6 +1614,8 @@ export class PostQuantumCryptoEngine extends EventEmitter {
       keyTypes,
       performanceMetrics: this.getPerformanceMetrics(),
       isInitialized: this.isInitialized,
+      uptime: Date.now() - (this as any).startTime || 0,
+      lastActivity: Date.now(),
       timestamp: Date.now()
     };
   }
@@ -1611,13 +1639,13 @@ export class PostQuantumCryptoEngine extends EventEmitter {
   private updatePerformanceMetrics(algorithm: string, operation: string, time: number): void {
     const avgKey = `${algorithm}_${operation}_avg`;
     const countKey = `${algorithm}_${operation}_count`;
-    
+
     const currentAvg = this.performanceMetrics.get(avgKey) || 0;
     const currentCount = this.performanceMetrics.get(countKey) || 0;
-    
+
     const newCount = currentCount + 1;
     const newAvg = (currentAvg * currentCount + time) / newCount;
-    
+
     this.performanceMetrics.set(avgKey, newAvg);
     this.performanceMetrics.set(countKey, newCount);
   }

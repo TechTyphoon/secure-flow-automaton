@@ -1,6 +1,11 @@
+export interface RegionalResources {
+    region: string;
+    resources: number;
+}
+
 export class GlobalOrchestration {
     private regions: string[];
-    private resourceMap: Map<string, any>;
+    private resourceMap: Map<string, RegionalResources>;
 
     constructor(regions: string[]) {
         this.regions = regions;
@@ -15,7 +20,7 @@ export class GlobalOrchestration {
         this.optimizeResourceAllocation();
     }
 
-    private async fetchResources(region: string): Promise<any> {
+    private async fetchResources(region: string): Promise<RegionalResources> {
         // Simulate fetching resources from a region
         return new Promise((resolve) => {
             setTimeout(() => {
@@ -29,7 +34,7 @@ export class GlobalOrchestration {
         console.log("Optimizing resource allocation across regions:", this.resourceMap);
     }
 
-    public getResourceMap(): Map<string, any> {
+    public getResourceMap(): Map<string, RegionalResources> {
         return this.resourceMap;
     }
 }

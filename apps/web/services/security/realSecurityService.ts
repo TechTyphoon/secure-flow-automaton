@@ -4,6 +4,59 @@ import { SecurityConfigManager } from './config';
  * Real Security Service - Production Implementation
  * Integrates with actual security tools and APIs
  */
+
+interface SonarQubeFacet {
+  property: string;
+  values: Array<{ val: string; count: number }>;
+}
+
+interface SonarQubeIssue {
+  key: string;
+  component: string;
+  severity: string;
+  status: string;
+  message: string;
+  type: string;
+}
+
+interface SonarQubeResponse {
+  total: number;
+  issues: SonarQubeIssue[];
+  facets: SonarQubeFacet[];
+}
+
+interface SnykIssue {
+  id: string;
+  type: string;
+  attributes: {
+    severity: string;
+    title: string;
+    description: string;
+    cvssScore?: number;
+  };
+}
+
+interface SnykResponse {
+  data: SnykIssue[];
+}
+
+interface GitHubSecurityAlert {
+  number: number;
+  state: string;
+  title: string;
+  severity: string;
+  description: string;
+  created_at: string;
+}
+
+interface DockerSecurityScan {
+  vulnerabilities: Array<{
+    severity: string;
+    package: string;
+    version: string;
+    description: string;
+  }>;
+}
 export class RealSecurityService {
   private config: SecurityConfigManager;
 
@@ -14,15 +67,27 @@ export class RealSecurityService {
   /**
    * Real SonarQube Integration
    */
-  async getSonarQubeIssues(): Promise<any> {
-    const sonarConfig = this.config.getServiceConfig('sonarqube');
-    
+  async getSonarQubeIssues(): Promise<{
+    totalIssues: number;
+    criticalIssues: Array<{ val: string; count: number }>;
+    securityHotspots: Array<{ val: string; count: number }>;
+    issues: SonarQubeIssue[];
+  }> {
+    const sonarConfig = this.config.getServiceConfig('sonarqube') as {
+      enabled: boolean;
+      url: string;
+      token: string;
+      projectKey: string;
+      timeout: number;
+    };
+
     if (!sonarConfig.enabled) {
       throw new Error('SonarQube not configured');
     }
 
     try {
       const response = await fetch(`${sonarConfig.url}/api/issues/search`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${sonarConfig.token}`,
           'Content-Type': 'application/json'
@@ -38,11 +103,11 @@ export class RealSecurityService {
         throw new Error(`SonarQube API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: SonarQubeResponse = await response.json();
       return {
         totalIssues: data.total,
-        criticalIssues: data.facets.find((f: any) => f.property === 'severities')?.values || [],
-        securityHotspots: data.facets.find((f: any) => f.property === 'types')?.values || [],
+        criticalIssues: data.facets.find((f: SonarQubeFacet) => f.property === 'severities')?.values || [],
+        securityHotspots: data.facets.find((f: SonarQubeFacet) => f.property === 'types')?.values || [],
         issues: data.issues || []
       };
     } catch (error) {
@@ -54,9 +119,19 @@ export class RealSecurityService {
   /**
    * Real Snyk Integration
    */
-  async getSnykVulnerabilities(): Promise<any> {
-    const snykConfig = this.config.getServiceConfig('snyk');
-    
+  async getSnykVulnerabilities(): Promise<{
+    totalVulnerabilities: number;
+    criticalVulnerabilities: SnykIssue[];
+    highVulnerabilities: SnykIssue[];
+    vulnerabilities: SnykIssue[];
+  }> {
+    const snykConfig = this.config.getServiceConfig('snyk') as {
+      enabled: boolean;
+      token: string;
+      orgId: string;
+      timeout: number;
+    };
+
     if (!snykConfig.enabled) {
       throw new Error('Snyk not configured');
     }
@@ -73,13 +148,13 @@ export class RealSecurityService {
         throw new Error(`Snyk API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: SnykResponse = await response.json();
       return {
         totalVulnerabilities: data.data?.length || 0,
-        criticalVulnerabilities: data.data?.filter((issue: any) => 
+        criticalVulnerabilities: data.data?.filter((issue: SnykIssue) =>
           issue.attributes.severity === 'critical'
         ) || [],
-        highVulnerabilities: data.data?.filter((issue: any) => 
+        highVulnerabilities: data.data?.filter((issue: SnykIssue) =>
           issue.attributes.severity === 'high'
         ) || [],
         vulnerabilities: data.data || []
@@ -93,9 +168,19 @@ export class RealSecurityService {
   /**
    * Real GitHub Security Alerts
    */
-  async getGitHubSecurityAlerts(): Promise<any> {
-    const githubConfig = this.config.getServiceConfig('github');
-    
+  async getGitHubSecurityAlerts(): Promise<{
+    totalAlerts: number;
+    criticalAlerts: GitHubSecurityAlert[];
+    highAlerts: GitHubSecurityAlert[];
+    alerts: GitHubSecurityAlert[];
+  }> {
+    const githubConfig = this.config.getServiceConfig('github') as {
+      enabled: boolean;
+      token: string;
+      owner: string;
+      repo: string;
+    };
+
     if (!githubConfig.enabled) {
       throw new Error('GitHub not configured');
     }
@@ -115,11 +200,11 @@ export class RealSecurityService {
         throw new Error(`GitHub API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: GitHubSecurityAlert[] = await response.json();
       return {
         totalAlerts: data.length,
-        criticalAlerts: data.filter((alert: any) => alert.severity === 'critical'),
-        highAlerts: data.filter((alert: any) => alert.severity === 'high'),
+        criticalAlerts: data.filter((alert: GitHubSecurityAlert) => alert.severity === 'critical'),
+        highAlerts: data.filter((alert: GitHubSecurityAlert) => alert.severity === 'high'),
         alerts: data
       };
     } catch (error) {
@@ -131,9 +216,24 @@ export class RealSecurityService {
   /**
    * Real Docker Security Scan
    */
-  async getDockerSecurityScan(): Promise<any> {
-    const dockerConfig = this.config.getServiceConfig('docker');
-    
+  async getDockerSecurityScan(): Promise<{
+    scanStatus: string;
+    vulnerabilities: Array<{
+      severity: string;
+      package: string;
+      version: string;
+      description: string;
+    }>;
+    totalVulnerabilities: number;
+    scanDate: string;
+  }> {
+    const dockerConfig = this.config.getServiceConfig('docker') as unknown as {
+      enabled: boolean;
+      username: string;
+      token: string;
+      timeout: number;
+    };
+
     if (!dockerConfig.enabled) {
       throw new Error('Docker not configured');
     }
@@ -154,7 +254,16 @@ export class RealSecurityService {
         throw new Error(`Docker API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: {
+        status: string;
+        vulnerabilities: Array<{
+          severity: string;
+          package: string;
+          version: string;
+          description: string;
+        }>;
+        scan_date: string;
+      } = await response.json();
       return {
         scanStatus: data.status,
         vulnerabilities: data.vulnerabilities || [],
@@ -172,7 +281,7 @@ export class RealSecurityService {
    */
   async getAWSSecurityFindings(): Promise<any> {
     const awsConfig = this.config.getServiceConfig('aws');
-    
+
     if (!awsConfig.enabled) {
       throw new Error('AWS not configured');
     }
@@ -211,14 +320,15 @@ export class RealSecurityService {
         docker: dockerScan.status === 'fulfilled' ? dockerScan.value : null,
         summary: {
           totalIssues: (sonarIssues.status === 'fulfilled' ? sonarIssues.value.totalIssues : 0) +
-                      (snykVulns.status === 'fulfilled' ? snykVulns.value.totalVulnerabilities : 0) +
-                      (githubAlerts.status === 'fulfilled' ? githubAlerts.value.totalAlerts : 0),
+            (snykVulns.status === 'fulfilled' ? snykVulns.value.totalVulnerabilities : 0) +
+            (githubAlerts.status === 'fulfilled' ? githubAlerts.value.totalAlerts : 0),
           criticalIssues: (sonarIssues.status === 'fulfilled' ? sonarIssues.value.criticalIssues.length : 0) +
-                         (snykVulns.status === 'fulfilled' ? snykVulns.value.criticalVulnerabilities.length : 0) +
-                         (githubAlerts.status === 'fulfilled' ? githubAlerts.value.criticalAlerts.length : 0),
-          highIssues: (sonarIssues.status === 'fulfilled' ? sonarIssues.value.highIssues?.length || 0 : 0) +
-                     (snykVulns.status === 'fulfilled' ? snykVulns.value.highVulnerabilities.length : 0) +
-                     (githubAlerts.status === 'fulfilled' ? githubAlerts.value.highAlerts.length : 0)
+            (snykVulns.status === 'fulfilled' ? snykVulns.value.criticalVulnerabilities.length : 0) +
+            (githubAlerts.status === 'fulfilled' ? githubAlerts.value.criticalAlerts.length : 0),
+          highIssues: (sonarIssues.status === 'fulfilled' ?
+            sonarIssues.value.criticalIssues.find((f: { val: string; count: number }) => f.val === 'HIGH')?.count || 0 : 0) +
+            (snykVulns.status === 'fulfilled' ? snykVulns.value.highVulnerabilities.length : 0) +
+            (githubAlerts.status === 'fulfilled' ? githubAlerts.value.highAlerts.length : 0)
         }
       };
     } catch (error) {

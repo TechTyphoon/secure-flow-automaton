@@ -92,6 +92,81 @@ interface ScalingAction {
   quantumRequired: boolean;
 }
 
+interface ResourceMetrics {
+  cpu?: number;
+  memory?: number;
+  quantumChannels?: number;
+  networkBandwidth?: number;
+  [key: string]: number | undefined;
+}
+
+interface IntegrationMetrics {
+  autoScaling: {
+    policies: number;
+    history: Array<{ timestamp: number; action: string; resource: string }>;
+    active: boolean;
+  };
+  failover: {
+    policies: number;
+    activeFailovers: number;
+    active: boolean;
+  };
+  selfHealing: {
+    actions: number;
+    successRate: number;
+    history: Array<{ timestamp: number; action: string; success: boolean }>;
+    active: boolean;
+  };
+  orchestration: {
+    initialized: boolean;
+    status: string;
+    uptime: number;
+  };
+}
+
+interface SelfHealingAction {
+  actionId: string;
+  type: 'RESTART_SERVICE' | 'REPLACE_NODE' | 'REBALANCE_LOAD' | 'RECOVER_QUANTUM_CHANNEL';
+  target: string;
+  trigger: string;
+  automated: boolean;
+  successRate: number;
+}
+
+interface SystemMetrics {
+  averageCpuUsage?: number;
+  averageMemoryUsage?: number;
+  quantumChannelUtilization?: number;
+  overallThroughput?: number;
+  globalMetrics?: SystemMetrics;
+  channelMetrics?: Map<string, { utilization: number }>;
+  serviceMetrics?: Map<string, { resourceUtilization: { cpu: number } }>;
+}
+
+interface IntegrationMetrics {
+  autoScaling: {
+    policies: number;
+    history: Array<{ timestamp: number; action: string; resource: string }>;
+    active: boolean;
+  };
+  failover: {
+    policies: number;
+    activeFailovers: number;
+    active: boolean;
+  };
+  selfHealing: {
+    actions: number;
+    successRate: number;
+    history: Array<{ timestamp: number; action: string; success: boolean }>;
+    active: boolean;
+  };
+  orchestration: {
+    initialized: boolean;
+    status: string;
+    uptime: number;
+  };
+}
+
 interface FailoverPolicy {
   policyId: string;
   name: string;
@@ -114,13 +189,14 @@ interface OptimizationRule {
   lastApplied: number;
 }
 
-interface SelfHealingAction {
-  actionId: string;
-  type: 'RESTART_SERVICE' | 'REPLACE_NODE' | 'REBALANCE_LOAD' | 'RECOVER_QUANTUM_CHANNEL';
-  target: string;
-  trigger: string;
-  automated: boolean;
-  successRate: number;
+interface SystemMetrics {
+  averageCpuUsage?: number;
+  averageMemoryUsage?: number;
+  quantumChannelUtilization?: number;
+  overallThroughput?: number;
+  globalMetrics?: SystemMetrics;
+  channelMetrics?: Map<string, { utilization: number }>;
+  serviceMetrics?: Map<string, { resourceUtilization: { cpu: number } }>;
 }
 
 // Auto-scaling engine
@@ -188,7 +264,7 @@ class QuantumAutoScalingEngine {
     });
   }
 
-  async evaluateScaling(metrics: any): Promise<ScalingAction[]> {
+  async evaluateScaling(metrics: SystemMetrics): Promise<ScalingAction[]> {
     const actions: ScalingAction[] = [];
     const currentTime = Date.now();
 
@@ -218,7 +294,7 @@ class QuantumAutoScalingEngine {
     return actions;
   }
 
-  private getMetricValue(metrics: any, metricName: string): number | null {
+  private getMetricValue(metrics: SystemMetrics, metricName: string): number | null {
     // Extract metric value from metrics object
     switch (metricName) {
       case 'cpu_usage':
@@ -299,7 +375,7 @@ class QuantumFailoverEngine {
 
   async evaluateFailover(
     healthStatus: Map<string, boolean>,
-    resourceMetrics: Map<string, any>
+    resourceMetrics: Map<string, ResourceMetrics>
   ): Promise<Array<{ resource: string; backup: string; policy: string }>> {
     const failoverActions: Array<{ resource: string; backup: string; policy: string }> = [];
 
@@ -397,7 +473,7 @@ class QuantumSelfHealingEngine {
 
     // Simulate healing action
     const success = Math.random() < action.successRate;
-    
+
     this.healingHistory.push({
       timestamp: Date.now(),
       action: action.type,
@@ -423,7 +499,7 @@ class QuantumSelfHealingEngine {
 
   getSuccessRate(): number {
     if (this.healingHistory.length === 0) return 0;
-    
+
     const successful = this.healingHistory.filter(h => h.success).length;
     return successful / this.healingHistory.length;
   }
@@ -434,11 +510,11 @@ export class QuantumOrchestrationIntegrator extends EventEmitter {
   private networkManager: QuantumMeshNetworkManager;
   private serviceDiscovery: QuantumServiceDiscoveryEngine;
   private analytics: QuantumNetworkAnalyticsEngine;
-  
+
   private autoScalingEngine: QuantumAutoScalingEngine;
   private failoverEngine: QuantumFailoverEngine;
   private selfHealingEngine: QuantumSelfHealingEngine;
-  
+
   private config: QuantumOrchestrationConfig;
   private status: OrchestrationStatus;
   private isInitialized: boolean = false;
@@ -449,22 +525,22 @@ export class QuantumOrchestrationIntegrator extends EventEmitter {
     cryptoEngine: PostQuantumCryptoEngine
   ) {
     super();
-    
+
     this.config = config;
     this.autoScalingEngine = new QuantumAutoScalingEngine();
     this.failoverEngine = new QuantumFailoverEngine();
     this.selfHealingEngine = new QuantumSelfHealingEngine();
-    
+
     this.status = {
       networkManager: { status: 'INITIALIZING', nodeCount: 0, channelCount: 0, meshConnectivity: 0 },
       serviceDiscovery: { status: 'INITIALIZING', serviceCount: 0, instanceCount: 0, bindingCount: 0 },
       analytics: { status: 'INITIALIZING', metricsCollected: 0, activeAlerts: 0, mlModelsReady: 0 },
-      integration: { 
-        status: 'INITIALIZING', 
-        autoScalingActive: false, 
-        failoverActive: false, 
-        optimizationActive: false, 
-        selfHealingActive: false 
+      integration: {
+        status: 'INITIALIZING',
+        autoScalingActive: false,
+        failoverActive: false,
+        optimizationActive: false,
+        selfHealingActive: false
       }
     };
 
@@ -487,8 +563,8 @@ export class QuantumOrchestrationIntegrator extends EventEmitter {
 
       // Initialize analytics
       this.analytics = new QuantumNetworkAnalyticsEngine(
-        this.networkManager, 
-        this.serviceDiscovery, 
+        this.networkManager,
+        this.serviceDiscovery,
         cryptoEngine
       );
       this.status.analytics.status = 'RUNNING';
@@ -501,7 +577,7 @@ export class QuantumOrchestrationIntegrator extends EventEmitter {
 
       this.isInitialized = true;
       this.status.integration.status = 'RUNNING';
-      
+
       // Enable integration features
       if (this.config.integrationConfig.enableAutoScaling) {
         this.status.integration.autoScalingActive = true;
@@ -605,7 +681,7 @@ export class QuantumOrchestrationIntegrator extends EventEmitter {
       for (const resource of alert.affectedResources) {
         healthStatus.set(resource, false);
       }
-      
+
       const failoverActions = await this.failoverEngine.evaluateFailover(healthStatus, new Map());
       for (const failover of failoverActions) {
         await this.executeFailover(failover);
@@ -637,7 +713,7 @@ export class QuantumOrchestrationIntegrator extends EventEmitter {
 
   private async executeScalingAction(action: ScalingAction): Promise<void> {
     console.log(`⚖️ Executing scaling action: ${action.type} on ${action.resource}`);
-    
+
     try {
       switch (action.type) {
         case 'SCALE_OUT':
@@ -714,12 +790,12 @@ export class QuantumOrchestrationIntegrator extends EventEmitter {
 
   private async scaleDownResource(resource: string, amount: number): Promise<void> {
     // Decrease resource allocation
-    console.log(`🔽 Scaling down ${resource} by ${amount} units`);  
+    console.log(`🔽 Scaling down ${resource} by ${amount} units`);
   }
 
   private async executeFailover(failover: { resource: string; backup: string; policy: string }): Promise<void> {
     console.log(`🔄 Executing failover: ${failover.resource} -> ${failover.backup}`);
-    
+
     this.emit('failover_executed', {
       resource: failover.resource,
       backup: failover.backup,
@@ -732,10 +808,10 @@ export class QuantumOrchestrationIntegrator extends EventEmitter {
     const topology = this.networkManager.getTopology();
     this.status.networkManager.nodeCount = topology.nodes.size;
     this.status.networkManager.channelCount = topology.connections.size;
-    
+
     // Calculate mesh connectivity based on connections
     const maxConnections = topology.nodes.size * (topology.nodes.size - 1);
-    this.status.networkManager.meshConnectivity = maxConnections > 0 ? 
+    this.status.networkManager.meshConnectivity = maxConnections > 0 ?
       topology.connections.size / maxConnections : 0;
   }
 
@@ -749,7 +825,7 @@ export class QuantumOrchestrationIntegrator extends EventEmitter {
     const summary = this.analytics.getAnalyticsSummary();
     this.status.analytics.metricsCollected = summary.metricsHistorySize;
     this.status.analytics.activeAlerts = summary.activeAlerts;
-    
+
     const mlModels = this.analytics.getMLModelStatus();
     this.status.analytics.mlModelsReady = Array.from(mlModels.values())
       .filter(model => model.status === 'READY').length;
@@ -836,7 +912,7 @@ export class QuantumOrchestrationIntegrator extends EventEmitter {
     return this.selfHealingEngine.getHealingActions();
   }
 
-  getIntegrationMetrics(): any {
+  getIntegrationMetrics(): IntegrationMetrics {
     return {
       autoScaling: {
         policies: this.autoScalingEngine.getPolicies().size,

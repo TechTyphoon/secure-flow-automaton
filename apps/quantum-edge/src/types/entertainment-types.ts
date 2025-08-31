@@ -7,6 +7,7 @@ export interface UserPreferences {
   viewingPatterns: ViewingPattern[];
   devicePreferences: DevicePreference[];
   accessibilityNeeds: AccessibilityNeed[];
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface ContentHistory {
@@ -16,6 +17,7 @@ export interface ContentHistory {
   rating: number;
   timestamp: Date;
   platform: string;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface ViewingPattern {
@@ -76,6 +78,7 @@ export interface UserBehaviorData {
   duration: number;
   deviceInfo: DeviceInfo;
   location: Location;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface DeviceInfo {

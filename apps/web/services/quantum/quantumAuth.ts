@@ -35,11 +35,14 @@ interface BiometricTemplate {
 
 interface ZeroKnowledgeProof {
   proofId: string;
+  proof: Uint8Array;
   statement: string;
   commitment: Uint8Array;
   challenge: Uint8Array;
   response: Uint8Array;
-  publicParameters: {
+  publicParameters?: {
+    publicMatrix: number[][];
+    publicValue: number[];
     generator: Uint8Array;
     modulus: Uint8Array;
     securityParameter: number;
@@ -48,11 +51,31 @@ interface ZeroKnowledgeProof {
   timestamp: number;
 }
 
+interface ZeroKnowledgeProofData {
+  proofId: string;
+  proof: Uint8Array;
+  statement: string;
+  commitment: Uint8Array;
+  challenge: Uint8Array;
+  response: Uint8Array;
+}
+
+interface SystemStatistics {
+  biometricTemplates: number;
+  activeAuthRequests: number;
+  latticeCredentials: number;
+  zeroKnowledgeProofs: number;
+  cryptoStatistics: unknown;
+  qkdStatistics: unknown;
+  isInitialized: boolean;
+  timestamp: number;
+}
+
 interface MultiModalAuthRequest {
   requestId: string;
   userId: string;
   requiredFactors: AuthenticationFactor[];
-  presentedFactors: Map<string, any>;
+  presentedFactors: Map<string, AuthenticationFactorData>;
   securityLevel: 1 | 2 | 3 | 4 | 5;
   quantumSafe: boolean;
   challengeResponse?: {
@@ -72,11 +95,48 @@ interface AuthenticationFactor {
   fallbackAllowed: boolean;
 }
 
+interface LatticeProofData {
+  proof: Uint8Array;
+  publicMatrix: number[][];
+  publicValue: number[];
+}
+
+interface SystemStatistics {
+  biometricTemplates: number;
+  activeAuthRequests: number;
+  latticeCredentials: number;
+  zeroKnowledgeProofs: number;
+  cryptoStatistics: unknown;
+  qkdStatistics: unknown;
+  isInitialized: boolean;
+}
+
+interface AuthenticationFactorData {
+  value: string | number | boolean | Uint8Array | number[] | object;
+  metadata?: Record<string, unknown>;
+  timestamp: number;
+  confidence?: number;
+  // For quantum signatures
+  message?: Uint8Array;
+  signature?: SignatureResult;
+  // For knowledge factors
+  password?: string;
+  pin?: string;
+  // For possession factors
+  tokenId?: string;
+  certificate?: string;
+  challenge?: Uint8Array;
+  response?: Uint8Array;
+  // For behavioral factors
+  timings?: number[];
+  movements?: Array<{ x: number; y: number; timestamp: number }>;
+}
+
 interface LatticeBasedCredential {
   credentialId: string;
   ownerPublicKey: Uint8Array;
   issuerSignature: SignatureResult;
-  claims: Map<string, any>;
+  claims: Map<string, string | number | boolean>;
   latticeParameters: {
     dimension: number;
     modulus: number;
@@ -335,13 +395,19 @@ class LatticeZKProof {
       response[i] = (response[i] + challenge[0] * secret[i]) % this.modulus;
     }
 
+    // Calculate public value: A * s
+    const publicValue = this.matrixVectorMult(publicMatrix, secret);
+
     return {
       proofId,
+      proof: new Uint8Array(response.map(x => x & 0xFF)), // Use response as proof
       statement,
       commitment: new Uint8Array(commitment.map(x => x & 0xFF)),
       challenge: new Uint8Array(challenge.map(x => x & 0xFF)),
       response: new Uint8Array(response.map(x => x & 0xFF)),
       publicParameters: {
+        publicMatrix,
+        publicValue,
         generator: new Uint8Array(publicMatrix[0].map(x => x & 0xFF)),
         modulus: new Uint8Array([this.modulus & 0xFF, (this.modulus >> 8) & 0xFF, (this.modulus >> 16) & 0xFF]),
         securityParameter: this.dimension
@@ -570,7 +636,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
 
   async authenticateMultiModal(
     userId: string,
-    factors: Map<string, any>,
+    factors: Map<string, AuthenticationFactorData>,
     securityLevel: 1 | 2 | 3 | 4 | 5 = 3
   ): Promise<AuthenticationResult> {
     if (!this.isInitialized) {
@@ -659,7 +725,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
           const biometricResult = await this.verifyBiometric(
             request.userId,
             factor.subtype as BiometricTemplate['type'],
-            factorData
+            factorData.value as number[]
           );
           factorVerified = biometricResult.verified;
           factorConfidence = biometricResult.confidence;
@@ -670,8 +736,8 @@ export class QuantumResistantAuthentication extends EventEmitter {
         case 'QUANTUM_SIGNATURE': {
           const signatureResult = await this.verifyQuantumSignature(
             request.userId,
-            factorData.message,
-            factorData.signature
+            factorData.message!,
+            factorData.signature!
           );
           factorVerified = signatureResult.verified;
           factorConfidence = signatureResult.confidence;
@@ -723,13 +789,17 @@ export class QuantumResistantAuthentication extends EventEmitter {
     // Additional lattice-based proof verification
     if (request.presentedFactors.has('lattice_proof')) {
       const latticeProofData = request.presentedFactors.get('lattice_proof');
-      latticeProofVerified = await this.verifyLatticeBasedProof(request.userId, latticeProofData);
+      if (latticeProofData) {
+        latticeProofVerified = await this.verifyLatticeBasedProof(request.userId, latticeProofData as unknown as LatticeProofData);
+      }
     }
 
     // Zero-knowledge proof verification
     if (request.presentedFactors.has('zk_proof')) {
       const zkProofData = request.presentedFactors.get('zk_proof');
-      zeroKnowledgeProofVerified = await this.verifyZeroKnowledgeProof(request.userId, zkProofData);
+      if (zkProofData) {
+        zeroKnowledgeProofVerified = await this.verifyZeroKnowledgeProof(request.userId, zkProofData as unknown as ZeroKnowledgeProofData);
+      }
     }
 
     // Calculate overall confidence
@@ -843,7 +913,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
   private async verifyKnowledgeFactor(
     userId: string,
     factorType: string,
-    data: any
+    data: AuthenticationFactorData
   ): Promise<{ verified: boolean; confidence: number }> {
     // Implement knowledge-based authentication (password, PIN, etc.)
     // This is a simplified implementation
@@ -873,7 +943,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
   private async verifyPossessionFactor(
     userId: string,
     factorType: string,
-    data: any
+    data: AuthenticationFactorData
   ): Promise<{ verified: boolean; confidence: number }> {
     // Implement possession-based authentication (tokens, certificates, etc.)
     switch (factorType) {
@@ -898,7 +968,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
   private async verifyBehavioralFactor(
     userId: string,
     factorType: string,
-    data: any
+    data: AuthenticationFactorData
   ): Promise<{ verified: boolean; confidence: number }> {
     // Implement behavioral authentication (keystroke dynamics, gait, etc.)
     switch (factorType) {
@@ -923,7 +993,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
     }
   }
 
-  private async verifyLatticeBasedProof(userId: string, proofData: any): Promise<boolean> {
+  private async verifyLatticeBasedProof(userId: string, proofData: LatticeProofData): Promise<boolean> {
     try {
       // Get user's lattice-based credential
       const credential = Array.from(this.latticeCredentials.values())
@@ -937,14 +1007,14 @@ export class QuantumResistantAuthentication extends EventEmitter {
       const publicMatrix = this.generatePublicMatrix(credential.latticeParameters);
       const publicValue = this.extractPublicValue(credential.ownerPublicKey);
       
-      return await this.latticeZKProof.verifyProof(proofData.proof, publicMatrix, publicValue);
+      return await this.latticeZKProof.verifyProof(proofData as unknown as ZeroKnowledgeProof, publicMatrix, publicValue);
     } catch (error) {
       console.error('Lattice-based proof verification failed:', error);
       return false;
     }
   }
 
-  private async verifyZeroKnowledgeProof(userId: string, proofData: any): Promise<boolean> {
+  private async verifyZeroKnowledgeProof(userId: string, proofData: ZeroKnowledgeProofData): Promise<boolean> {
     try {
       const storedProof = this.zeroKnowledgeProofs.get(proofData.proofId);
       if (!storedProof) {
@@ -1138,7 +1208,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
     return { verified: true, confidence: 0.95 };
   }
 
-  private async verifyCertificate(certificate: any): Promise<boolean> {
+  private async verifyCertificate(certificate: string): Promise<boolean> {
     // Simplified certificate verification
     return true;
   }
@@ -1148,7 +1218,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
     return 0.8 + (Math.random() - 0.5) * 0.3;
   }
 
-  private analyzeMouseDynamics(userId: string, movements: any[]): number {
+  private analyzeMouseDynamics(userId: string, movements: Array<{ x: number; y: number; timestamp: number }>): number {
     // Simplified mouse dynamics analysis
     return 0.75 + (Math.random() - 0.5) * 0.4;
   }
@@ -1189,7 +1259,7 @@ export class QuantumResistantAuthentication extends EventEmitter {
     return false;
   }
 
-  getSystemStatistics(): any {
+  getSystemStatistics(): SystemStatistics {
     return {
       biometricTemplates: this.biometricTemplates.size,
       activeAuthRequests: this.authenticationRequests.size,

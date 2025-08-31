@@ -44,7 +44,7 @@ export class SecurityNotificationService {
     return success;
   }
 
-  private async sendSlackAlert(alert: SecurityAlert, slackConfig: any): Promise<boolean> {
+  private async sendSlackAlert(alert: SecurityAlert, slackConfig: { enabled: boolean; webhookUrl: string; channel: string }): Promise<boolean> {
     try {
       const color = this.getSeverityColor(alert.severity);
       const icon = this.getSeverityIcon(alert.severity);
@@ -97,7 +97,7 @@ export class SecurityNotificationService {
     }
   }
 
-  private async sendTeamsAlert(alert: SecurityAlert, teamsConfig: any): Promise<boolean> {
+  private async sendTeamsAlert(alert: SecurityAlert, teamsConfig: { enabled: boolean; webhookUrl: string }): Promise<boolean> {
     try {
       const color = this.getSeverityColor(alert.severity);
       const icon = this.getSeverityIcon(alert.severity);
@@ -203,11 +203,11 @@ View full details in the SecureFlow dashboard.
   }
 
   private getHighestSeverity(alerts: SecurityAlert[]): 'critical' | 'high' | 'medium' | 'low' {
-    const severityOrder = ['critical', 'high', 'medium', 'low'];
+    const severityOrder: ('critical' | 'high' | 'medium' | 'low')[] = ['critical', 'high', 'medium', 'low'];
     
     for (const severity of severityOrder) {
       if (alerts.some(alert => alert.severity === severity)) {
-        return severity as any;
+        return severity;
       }
     }
     

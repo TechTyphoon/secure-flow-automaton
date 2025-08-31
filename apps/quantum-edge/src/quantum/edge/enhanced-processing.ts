@@ -3,7 +3,7 @@ interface QuantumData {
 }
 
 interface QuantumResult {
-    data: any[];
+    data: number[];
     status: string;
     timestamp: Date;
 }
@@ -29,18 +29,18 @@ export class EnhancedProcessing {
                 timestamp: new Date(),
             };
         }
-        
+
         const results = await Promise.all(this.processingUnits.map(unit => unit.process(data)));
         return this.aggregateResults(results);
     }
 
     private aggregateResults(results: Array<QuantumResult>): QuantumResult {
         // Implement aggregation logic for results
-        const aggregatedData = results.reduce((acc, result) => {
+        const aggregatedData = results.reduce((acc: number[], result) => {
             // Combine results based on specific criteria
             return acc.concat(result.data);
         }, []);
-        
+
         return {
             data: aggregatedData,
             status: 'success',

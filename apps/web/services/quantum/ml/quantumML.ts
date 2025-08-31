@@ -13,12 +13,12 @@ export interface MLModel {
   modelType: 'classification' | 'regression' | 'clustering' | 'anomaly_detection';
   quantumEnhanced: boolean;
   accuracy: number;
-  trainingData: any[];
-  parameters: Record<string, any>;
+  trainingData: number[][];
+  parameters: Record<string, number | string | boolean>;
 }
 
 export interface PredictionResult {
-  prediction: any;
+  prediction: number | string | boolean | number[];
   confidence: number;
   quantumAdvantage: number;
   features: QuantumFeature[];

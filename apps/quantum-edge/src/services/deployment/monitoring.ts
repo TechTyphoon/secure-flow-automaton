@@ -1,5 +1,5 @@
 export class Monitoring {
-    private metrics: Record<string, any> = {};
+    private metrics: Record<string, number> = {};
     private alerts: string[] = [];
 
     constructor() {
@@ -34,7 +34,7 @@ export class Monitoring {
         }
     }
 
-    public getMetrics(): Record<string, any> {
+    public getMetrics(): Record<string, number> {
         return this.metrics;
     }
 

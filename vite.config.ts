@@ -78,7 +78,7 @@ export default defineConfig(({ mode }) => ({
         
         // Optimize file naming for caching
         entryFileNames: 'assets/[name].[hash].js',
-        chunkFileNames: (chunkInfo: any) => {
+        chunkFileNames: (chunkInfo: import('rollup').PreRenderedChunk) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
           return `assets/${facadeModuleId}.[hash].js`;
         },

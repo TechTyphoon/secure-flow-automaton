@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,17 +27,17 @@ const SecurityServiceDashboard = () => {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [testResults, setTestResults] = useState<any>({});
 
-  const healthMonitor = new SecurityHealthMonitor();
-  const notifications = new SecurityNotificationService();
+  const healthMonitor = useMemo(() => new SecurityHealthMonitor(), []);
+  const notifications = useMemo(() => new SecurityNotificationService(), []);
 
   useEffect(() => {
     checkServiceHealth();
     // Auto-refresh every 5 minutes
     const interval = setInterval(checkServiceHealth, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [checkServiceHealth]);
 
-  const checkServiceHealth = async () => {
+  const checkServiceHealth = useCallback(async () => {
     setIsLoading(true);
     try {
       const statuses = await healthMonitor.checkAllServices();
@@ -48,7 +48,7 @@ const SecurityServiceDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [healthMonitor]);
 
   const testSonarQubeIntegration = async () => {
     try {

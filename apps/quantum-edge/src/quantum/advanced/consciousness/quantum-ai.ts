@@ -4,7 +4,7 @@
  */
 
 import { NeuralNetwork } from './neural-network';
-import { CognitiveProcessing } from './cognitive-processing';
+import { CognitiveProcessing, CognitiveOutput } from './cognitive-processing';
 
 export class QuantumAI {
   private neuralNetwork: NeuralNetwork;
@@ -17,7 +17,7 @@ export class QuantumAI {
 
   async processInput(input: number[]): Promise<{
     neuralOutput: number[];
-    cognitiveOutput: any;
+    cognitiveOutput: CognitiveOutput;
     confidence: number;
   }> {
     // Process through neural network

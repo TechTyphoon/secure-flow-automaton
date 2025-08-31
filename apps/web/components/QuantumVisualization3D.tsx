@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -72,49 +72,7 @@ const QuantumVisualization3D: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas size
-    canvas.width = 800;
-    canvas.height = 600;
-
-    const animate = () => {
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw quantum circuit
-      if (showCircuit) {
-        drawQuantumCircuit(ctx);
-      }
-
-      // Draw quantum states
-      if (showState) {
-        drawQuantumStates(ctx);
-      }
-
-      // Animate gates
-      if (isPlaying) {
-        animateQuantumGates();
-      }
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isPlaying, showCircuit, showState, currentStep]);
-
-  const drawQuantumCircuit = (ctx: CanvasRenderingContext2D) => {
+  const drawQuantumCircuit = useCallback((ctx: CanvasRenderingContext2D) => {
     ctx.save();
     ctx.translate(50, 100);
 
@@ -163,9 +121,9 @@ const QuantumVisualization3D: React.FC = () => {
     }
 
     ctx.restore();
-  };
+  }, [quantumGates]);
 
-  const drawQuantumStates = (ctx: CanvasRenderingContext2D) => {
+  const drawQuantumStates = useCallback((ctx: CanvasRenderingContext2D) => {
     ctx.save();
     ctx.translate(50, 350);
 
@@ -223,7 +181,49 @@ const QuantumVisualization3D: React.FC = () => {
     });
 
     ctx.restore();
-  };
+  }, [quantumStates]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas size
+    canvas.width = 800;
+    canvas.height = 600;
+
+    const animate = () => {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw quantum circuit
+      if (showCircuit) {
+        drawQuantumCircuit(ctx);
+      }
+
+      // Draw quantum states
+      if (showState) {
+        drawQuantumStates(ctx);
+      }
+
+      // Animate gates
+      if (isPlaying) {
+        animateQuantumGates();
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isPlaying, showCircuit, showState, currentStep, drawQuantumCircuit, drawQuantumStates]);
 
   const animateQuantumGates = () => {
     setQuantumGates(prev => prev.map(gate => ({

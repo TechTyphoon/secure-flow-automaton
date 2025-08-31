@@ -174,7 +174,7 @@ export const EnhancedRUMDashboard: React.FC<EnhancedRUMDashboardProps> = ({ clas
           
           <select 
             value={selectedTimeRange} 
-            onChange={(e) => setSelectedTimeRange(e.target.value as any)}
+            onChange={(e) => setSelectedTimeRange(e.target.value as '1h' | '24h' | '7d' | '30d')}
             className="border rounded px-3 py-1 text-sm"
           >
             <option value="1h">Last Hour</option>

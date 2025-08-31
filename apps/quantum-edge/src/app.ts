@@ -1,6 +1,6 @@
-import { QuantumConfig } from './config/quantum-config';
-import { NetworkConfig } from './config/network-config';
-import { DeploymentConfig } from './config/deployment-config';
+import { quantumConfig } from './config/quantum-config';
+import { networkConfig } from './config/network-config';
+import { deploymentConfig } from './config/deployment-config';
 import { Orchestrator } from './services/deployment/orchestrator';
 import { Monitoring } from './services/deployment/monitoring';
 import { Scaling } from './services/deployment/scaling';
@@ -32,13 +32,13 @@ export class QuantumEdgeApplication {
   async initialize(): Promise<void> {
     try {
       console.log('Initializing Quantum Edge Application...');
-      
+
       // Initialize neural network
       await this.initializeNeuralNetwork();
-      
+
       // Initialize cognitive processing
       await this.initializeCognitiveProcessing();
-      
+
       this.isInitialized = true;
       console.log('Quantum Edge Application initialized successfully');
     } catch (error) {
@@ -65,7 +65,7 @@ export class QuantumEdgeApplication {
 
     // Process data through neural network
     const neuralOutput = this.neuralNetwork.predict(input);
-    
+
     // Process through cognitive system
     const cognitiveOutput = await this.cognitiveProcessing.processInput({
       data: neuralOutput,

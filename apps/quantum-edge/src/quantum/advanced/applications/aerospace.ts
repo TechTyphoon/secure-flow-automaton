@@ -23,7 +23,8 @@ import {
   QuantumOptimizationResult,
   QuantumAerodynamicsResult,
   QuantumMissionResult,
-  QuantumDebrisResult
+  QuantumDebrisResult,
+  ResourceAllocation
 } from '../../../types/aerospace-types';
 
 export interface FlightData {
@@ -73,6 +74,7 @@ export interface SatelliteData {
     bandwidth: number;
     sensors: string[];
   };
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface FlightOptimizationResult {
@@ -81,6 +83,7 @@ export interface FlightOptimizationResult {
   timeSavings: number;
   safetyScore: number;
   quantumAdvantage: number;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface ManufacturingResult {
@@ -114,24 +117,24 @@ export class AerospaceQuantumApplications {
 
   async optimizeFlightPath(flightData: FlightData): Promise<FlightOptimizationResult> {
     console.log('✈️ Optimizing flight path with quantum algorithms...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum flight optimization
     const quantumOptimization = await this.quantumCore.optimizeFlight(
       flightData.route,
       flightData.weather,
       flightData.payload
     );
-    
+
     // Flight optimization pipeline
     const optimizedFlight = await this.flightOptimizer.optimizeFlight(
       flightData,
-      quantumOptimization
+      quantumOptimization as QuantumOptimizationResult
     );
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return {
       ...optimizedFlight,
       quantumAdvantage: this.calculateQuantumAdvantage(processingTime, optimizedFlight.fuelEfficiency)
@@ -140,23 +143,23 @@ export class AerospaceQuantumApplications {
 
   async manufactureComponent(manufacturingData: ManufacturingData): Promise<ManufacturingResult> {
     console.log('🏭 Manufacturing aerospace component with quantum precision...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum manufacturing simulation
     const quantumManufacturing = await this.quantumCore.simulateManufacturing(
       manufacturingData.materials,
       manufacturingData.specifications
     );
-    
+
     // Manufacturing pipeline
     const manufacturedComponent = await this.manufacturingEngine.manufactureComponent(
       manufacturingData,
       quantumManufacturing
     );
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return {
       ...manufacturedComponent,
       quantumAdvantage: this.calculateQuantumAdvantage(processingTime, manufacturedComponent.quality)
@@ -165,20 +168,20 @@ export class AerospaceQuantumApplications {
 
   async optimizeSatelliteNetwork(satelliteData: SatelliteData[]): Promise<SatelliteResult[]> {
     console.log('🛰️ Optimizing satellite network with quantum algorithms...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum satellite optimization
     const quantumOptimization = await this.quantumCore.optimizeSatellites(satelliteData);
-    
+
     // Satellite network processing
     const optimizedSatellites = await this.satelliteEngine.optimizeNetwork(
       satelliteData,
       quantumOptimization
     );
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return optimizedSatellites.map(satellite => ({
       ...satellite,
       quantumAdvantage: this.calculateQuantumAdvantage(processingTime, satellite.performance)
@@ -197,17 +200,32 @@ export class AerospaceQuantumApplications {
     quantumAdvantage: number;
   }> {
     console.log('🔧 Predicting aircraft maintenance with quantum AI...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum maintenance prediction
     const maintenancePrediction = await this.quantumCore.predictMaintenance(aircraftData);
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return {
-      maintenanceSchedule: maintenancePrediction.schedule,
-      riskAssessment: maintenancePrediction.risks,
+      maintenanceSchedule: maintenancePrediction.schedule.map((item: string) => ({
+        componentId: 'unknown',
+        maintenanceType: 'inspection' as const,
+        scheduledDate: new Date(),
+        priority: 'medium' as const,
+        estimatedCost: 0,
+        requiredParts: [item]
+      })),
+      riskAssessment: maintenancePrediction.risks.map((item: string) => ({
+        riskId: 'unknown',
+        componentId: 'unknown',
+        riskType: 'operational' as const,
+        severity: 'medium' as const,
+        probability: 0.5,
+        impact: item,
+        mitigationStrategy: 'Monitor and maintain'
+      })),
       costProjection: maintenancePrediction.cost,
       quantumAdvantage: this.calculateQuantumAdvantage(processingTime, maintenancePrediction.accuracy)
     };
@@ -225,18 +243,18 @@ export class AerospaceQuantumApplications {
     quantumAdvantage: number;
   }> {
     console.log('🌪️ Simulating aerodynamic performance with quantum algorithms...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum aerodynamic simulation
     const aerodynamicSimulation = await this.quantumCore.simulateAerodynamics(
       aircraftDesign.geometry,
       aircraftDesign.materials,
       aircraftDesign.operatingConditions
     );
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return {
       aerodynamicEfficiency: aerodynamicSimulation.efficiency,
       dragCoefficient: aerodynamicSimulation.drag,
@@ -258,16 +276,25 @@ export class AerospaceQuantumApplications {
     quantumAdvantage: number;
   }> {
     console.log('🚀 Optimizing space mission with quantum algorithms...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum mission optimization
     const missionOptimization = await this.quantumCore.optimizeMission(missionData);
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return {
-      missionPlan: missionOptimization.plan,
+      missionPlan: {
+        phases: missionOptimization.plan.phases.map((phaseName: string, index: number) => ({
+          phaseId: `phase-${index}`,
+          name: phaseName,
+          duration: 0,
+          objectives: [`Complete ${phaseName}`],
+          activities: [`Execute ${phaseName}`],
+          dependencies: index > 0 ? [`phase-${index - 1}`] : []
+        }))
+      },
       successProbability: missionOptimization.probability,
       resourceOptimization: missionOptimization.resources,
       quantumAdvantage: this.calculateQuantumAdvantage(processingTime, missionOptimization.efficiency)
@@ -281,14 +308,14 @@ export class AerospaceQuantumApplications {
     quantumAdvantage: number;
   }> {
     console.log('🛸 Analyzing space debris with quantum algorithms...');
-    
+
     const startTime = Date.now();
-    
+
     // Quantum debris analysis
     const debrisAnalysis = await this.quantumCore.analyzeDebris(debrisData);
-    
+
     const processingTime = Date.now() - startTime;
-    
+
     return {
       collisionRisk: debrisAnalysis.risk,
       mitigationStrategies: debrisAnalysis.strategies,
@@ -301,9 +328,9 @@ export class AerospaceQuantumApplications {
     // Calculate quantum advantage based on processing time and efficiency
     const classicalTime = processingTime * 4; // Assume classical takes 4x longer
     const classicalEfficiency = efficiency * 0.7; // Assume classical is 30% less efficient
-    
-    return ((classicalTime - processingTime) / classicalTime) * 100 + 
-           ((efficiency - classicalEfficiency) / classicalEfficiency) * 80;
+
+    return ((classicalTime - processingTime) / classicalTime) * 100 +
+      ((efficiency - classicalEfficiency) / classicalEfficiency) * 80;
   }
 }
 

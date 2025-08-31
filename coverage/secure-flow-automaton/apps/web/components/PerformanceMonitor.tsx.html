@@ -1053,7 +1053,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import React, { useEffect, useState, useCallback } from 'react';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import React, { useEffect, useState, useCallback, useMemo } from 'react';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
 <span class="cstat-no" title="statement not covered" >import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';</span>
 <span class="cstat-no" title="statement not covered" >import { Progress } from '@/components/ui/progress';</span>
 <span class="cstat-no" title="statement not covered" >import { Badge } from '@/components/ui/badge';</span>
@@ -1119,23 +1119,23 @@ interface PerformanceAlert {
 <span class="cstat-no" title="statement not covered" >  const [performanceScore, setPerformanceScore] = useState(0);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  // Core Web Vitals thresholds</span>
-<span class="cstat-no" title="statement not covered" >  const thresholds = {</span>
+<span class="cstat-no" title="statement not covered" >  const thresholds = useMemo(() =&gt; ({</span>
 <span class="cstat-no" title="statement not covered" >    lcp: { good: 2500, poor: 4000 },</span>
 <span class="cstat-no" title="statement not covered" >    fid: { good: 100, poor: 300 },</span>
 <span class="cstat-no" title="statement not covered" >    cls: { good: 0.1, poor: 0.25 },</span>
 <span class="cstat-no" title="statement not covered" >    ttfb: { good: 800, poor: 1800 },</span>
 <span class="cstat-no" title="statement not covered" >    fcp: { good: 1800, poor: 3000 },</span>
 <span class="cstat-no" title="statement not covered" >    tti: { good: 3800, poor: 7300 }</span>
-<span class="cstat-no" title="statement not covered" >  };</span>
+<span class="cstat-no" title="statement not covered" >  }), []);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const getPerformanceRating = (metric: string, value: number): 'good' | 'needs-improvement' | 'poor' =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  const getPerformanceRating = useCallback((metric: string, value: number): 'good' | 'needs-improvement' | 'poor' =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const threshold = thresholds[metric as keyof typeof thresholds];</span>
 <span class="cstat-no" title="statement not covered" >    if (!threshold) return 'good';</span>
     
 <span class="cstat-no" title="statement not covered" >    if (value &lt;= threshold.good) return 'good';</span>
 <span class="cstat-no" title="statement not covered" >    if (value &lt;= threshold.poor) return 'needs-improvement';</span>
 <span class="cstat-no" title="statement not covered" >    return 'poor';</span>
-<span class="cstat-no" title="statement not covered" >  };</span>
+<span class="cstat-no" title="statement not covered" >  }, [thresholds]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const calculatePerformanceScore = useCallback((metrics: PerformanceMetrics): number =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const weights = {</span>
@@ -1166,7 +1166,7 @@ interface PerformanceAlert {
 <span class="cstat-no" title="statement not covered" >    });</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return Math.round(totalScore / totalWeight);</span>
-<span class="cstat-no" title="statement not covered" >  }, []);</span>
+<span class="cstat-no" title="statement not covered" >  }, [getPerformanceRating]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const collectPerformanceMetrics = useCallback((): PerformanceMetrics =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;</span>
@@ -1262,7 +1262,7 @@ interface PerformanceAlert {
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    setAlerts(prev =&gt; [...newAlerts, ...prev.slice(0, 4)]); // Keep only latest 5 alerts</span>
-<span class="cstat-no" title="statement not covered" >  }, []);</span>
+<span class="cstat-no" title="statement not covered" >  }, [thresholds, getPerformanceRating]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  useEffect(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const updateMetrics = () =&gt; {</span>
@@ -1555,7 +1555,7 @@ interface PerformanceAlert {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-28T09:40:00.524Z
+                at 2025-08-31T09:32:32.910Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

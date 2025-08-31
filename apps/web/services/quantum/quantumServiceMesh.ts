@@ -94,6 +94,103 @@ interface TimeoutConfig {
   quantumHandshakeTimeout: number;
 }
 
+interface ProxyFilterConfig {
+  // Authentication config
+  enabled?: boolean;
+  quantumSignatures?: boolean;
+  biometricAuth?: boolean;
+  biometricRequired?: boolean;
+
+  // Authorization config
+  policies?: string[];
+  quantumPolicies?: string[];
+
+  // Rate limiting config
+  requestsPerSecond?: number;
+  burstSize?: number;
+  burstLimit?: number;
+  quantumRequestLimits?: boolean;
+  quantumPrioritization?: boolean;
+
+  // Quantum encryption config
+  algorithm?: string;
+  quantumKeyDistribution?: boolean;
+  keyRotationInterval?: number;
+
+  // Logging config
+  level?: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
+  quantumMetrics?: boolean;
+
+  // Token validation
+  tokenValidation?: boolean;
+}
+
+interface LoadBalancingStats {
+  services: number;
+  totalEndpoints: number;
+  healthyEndpoints: number;
+  quantumEndpoints: number;
+  policies: number;
+  timestamp: number;
+}
+
+interface TrafficStats {
+  totalRules: number;
+  activeRules: number;
+  quantumRules: number;
+  servicesWithRules: number;
+  timestamp: number;
+}
+
+interface ServiceMeshStatus {
+  config: {
+    name: string;
+    namespace: string;
+    quantumSecurity: boolean;
+    version: string;
+  };
+  services: {
+    total: number;
+    healthy: number;
+    quantumEnabled: number;
+  };
+  loadBalancing: LoadBalancingStats;
+  circuitBreakers: {
+    total: number;
+    open: number;
+    halfOpen: number;
+  };
+  trafficManagement: TrafficStats;
+  metrics: ServiceMeshMetrics;
+  isInitialized: boolean;
+  timestamp: number;
+}
+
+interface CircuitBreakerConfig {
+  failureThreshold: number;
+  recoveryTimeout: number;
+  monitoringPeriod: number;
+  quantumMonitoring: boolean;
+}
+
+interface AuthenticationFilterConfig {
+  quantumSignatures: boolean;
+  biometricRequired: boolean;
+  tokenValidation: boolean;
+}
+
+interface QuantumEncryptionFilterConfig {
+  quantumKeyDistribution: boolean;
+  algorithm: string;
+  keyRotationInterval: number;
+}
+
+interface RateLimitingFilterConfig {
+  requestsPerSecond: number;
+  burstLimit: number;
+  quantumPrioritization: boolean;
+}
+
 interface QuantumTrafficRule {
   ruleId: string;
   name: string;
@@ -239,7 +336,7 @@ interface QuantumProxyConfig {
 interface ProxyFilter {
   name: string;
   type: 'AUTHENTICATION' | 'AUTHORIZATION' | 'RATE_LIMITING' | 'QUANTUM_ENCRYPTION' | 'LOGGING';
-  config: Record<string, any>;
+  config: ProxyFilterConfig;
   priority: number;
   quantumEnabled: boolean;
 }
@@ -262,13 +359,13 @@ class QuantumLoadBalancer {
     }
 
     const policy = this.policies.get(serviceName) || this.getDefaultPolicy();
-    let candidates = serviceEndpoints.filter(endpoint => 
+    let candidates = serviceEndpoints.filter(endpoint =>
       endpoint.healthStatus === 'HEALTHY'
     );
 
     // Filter for quantum-capable endpoints if required
     if (quantumRequired) {
-      candidates = candidates.filter(endpoint => 
+      candidates = candidates.filter(endpoint =>
         endpoint.quantumCapabilities.qkdSupported && endpoint.quantumSecured
       );
     }
@@ -299,7 +396,7 @@ class QuantumLoadBalancer {
   }
 
   private leastConnectionsSelection(endpoints: ServiceMeshEndpoint[]): ServiceMeshEndpoint {
-    return endpoints.reduce((least, current) => 
+    return endpoints.reduce((least, current) =>
       current.metrics.connectionCount < least.metrics.connectionCount ? current : least
     );
   }
@@ -331,7 +428,7 @@ class QuantumLoadBalancer {
       return { endpoint, score };
     });
 
-    const best = scoredEndpoints.reduce((best, current) => 
+    const best = scoredEndpoints.reduce((best, current) =>
       current.score > best.score ? current : best
     );
 
@@ -339,7 +436,7 @@ class QuantumLoadBalancer {
   }
 
   private latencyBasedSelection(endpoints: ServiceMeshEndpoint[]): ServiceMeshEndpoint {
-    return endpoints.reduce((fastest, current) => 
+    return endpoints.reduce((fastest, current) =>
       current.metrics.averageResponseTime < fastest.metrics.averageResponseTime ? current : fastest
     );
   }
@@ -371,7 +468,7 @@ class QuantumLoadBalancer {
   getEndpointHealth(serviceName: string): Map<string, 'HEALTHY' | 'UNHEALTHY' | 'UNKNOWN'> {
     const endpoints = this.endpoints.get(serviceName) || [];
     const health = new Map<string, 'HEALTHY' | 'UNHEALTHY' | 'UNKNOWN'>();
-    
+
     for (const endpoint of endpoints) {
       health.set(endpoint.endpointId, endpoint.healthStatus);
     }
@@ -379,10 +476,10 @@ class QuantumLoadBalancer {
     return health;
   }
 
-  getLoadBalancingStats(): any {
+  getLoadBalancingStats(): LoadBalancingStats {
     const totalEndpoints = Array.from(this.endpoints.values())
       .reduce((sum, endpoints) => sum + endpoints.length, 0);
-    
+
     const healthyEndpoints = Array.from(this.endpoints.values())
       .flat()
       .filter(endpoint => endpoint.healthStatus === 'HEALTHY').length;
@@ -405,11 +502,11 @@ class QuantumLoadBalancer {
 // Circuit breaker implementation
 class QuantumCircuitBreakerManager {
   private circuitBreakers: Map<string, QuantumCircuitBreaker> = new Map();
-  private config: Map<string, any> = new Map();
+  private config: Map<string, CircuitBreakerConfig> = new Map();
 
   createCircuitBreaker(serviceName: string, namespace: string): string {
     const serviceId = `${namespace}/${serviceName}`;
-    
+
     const circuitBreaker: QuantumCircuitBreaker = {
       serviceId,
       serviceName,
@@ -488,7 +585,7 @@ class QuantumCircuitBreakerManager {
 
     if (isQuantumRequest) {
       circuitBreaker.currentQuantumFailures++;
-      
+
       // Record specific quantum failure types
       switch (failureType) {
         case 'QBER_HIGH':
@@ -505,7 +602,7 @@ class QuantumCircuitBreakerManager {
 
     // Check if we should open the circuit
     const shouldOpen = circuitBreaker.currentFailures >= circuitBreaker.failureThreshold ||
-                      (isQuantumRequest && circuitBreaker.currentQuantumFailures >= circuitBreaker.quantumFailureThreshold);
+      (isQuantumRequest && circuitBreaker.currentQuantumFailures >= circuitBreaker.quantumFailureThreshold);
 
     if (shouldOpen && circuitBreaker.state === 'CLOSED') {
       circuitBreaker.state = 'OPEN';
@@ -548,7 +645,7 @@ class QuantumTrafficManager {
 
   addTrafficRule(rule: QuantumTrafficRule): void {
     this.trafficRules.set(rule.ruleId, rule);
-    
+
     // Index rule by destination services
     for (const service of rule.destination.services) {
       const serviceRules = this.activeRules.get(service) || [];
@@ -565,7 +662,7 @@ class QuantumTrafficManager {
     targetService: string
   ): Promise<TrafficAction | null> {
     const rules = this.activeRules.get(targetService) || [];
-    
+
     for (const rule of rules) {
       if (!rule.enabled) continue;
 
@@ -637,8 +734,11 @@ class QuantumTrafficManager {
 
       case 'QUANTUM_THRESHOLD': {
         // Check quantum-specific thresholds
-        const quantumMetric = await this.getQuantumMetric(request, condition.value as string);
-        return quantumMetric !== null;
+        if (typeof condition.value === 'string') {
+          const quantumMetric = await this.getQuantumMetric(request, condition.value);
+          return quantumMetric !== null;
+        }
+        return false;
       }
 
       case 'SECURITY_LEVEL': {
@@ -652,7 +752,7 @@ class QuantumTrafficManager {
 
   private compareValues(actual: number, operator: string, expected: string | number): boolean {
     const expectedNum = typeof expected === 'string' ? parseFloat(expected) : expected;
-    
+
     switch (operator) {
       case 'EQUALS': {
         return actual === expectedNum;
@@ -712,7 +812,7 @@ class QuantumTrafficManager {
     return Array.from(this.trafficRules.values());
   }
 
-  getTrafficStats(): any {
+  getTrafficStats(): TrafficStats {
     const totalRules = this.trafficRules.size;
     const activeRules = Array.from(this.trafficRules.values()).filter(r => r.enabled).length;
     const quantumRules = Array.from(this.trafficRules.values())
@@ -764,12 +864,12 @@ export class QuantumServiceMesh extends EventEmitter {
     private cryptoEngine: PostQuantumCryptoEngine
   ) {
     super();
-    
+
     this.config = config;
     this.loadBalancer = new QuantumLoadBalancer();
     this.circuitBreakerManager = new QuantumCircuitBreakerManager();
     this.trafficManager = new QuantumTrafficManager();
-    
+
     this.meshMetrics = {
       timestamp: Date.now(),
       totalServices: 0,
@@ -807,7 +907,7 @@ export class QuantumServiceMesh extends EventEmitter {
       this.startMetricsCollection();
 
       this.isInitialized = true;
-      
+
       this.emit('initialized', {
         name: this.config.name,
         namespace: this.config.namespace,
@@ -909,7 +1009,7 @@ export class QuantumServiceMesh extends EventEmitter {
   private async initializeServiceDiscovery(): Promise<void> {
     // Get services from Kubernetes controller
     const quantumServices = this.kubernetesController.getQuantumServices();
-    
+
     for (const service of quantumServices) {
       const serviceDiscovery: QuantumServiceDiscovery = {
         serviceName: service.metadata.name,
@@ -945,7 +1045,7 @@ export class QuantumServiceMesh extends EventEmitter {
       };
 
       this.serviceDiscovery.set(service.metadata.name, serviceDiscovery);
-      
+
       // Create circuit breaker for service
       this.circuitBreakerManager.createCircuitBreaker(
         service.metadata.name,
@@ -1029,7 +1129,7 @@ export class QuantumServiceMesh extends EventEmitter {
 
   private updateMeshMetrics(): void {
     const timestamp = Date.now();
-    
+
     // Update service counts
     this.meshMetrics.totalServices = this.serviceDiscovery.size;
     this.meshMetrics.healthyServices = Array.from(this.serviceDiscovery.values())
@@ -1067,12 +1167,12 @@ export class QuantumServiceMesh extends EventEmitter {
     }
 
     const startTime = Date.now();
-    
+
     try {
       // Check circuit breaker
       const serviceId = `${request.targetNamespace}/${request.targetService}`;
       const allowed = await this.circuitBreakerManager.allowRequest(serviceId, request.quantumRequired);
-      
+
       if (!allowed) {
         this.circuitBreakerManager.recordFailure(serviceId, request.quantumRequired, 'CIRCUIT_BREAKER_OPEN');
         throw new Error('Circuit breaker is open');
@@ -1097,13 +1197,13 @@ export class QuantumServiceMesh extends EventEmitter {
 
       // Process request through proxy filters
       const processedRequest = await this.processRequestFilters(request, endpoint);
-      
+
       // Simulate request execution
       const response = await this.executeServiceRequest(processedRequest, endpoint);
 
       // Record success
       this.circuitBreakerManager.recordSuccess(serviceId, request.quantumRequired);
-      
+
       // Update metrics
       const responseTime = Date.now() - startTime;
       this.updateRequestMetrics(request, endpoint, responseTime, true);
@@ -1124,7 +1224,7 @@ export class QuantumServiceMesh extends EventEmitter {
       // Record failure
       const serviceId = `${request.targetNamespace}/${request.targetService}`;
       this.circuitBreakerManager.recordFailure(serviceId, request.quantumRequired, 'REQUEST_FAILURE');
-      
+
       const responseTime = Date.now() - startTime;
       this.updateRequestMetrics(request, null, responseTime, false);
 
@@ -1148,10 +1248,10 @@ export class QuantumServiceMesh extends EventEmitter {
 
     // Apply filters in priority order
     const sortedFilters = [...proxyConfig.filters].sort((a, b) => a.priority - b.priority);
-    
+
     for (const filter of sortedFilters) {
       if (!filter.quantumEnabled && request.quantumRequired) continue;
-      
+
       switch (filter.type) {
         case 'AUTHENTICATION':
           processedRequest = await this.applyAuthenticationFilter(processedRequest, filter.config);
@@ -1168,34 +1268,34 @@ export class QuantumServiceMesh extends EventEmitter {
     return processedRequest;
   }
 
-  private async applyAuthenticationFilter(request: ServiceRequest, config: any): Promise<ServiceRequest> {
+  private async applyAuthenticationFilter(request: ServiceRequest, config: Partial<AuthenticationFilterConfig>): Promise<ServiceRequest> {
     if (config.quantumSignatures && request.quantumRequired) {
       // Apply quantum signature verification
       const signature = await this.cryptoEngine.sign(
         'service-auth-key',
         new TextEncoder().encode(request.requestId)
       );
-      
+
       request.headers['X-Quantum-Signature'] = Buffer.from(signature.signature).toString('base64');
     }
-    
+
     return request;
   }
 
-  private async applyQuantumEncryptionFilter(request: ServiceRequest, config: any): Promise<ServiceRequest> {
+  private async applyQuantumEncryptionFilter(request: ServiceRequest, config: Partial<QuantumEncryptionFilterConfig>): Promise<ServiceRequest> {
     if (config.quantumKeyDistribution && request.quantumRequired) {
       // Set quantum encryption headers
-      request.headers['X-Quantum-Encryption'] = config.algorithm;
+      request.headers['X-Quantum-Encryption'] = config.algorithm || 'AES-256-GCM';
       request.headers['X-Quantum-Key-ID'] = `qkey-${Date.now()}`;
     }
-    
+
     return request;
   }
 
-  private async applyRateLimitingFilter(request: ServiceRequest, config: any): Promise<void> {
+  private async applyRateLimitingFilter(request: ServiceRequest, config: Partial<RateLimitingFilterConfig>): Promise<void> {
     // Simple rate limiting simulation
     const currentRate = await this.getCurrentRequestRate(request.sourceService);
-    if (currentRate > config.requestsPerSecond) {
+    if (config.requestsPerSecond && currentRate > config.requestsPerSecond) {
       throw new Error('Rate limit exceeded');
     }
   }
@@ -1244,7 +1344,7 @@ export class QuantumServiceMesh extends EventEmitter {
     success: boolean
   ): void {
     this.meshMetrics.totalRequests++;
-    
+
     if (success) {
       this.meshMetrics.successfulRequests++;
     }
@@ -1258,7 +1358,7 @@ export class QuantumServiceMesh extends EventEmitter {
     if (endpoint) {
       endpoint.metrics.requestsPerSecond++;
       endpoint.metrics.averageResponseTime = (endpoint.metrics.averageResponseTime + responseTime) / 2;
-      
+
       if (!success) {
         endpoint.metrics.errorRate = (endpoint.metrics.errorRate + 1) / endpoint.metrics.requestsPerSecond;
       }
@@ -1325,7 +1425,7 @@ export class QuantumServiceMesh extends EventEmitter {
     if (!service) return false;
 
     this.serviceDiscovery.delete(serviceName);
-    
+
     this.emit('service_removed', {
       serviceName,
       timestamp: Date.now()
@@ -1337,7 +1437,7 @@ export class QuantumServiceMesh extends EventEmitter {
 
   addTrafficRule(rule: QuantumTrafficRule): void {
     this.trafficManager.addTrafficRule(rule);
-    
+
     this.emit('traffic_rule_added', {
       ruleId: rule.ruleId,
       name: rule.name,
@@ -1346,7 +1446,7 @@ export class QuantumServiceMesh extends EventEmitter {
     });
   }
 
-  getServiceMeshStatus(): any {
+  getServiceMeshStatus(): ServiceMeshStatus {
     return {
       config: {
         name: this.config.name,
@@ -1396,7 +1496,7 @@ interface ServiceResponse {
   requestId: string;
   statusCode: number;
   headers: Record<string, string>;
-  body: any;
+  body: ServiceResponseBody;
   quantumMetrics?: {
     qkdChannelUsed: boolean;
     quantumOperations: number;
@@ -1404,6 +1504,8 @@ interface ServiceResponse {
   };
   timestamp: number;
 }
+
+type ServiceResponseBody = string | Buffer | Record<string, unknown> | null;
 
 export type {
   QuantumServiceMeshConfig,

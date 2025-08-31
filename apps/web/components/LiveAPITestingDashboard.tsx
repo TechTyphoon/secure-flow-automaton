@@ -25,7 +25,7 @@ interface APITestResult {
   service: string;
   status: 'success' | 'error' | 'pending';
   message: string;
-  response?: any;
+  response?: Record<string, unknown>;
   timestamp: string;
 }
 

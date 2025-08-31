@@ -1,5 +1,5 @@
 export class NeuralNetwork {
-    private weights: number[][];
+    private weights: number[][][];
     private biases: number[];
 
     constructor(inputSize: number, hiddenSize: number, outputSize: number) {
@@ -8,13 +8,13 @@ export class NeuralNetwork {
             this.initializeWeights(hiddenSize, outputSize)
         ];
         this.biases = [
-            this.initializeBiases(hiddenSize),
-            this.initializeBiases(outputSize)
+            ...this.initializeBiases(hiddenSize),
+            ...this.initializeBiases(outputSize)
         ];
     }
 
-    private initializeWeights(inputSize: number, outputSize: number): number[] {
-        const weights = new Array(outputSize).fill(0).map(() => 
+    private initializeWeights(inputSize: number, outputSize: number): number[][] {
+        const weights = new Array(outputSize).fill(0).map(() =>
             new Array(inputSize).fill(0).map(() => Math.random())
         );
         return weights;
@@ -33,7 +33,7 @@ export class NeuralNetwork {
         return [];
     }
 
-    public getWeights(): number[][] {
+    public getWeights(): number[][][] {
         return this.weights;
     }
 

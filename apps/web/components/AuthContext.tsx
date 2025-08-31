@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, createContext, useContext } from "react";
+import React, { useEffect, useState, createContext, useContext, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { SessionManager, SecurityLogger, validatePassword } from "@/lib/security";
@@ -32,17 +32,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [sessionManager, setSessionManager] = useState<SessionManager | null>(null);
 
   // Enhanced session timeout handler
-  const handleSessionTimeout = () => {
+  const handleSessionTimeout = useCallback(() => {
     SecurityLogger.logEvent('session_timeout', { userId: user?.id });
     supabase.auth.signOut();
     setSessionTimeoutWarning(false);
-  };
+  }, [user?.id]);
 
   // Session timeout warning handler
-  const handleSessionWarning = () => {
+  const handleSessionWarning = useCallback(() => {
     SecurityLogger.logEvent('session_timeout_warning', { userId: user?.id });
     setSessionTimeoutWarning(true);
-  };
+  }, [user?.id]);
 
   // Extend session function
   const extendSession = () => {
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         sessionManager.destroy();
       }
     };
-  }, [user, sessionManager]);
+  }, [user, sessionManager, handleSessionTimeout, handleSessionWarning]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {

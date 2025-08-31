@@ -114,7 +114,7 @@ export class SecurityConfigManager {
     };
   }
 
-  getServiceConfig(service: 'sonarqube' | 'snyk' | 'github' | 'docker' | 'aws' | 'database'): any {
+  getServiceConfig(service: 'sonarqube' | 'snyk' | 'github' | 'docker' | 'aws' | 'database'): SecurityConfig['sonarqube'] | SecurityConfig['snyk'] | SecurityConfig['github'] | SecurityConfig['docker'] | SecurityConfig['aws'] | SecurityConfig['database'] {
     return this.config[service];
   }
 
@@ -122,15 +122,15 @@ export class SecurityConfigManager {
     return this.config[service].enabled;
   }
 
-  getNotificationConfig(): any {
+  getNotificationConfig(): SecurityConfig['notifications'] {
     return this.config.notifications;
   }
 
-  getMonitoringConfig(): any {
+  getMonitoringConfig(): SecurityConfig['monitoring'] {
     return this.config.monitoring;
   }
 
-  getQuantumConfig(): any {
+  getQuantumConfig(): SecurityConfig['quantum'] {
     return this.config.quantum;
   }
 

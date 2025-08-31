@@ -50,6 +50,35 @@ export interface NetworkTopology {
     networkHealth: number;
 }
 
+export interface NetworkHealthMetrics {
+    activeNodes: number;
+    totalNodes: number;
+    healthyConnections: number;
+    totalConnections: number;
+    averageFidelity: number;
+    averageLatency: number;
+    networkUtilization: number;
+}
+
+export interface NetworkStats {
+    nodes: {
+        total: number;
+        active: number;
+        byType: Record<string, number>;
+    };
+    connections: {
+        total: number;
+        established: number;
+        averageFidelity: number;
+        totalBandwidth: number;
+    };
+    performance: {
+        networkHealth: number;
+        averageLatency: number;
+        totalThroughput: number;
+    };
+}
+
 export class QuantumInternet {
     private topology: NetworkTopology;
     private activeConnections: Map<string, QuantumConnection>;
@@ -61,7 +90,7 @@ export class QuantumInternet {
         this.topology = this.initializeNetworkTopology();
         this.activeConnections = new Map();
         this.quantumRouter = new QuantumRouter(this.topology);
-        
+
         // Start network services
         this.startNetworkServices();
     }
@@ -71,20 +100,20 @@ export class QuantumInternet {
      */
     private initializeNetworkTopology(): NetworkTopology {
         const nodes = new Map<string, QuantumNode>();
-        
+
         // Create diverse network nodes
-        const nodeTypes: Array<{ id: string; location: any; type: any }> = [
+        const nodeTypes: Array<{ id: string; location: { lat: number; lon: number; altitude?: number }; type: 'ground' | 'satellite' | 'submarine' | 'aerial' }> = [
             // Major ground stations
             { id: 'QN-US-001', location: { lat: 37.7749, lon: -122.4194 }, type: 'ground' }, // San Francisco
             { id: 'QN-EU-001', location: { lat: 51.5074, lon: -0.1278 }, type: 'ground' }, // London
             { id: 'QN-AS-001', location: { lat: 35.6762, lon: 139.6503 }, type: 'ground' }, // Tokyo
             { id: 'QN-AU-001', location: { lat: -33.8688, lon: 151.2093 }, type: 'ground' }, // Sydney
-            
+
             // Satellite nodes
             { id: 'QS-LEO-001', location: { lat: 0, lon: 0, altitude: 550 }, type: 'satellite' },
             { id: 'QS-LEO-002', location: { lat: 45, lon: 90, altitude: 550 }, type: 'satellite' },
             { id: 'QS-GEO-001', location: { lat: 0, lon: -60, altitude: 35786 }, type: 'satellite' },
-            
+
             // Submarine cable nodes
             { id: 'QN-SUB-001', location: { lat: 40.7128, lon: -74.0060 }, type: 'submarine' },
             { id: 'QN-SUB-002', location: { lat: 51.4545, lon: -3.1816 }, type: 'submarine' }
@@ -113,7 +142,7 @@ export class QuantumInternet {
                     lastHeartbeat: new Date()
                 }
             };
-            
+
             nodes.set(nodeInfo.id, node);
         });
 
@@ -167,7 +196,7 @@ export class QuantumInternet {
             if (entanglementSuccess) {
                 connection.status = 'established';
                 connection.entanglementPairs = Math.floor(100 + Math.random() * 400);
-                
+
                 // Store connection
                 this.activeConnections.set(connection.connectionId, connection);
                 sourceNode.connections.set(destination, connection);
@@ -198,7 +227,7 @@ export class QuantumInternet {
     public manageTraffic(): void {
         // Get all active connections
         const connections = Array.from(this.activeConnections.values());
-        
+
         // Calculate network load
         const totalLoad = connections.reduce((sum, conn) => {
             return sum + (conn.bandwidth * conn.fidelity);
@@ -209,7 +238,7 @@ export class QuantumInternet {
         // Traffic optimization decisions
         connections.forEach(connection => {
             const load = connection.bandwidth * connection.fidelity;
-            
+
             if (load > averageLoad * 1.5) {
                 // High traffic connection - optimize
                 this.optimizeHighTrafficConnection(connection);
@@ -224,7 +253,7 @@ export class QuantumInternet {
 
         // Rebalance network load
         this.rebalanceNetworkLoad();
-        
+
         console.log(`Traffic management complete. Active connections: ${connections.length}`);
         console.log(`Average network load: ${averageLoad.toFixed(2)} qubits/s`);
     }
@@ -249,10 +278,10 @@ export class QuantumInternet {
         this.topology.nodes.forEach(node => {
             if (node.status === 'active') {
                 metrics.activeNodes++;
-                
+
                 // Update node heartbeat
                 node.metrics.lastHeartbeat = new Date();
-                
+
                 // Check node health
                 const health = this.calculateNodeHealth(node);
                 if (health < 0.7) {
@@ -264,19 +293,19 @@ export class QuantumInternet {
         // Collect connection metrics
         let totalFidelity = 0;
         let totalLatency = 0;
-        
+
         this.activeConnections.forEach(connection => {
             if (connection.status === 'established') {
                 metrics.healthyConnections++;
                 metrics.totalEntanglementPairs += connection.entanglementPairs;
                 totalFidelity += connection.fidelity;
                 totalLatency += connection.latency;
-                
+
                 // Detect anomalies
                 if (connection.fidelity < 0.8) {
                     console.warn(`Low fidelity on ${connection.connectionId}: ${(connection.fidelity * 100).toFixed(2)}%`);
                 }
-                
+
                 // Update entanglement decay
                 this.updateEntanglementDecay(connection);
             }
@@ -316,36 +345,36 @@ export class QuantumInternet {
     /**
      * Calculate distance between two nodes (Great Circle for Earth-based)
      */
-    private calculateDistance(loc1: any, loc2: any): number {
+    private calculateDistance(loc1: { lat: number; lon: number; altitude?: number }, loc2: { lat: number; lon: number; altitude?: number }): number {
         if (loc1.altitude || loc2.altitude) {
             // 3D distance for satellite nodes
             const earthRadius = 6371; // km
             const alt1 = loc1.altitude || 0;
             const alt2 = loc2.altitude || 0;
-            
+
             // Convert to 3D Cartesian
             const x1 = (earthRadius + alt1) * Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc1.lon * Math.PI / 180);
             const y1 = (earthRadius + alt1) * Math.cos(loc1.lat * Math.PI / 180) * Math.sin(loc1.lon * Math.PI / 180);
             const z1 = (earthRadius + alt1) * Math.sin(loc1.lat * Math.PI / 180);
-            
+
             const x2 = (earthRadius + alt2) * Math.cos(loc2.lat * Math.PI / 180) * Math.cos(loc2.lon * Math.PI / 180);
             const y2 = (earthRadius + alt2) * Math.cos(loc2.lat * Math.PI / 180) * Math.sin(loc2.lon * Math.PI / 180);
             const z2 = (earthRadius + alt2) * Math.sin(loc2.lat * Math.PI / 180);
-            
+
             return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2));
         }
-        
+
         // Great circle distance for ground nodes
         const R = 6371; // Earth's radius in km
         const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
         const dLon = (loc2.lon - loc1.lon) * Math.PI / 180;
-        
+
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc2.lat * Math.PI / 180) *
-                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        
+            Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc2.lat * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        
+
         return R * c;
     }
 
@@ -355,7 +384,7 @@ export class QuantumInternet {
     private calculateLatency(distance: number, sourceType: string, targetType: string): number {
         // Base latency from speed of light
         let latency = (distance / this.speedOfLight) * 1000; // Convert to ms
-        
+
         // Add processing delays based on node types
         const processingDelays: Record<string, number> = {
             'ground': 0.5,
@@ -363,13 +392,13 @@ export class QuantumInternet {
             'submarine': 1.0,
             'aerial': 1.5
         };
-        
+
         latency += processingDelays[sourceType] || 0;
         latency += processingDelays[targetType] || 0;
-        
+
         // Add quantum processing overhead (entanglement verification, error correction)
         latency += 0.5 + Math.random() * 1.5; // 0.5-2ms quantum overhead
-        
+
         return latency;
     }
 
@@ -392,7 +421,7 @@ export class QuantumInternet {
     /**
      * Calculate channel fidelity based on distance and type
      */
-    private calculateChannelFidelity(distance: number, channelType: string): number {
+    private calculateChannelFidelity(distance: number, channelType: 'fiber' | 'free-space' | 'satellite' | 'microwave'): number {
         // Base fidelity for different channel types
         const baseFidelity: Record<string, number> = {
             'fiber': 0.99,
@@ -400,9 +429,9 @@ export class QuantumInternet {
             'satellite': 0.92,
             'microwave': 0.97
         };
-        
+
         let fidelity = baseFidelity[channelType] || 0.90;
-        
+
         // Distance-based degradation
         const degradationRate = {
             'fiber': 0.00001,      // Very low degradation
@@ -410,12 +439,12 @@ export class QuantumInternet {
             'satellite': 0.00005,   // Medium degradation
             'microwave': 0.00002    // Low degradation
         };
-        
+
         fidelity -= (degradationRate[channelType] || 0.0001) * distance;
-        
+
         // Add random fluctuations (atmospheric, equipment variations)
         fidelity += (Math.random() - 0.5) * 0.02;
-        
+
         return Math.max(0.5, Math.min(1.0, fidelity));
     }
 
@@ -430,15 +459,15 @@ export class QuantumInternet {
             'satellite': 2000,
             'microwave': 7000
         };
-        
+
         let bandwidth = baseBandwidth[channelType] || 1000;
-        
+
         // Distance impact (inverse square law approximation)
         bandwidth = bandwidth / (1 + distance / 10000);
-        
+
         // Add variations
         bandwidth *= (0.8 + Math.random() * 0.4);
-        
+
         return Math.max(100, bandwidth);
     }
 
@@ -447,20 +476,20 @@ export class QuantumInternet {
      */
     private generateRoutingTable(nodes: Map<string, QuantumNode>): Map<string, string[]> {
         const routingTable = new Map<string, string[]>();
-        
+
         // Simple routing for now - can be enhanced with quantum algorithms
         nodes.forEach((sourceNode, sourceId) => {
             const routes: string[] = [];
-            
+
             nodes.forEach((targetNode, targetId) => {
                 if (sourceId !== targetId) {
                     routes.push(targetId);
                 }
             });
-            
+
             routingTable.set(sourceId, routes);
         });
-        
+
         return routingTable;
     }
 
@@ -472,12 +501,12 @@ export class QuantumInternet {
         setInterval(() => {
             this.monitorNetwork();
         }, quantumConfig.monitoringInterval || 5000);
-        
+
         // Start traffic management
         setInterval(() => {
             this.manageTraffic();
         }, 10000);
-        
+
         // Start entanglement refresh
         setInterval(() => {
             this.refreshEntanglements();
@@ -493,7 +522,7 @@ export class QuantumInternet {
             connection.entanglementPairs * 1.2,
             1000
         );
-        
+
         // Try to improve fidelity through error correction
         if (connection.fidelity < 0.95) {
             connection.fidelity = Math.min(connection.fidelity * 1.05, 0.99);
@@ -517,7 +546,7 @@ export class QuantumInternet {
     private updateConnectionQoS(connection: QuantumConnection): void {
         // Implement QoS policies based on traffic patterns
         const qosLevel = connection.bandwidth > 5000 ? 'premium' : 'standard';
-        
+
         // Apply QoS settings
         if (qosLevel === 'premium') {
             // Priority routing, better error correction
@@ -531,12 +560,12 @@ export class QuantumInternet {
     private rebalanceNetworkLoad(): void {
         // Find overloaded and underutilized nodes
         const nodeLoads = new Map<string, number>();
-        
+
         this.topology.nodes.forEach((node, nodeId) => {
             const load = node.connections.size * node.metrics.throughput;
             nodeLoads.set(nodeId, load);
         });
-        
+
         // Implement load balancing logic
         // This could use quantum optimization algorithms
     }
@@ -551,13 +580,13 @@ export class QuantumInternet {
             memoryUsage: 0.2,
             connections: 0.2
         };
-        
-        const health = 
+
+        const health =
             node.metrics.uptime * weights.uptime +
             (1 - node.metrics.errorRate) * weights.errorRate +
             (1 - node.metrics.quantumMemoryUsage) * weights.memoryUsage +
             Math.min(node.connections.size / 10, 1) * weights.connections;
-        
+
         return health;
     }
 
@@ -569,10 +598,10 @@ export class QuantumInternet {
         const decayRate = 0.001; // per second
         const timeSinceEstablished = Date.now() - parseInt(connection.connectionId.split('-')[2]);
         const decayFactor = Math.exp(-decayRate * timeSinceEstablished / 1000);
-        
+
         connection.entanglementPairs = Math.floor(connection.entanglementPairs * decayFactor);
         connection.fidelity *= Math.pow(decayFactor, 0.1); // Fidelity decays slower
-        
+
         // Regenerate entanglement if too low
         if (connection.entanglementPairs < 10) {
             this.regenerateEntanglement(connection);
@@ -582,35 +611,35 @@ export class QuantumInternet {
     /**
      * Calculate overall network health
      */
-    private calculateOverallNetworkHealth(metrics: any): number {
-        const health = 
+    private calculateOverallNetworkHealth(metrics: NetworkHealthMetrics): number {
+        const health =
             (metrics.activeNodes / metrics.totalNodes) * 0.25 +
             (metrics.healthyConnections / Math.max(metrics.totalConnections, 1)) * 0.25 +
             metrics.averageFidelity * 0.25 +
             (1 - Math.min(metrics.averageLatency / 100, 1)) * 0.15 +
             (1 - metrics.networkUtilization) * 0.10;
-        
+
         return Math.max(0, Math.min(1, health));
     }
 
     /**
      * Check and trigger network alerts
      */
-    private checkAndTriggerAlerts(metrics: any): void {
+    private checkAndTriggerAlerts(metrics: NetworkHealthMetrics): void {
         // Critical alerts
         if (this.topology.networkHealth < 0.5) {
             console.error('CRITICAL: Network health below 50%');
         }
-        
+
         if (metrics.averageFidelity < 0.7) {
             console.error('CRITICAL: Average fidelity below 70%');
         }
-        
+
         // Warning alerts
         if (metrics.networkUtilization > 0.9) {
             console.warn('WARNING: Network utilization above 90%');
         }
-        
+
         if (metrics.activeNodes < metrics.totalNodes * 0.8) {
             console.warn('WARNING: More than 20% of nodes offline');
         }
@@ -634,7 +663,7 @@ export class QuantumInternet {
         // Simulate entanglement generation
         const generationRate = 100 + Math.random() * 200; // 100-300 pairs
         connection.entanglementPairs += generationRate;
-        
+
         // Cap at maximum
         connection.entanglementPairs = Math.min(connection.entanglementPairs, 1000);
     }
@@ -642,12 +671,12 @@ export class QuantumInternet {
     /**
      * Get network statistics
      */
-    public getNetworkStats(): any {
-        const stats = {
+    public getNetworkStats(): NetworkStats {
+        const stats: NetworkStats = {
             nodes: {
                 total: this.topology.nodes.size,
                 active: Array.from(this.topology.nodes.values()).filter(n => n.status === 'active').length,
-                byType: {} as any
+                byType: {}
             },
             connections: {
                 total: this.activeConnections.size,
@@ -661,17 +690,17 @@ export class QuantumInternet {
                 totalThroughput: 0
             }
         };
-        
+
         // Calculate type distribution
         this.topology.nodes.forEach(node => {
             stats.nodes.byType[node.type] = (stats.nodes.byType[node.type] || 0) + 1;
         });
-        
+
         // Calculate connection metrics
         let totalFidelity = 0;
         let totalLatency = 0;
         let connectionCount = 0;
-        
+
         this.activeConnections.forEach(connection => {
             if (connection.status === 'established') {
                 totalFidelity += connection.fidelity;
@@ -680,17 +709,17 @@ export class QuantumInternet {
                 connectionCount++;
             }
         });
-        
+
         if (connectionCount > 0) {
             stats.connections.averageFidelity = totalFidelity / connectionCount;
             stats.performance.averageLatency = totalLatency / connectionCount;
         }
-        
+
         // Calculate total throughput
         this.topology.nodes.forEach(node => {
             stats.performance.totalThroughput += node.metrics.throughput;
         });
-        
+
         return stats;
     }
 }
@@ -700,17 +729,17 @@ export class QuantumInternet {
  */
 class QuantumRouter {
     private routingTable: Map<string, Map<string, { nextHop: string; cost: number }>>;
-    
+
     constructor(private topology: NetworkTopology) {
         this.routingTable = new Map();
         this.initializeRoutingTable();
     }
-    
+
     private initializeRoutingTable(): void {
         // Initialize with direct connections
         this.topology.nodes.forEach((node, nodeId) => {
             const routes = new Map<string, { nextHop: string; cost: number }>();
-            
+
             this.topology.nodes.forEach((targetNode, targetId) => {
                 if (nodeId !== targetId) {
                     routes.set(targetId, {
@@ -719,29 +748,29 @@ class QuantumRouter {
                     });
                 }
             });
-            
+
             this.routingTable.set(nodeId, routes);
         });
     }
-    
+
     public findOptimalRoute(source: string, destination: string): string[] {
         // Implement Dijkstra's algorithm or quantum-inspired optimization
         const visited = new Set<string>();
         const distances = new Map<string, number>();
         const previous = new Map<string, string>();
         const queue = new Set<string>();
-        
+
         // Initialize
         this.topology.nodes.forEach((node, nodeId) => {
             distances.set(nodeId, nodeId === source ? 0 : Infinity);
             queue.add(nodeId);
         });
-        
+
         while (queue.size > 0) {
             // Find node with minimum distance
             let minNode: string | null = null;
             let minDistance = Infinity;
-            
+
             queue.forEach(nodeId => {
                 const distance = distances.get(nodeId) || Infinity;
                 if (distance < minDistance) {
@@ -749,12 +778,12 @@ class QuantumRouter {
                     minNode = nodeId;
                 }
             });
-            
+
             if (!minNode || minDistance === Infinity) break;
-            
+
             queue.delete(minNode);
             visited.add(minNode);
-            
+
             // Update distances for neighbors
             const node = this.topology.nodes.get(minNode);
             if (node) {
@@ -762,33 +791,33 @@ class QuantumRouter {
                     if (!visited.has(neighborId)) {
                         const altDistance = minDistance + connection.latency;
                         const currentDistance = distances.get(neighborId) || Infinity;
-                        
+
                         if (altDistance < currentDistance) {
                             distances.set(neighborId, altDistance);
-                            previous.set(neighborId, minNode);
+                            previous.set(neighborId, minNode!);
                         }
                     }
                 });
             }
         }
-        
+
         // Reconstruct path
         const path: string[] = [];
         let current = destination;
-        
+
         while (current && current !== source) {
             path.unshift(current);
             current = previous.get(current) || '';
         }
-        
+
         if (current === source) {
             path.unshift(source);
             return path;
         }
-        
+
         return []; // No path found
     }
-    
+
     public updateRoute(source: string, destination: string, cost: number): void {
         const routes = this.routingTable.get(source);
         if (routes) {

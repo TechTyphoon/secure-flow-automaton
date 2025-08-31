@@ -26,6 +26,7 @@ export interface Substation {
   load: number;
   efficiency: number;
   maintenanceStatus: 'operational' | 'maintenance' | 'outage';
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface RenewableEnergySource {
@@ -49,6 +50,7 @@ export interface WeatherConditions {
   windDirection: number;
   solarIrradiance: number;
   cloudCover: number;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface EnergyStorage {
@@ -70,6 +72,7 @@ export interface EnergyDemand {
   total: number;
   peakDemand: number;
   averageDemand: number;
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface GridOptimizationResult {
@@ -206,7 +209,13 @@ export interface SmartGridOptimizationResult {
 }
 
 export interface QuantumEnergyResult {
-  optimization: GridOptimizationResult | RenewableOptimizationResult | StorageOptimizationResult | NuclearOptimizationResult | SmartGridOptimizationResult;
-  accuracy: number;
-  processingTime: number;
+  optimization?: GridOptimizationResult | RenewableOptimizationResult | StorageOptimizationResult | NuclearOptimizationResult | SmartGridOptimizationResult;
+  accuracy?: number;
+  processingTime?: number;
+  forecastId?: string;
+  demandPrediction?: number[];
+  generationPrediction?: number[];
+  pricePrediction?: number[];
+  quantumAdvantage?: number;
+  [key: string]: unknown; // Allow additional properties
 } 

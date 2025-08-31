@@ -81,7 +81,7 @@ class SecurityTokenizer {
     },
     // Domain names
     {
-      pattern: /(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}/g,
+      pattern: /(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}/g,
       type: 'DOMAIN',
       validator: (domain: string) => this.isValidDomain(domain)
     },

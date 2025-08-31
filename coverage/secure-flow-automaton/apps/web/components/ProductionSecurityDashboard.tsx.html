@@ -531,10 +531,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -542,7 +541,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -565,13 +563,15 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -875,7 +875,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import React, { useState, useEffect } from 'react';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
+<span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import React, { useState, useEffect, useCallback } from 'react';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
 <span class="cstat-no" title="statement not covered" >import { Card, CardContent, CardHeader, CardTitle } from './ui/card';</span>
 <span class="cstat-no" title="statement not covered" >import { Button } from './ui/button';</span>
 <span class="cstat-no" title="statement not covered" >import { Badge } from './ui/badge';</span>
@@ -935,13 +935,7 @@ interface SecurityMetrics {
 <span class="cstat-no" title="statement not covered" >  const notificationService = new RealNotificationService();</span>
 <span class="cstat-no" title="statement not covered" >  const monitoringService = new RealMonitoringService();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  useEffect(() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (securityScans) {</span>
-<span class="cstat-no" title="statement not covered" >      updateMetrics();</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >  }, [securityScans]);</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  const updateMetrics = () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  const updateMetrics = useCallback(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!securityScans) return;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const sonarQube = securityScans.sonarQube;</span>
@@ -980,7 +974,13 @@ interface SecurityMetrics {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    setMetrics(newMetrics);</span>
 <span class="cstat-no" title="statement not covered" >    setLastUpdate(new Date());</span>
-<span class="cstat-no" title="statement not covered" >  };</span>
+<span class="cstat-no" title="statement not covered" >  }, [securityScans]);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  useEffect(() =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    if (securityScans) {</span>
+<span class="cstat-no" title="statement not covered" >      updateMetrics();</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >  }, [securityScans, updateMetrics]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const handleRefresh = async () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setIsLoading(true);</span>
@@ -1288,7 +1288,7 @@ interface SecurityMetrics {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-28T09:40:00.524Z
+                at 2025-08-31T09:32:32.910Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

@@ -6,6 +6,24 @@ type SecurityScan = Database['public']['Tables']['security_scans']['Row'];
 type SecurityScanInsert = Database['public']['Tables']['security_scans']['Insert'];
 type Vulnerability = Database['public']['Tables']['vulnerabilities']['Row'];
 type VulnerabilityInsert = Database['public']['Tables']['vulnerabilities']['Insert'];
+type Json = Database['public']['Tables']['security_scans']['Row']['scan_results'];
+
+interface ScanVulnerability {
+  id: string;
+  title: string;
+  description: string;
+  severity: string;
+  file_path: string;
+  line_number?: number;
+  tool: string;
+  cwe_id?: string;
+  first_detected: string;
+  rule_id?: string;
+  column_number?: number;
+  cve_id?: string;
+  package_name?: string;
+  affected_versions?: string;
+}
 
 export interface SecurityScanRequest {
   projectName: string;
@@ -23,7 +41,7 @@ export interface SecurityScanResult {
   highCount: number;
   mediumCount: number;
   lowCount: number;
-  scanResults: any;
+  scanResults: Json | null;
   startedAt: string;
   completedAt?: string;
 }
@@ -41,7 +59,7 @@ export class SecurityScanService {
   async triggerScan(request: SecurityScanRequest): Promise<SecurityScanResult> {
     try {
       logger.info('Triggering security scan for:', request.projectName);
-      
+
       // Create initial scan record
       const scanInsert: SecurityScanInsert = {
         project_name: request.projectName,
@@ -55,7 +73,7 @@ export class SecurityScanService {
         medium_count: 0,
         low_count: 0,
         scan_results: {
-          request: request as any,
+          request: request as unknown as Json,
           started_at: new Date().toISOString()
         }
       };
@@ -94,7 +112,7 @@ export class SecurityScanService {
   private async performScan(scanId: string, request: SecurityScanRequest) {
     try {
       logger.debug(`Performing scan for ID: ${scanId}`);
-      
+
       // Simulate different scanning tools
       const scanResults = await Promise.all([
         this.runStaticAnalysis(request),
@@ -103,7 +121,7 @@ export class SecurityScanService {
       ]);
 
       const [staticResults, dependencyResults, lintResults] = scanResults;
-      
+
       // Combine all vulnerabilities
       const allVulnerabilities = [
         ...staticResults.vulnerabilities,
@@ -176,7 +194,7 @@ export class SecurityScanService {
 
     } catch (error) {
       console.error(`❌ Error performing scan for ID: ${scanId}:`, error);
-      
+
       // Update scan record with error
       await supabase
         .from('security_scans')
@@ -195,7 +213,7 @@ export class SecurityScanService {
   private async runStaticAnalysis(request: SecurityScanRequest) {
     // Simulate static analysis scanning
     await this.delay(2000);
-    
+
     // Real vulnerabilities will come from external security tools
     const realVulnerabilities = [
       {
@@ -232,7 +250,7 @@ export class SecurityScanService {
   private async runDependencyScanning(request: SecurityScanRequest) {
     // Simulate dependency vulnerability scanning
     await this.delay(1500);
-    
+
     // Real vulnerabilities will come from external security tools
     const realVulnerabilities = [
       {
@@ -259,7 +277,7 @@ export class SecurityScanService {
   private async runSecurityLinting(request: SecurityScanRequest) {
     // Simulate security linting
     await this.delay(1000);
-    
+
     // Real vulnerabilities will come from external security tools
     const realVulnerabilities = [
       {
@@ -282,7 +300,7 @@ export class SecurityScanService {
     };
   }
 
-  private countVulnerabilitiesBySeverity(vulnerabilities: any[]) {
+  private countVulnerabilitiesBySeverity(vulnerabilities: ScanVulnerability[]) {
     return vulnerabilities.reduce((counts, vuln) => {
       counts[vuln.severity] = (counts[vuln.severity] || 0) + 1;
       return counts;

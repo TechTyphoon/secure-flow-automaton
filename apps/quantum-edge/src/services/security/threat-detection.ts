@@ -3,9 +3,36 @@
  * Advanced quantum-enhanced threat detection and analysis
  */
 
+export interface ThreatPattern {
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  confidence: number;
+}
+
+export interface ThreatData {
+  type?: string;
+  source?: string;
+  indicators?: string[];
+  timestamp?: number;
+}
+
+export interface DetectionResult {
+  detected: boolean;
+  threatType: string;
+  severity: string;
+  confidence: number;
+  recommendations: string[];
+}
+
+export interface ThreatIntelligence {
+  totalThreats: number;
+  highSeverityCount: number;
+  averageConfidence: number;
+  recentThreats: DetectionResult[];
+}
+
 export class ThreatDetection {
-  private threatPatterns: Map<string, any> = new Map();
-  private detectionHistory: any[] = [];
+  private threatPatterns: Map<string, ThreatPattern> = new Map();
+  private detectionHistory: DetectionResult[] = [];
 
   constructor() {
     this.initializeThreatPatterns();
@@ -18,41 +45,38 @@ export class ThreatDetection {
     this.threatPatterns.set('data_exfiltration', { severity: 'high', confidence: 0.90 });
   }
 
-  async detect(threatData: any): Promise<{
-    detected: boolean;
-    threatType: string;
-    severity: string;
-    confidence: number;
-    recommendations: string[];
-  }> {
+  async detect(threatData: ThreatData): Promise<DetectionResult> {
     const threatType = threatData.type || 'unknown';
     const pattern = this.threatPatterns.get(threatType);
-    
+
     if (pattern) {
-      const detection = {
+      const detection: DetectionResult = {
         detected: true,
         threatType,
         severity: pattern.severity,
         confidence: pattern.confidence,
         recommendations: this.generateRecommendations(threatType, pattern.severity)
       };
-      
+
       this.detectionHistory.push(detection);
       return detection;
     }
 
-    return {
+    const unknownDetection: DetectionResult = {
       detected: false,
       threatType: 'unknown',
       severity: 'low',
       confidence: 0.1,
       recommendations: ['Monitor for unusual activity']
     };
+
+    this.detectionHistory.push(unknownDetection);
+    return unknownDetection;
   }
 
   private generateRecommendations(threatType: string, severity: string): string[] {
     const recommendations: string[] = [];
-    
+
     switch (threatType) {
       case 'malware':
         recommendations.push('Isolate affected systems', 'Run full system scan', 'Update security signatures');
@@ -73,12 +97,7 @@ export class ThreatDetection {
     return recommendations;
   }
 
-  async analyzeThreatIntelligence(): Promise<{
-    totalThreats: number;
-    highSeverityCount: number;
-    averageConfidence: number;
-    recentThreats: any[];
-  }> {
+  async analyzeThreatIntelligence(): Promise<ThreatIntelligence> {
     const totalThreats = this.detectionHistory.length;
     const highSeverityCount = this.detectionHistory.filter(t => t.severity === 'high' || t.severity === 'critical').length;
     const averageConfidence = this.detectionHistory.reduce((sum, t) => sum + t.confidence, 0) / totalThreats || 0;
@@ -92,7 +111,7 @@ export class ThreatDetection {
     };
   }
 
-  getDetectionHistory(): any[] {
+  getDetectionHistory(): DetectionResult[] {
     return [...this.detectionHistory];
   }
 }

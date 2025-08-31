@@ -32,7 +32,18 @@ export interface SonarQubeIssue {
     startOffset: number;
     endOffset: number;
   };
-  flows: any[];
+  flows: Array<{
+    locations: Array<{
+      component: string;
+      textRange: {
+        startLine: number;
+        endLine: number;
+        startOffset: number;
+        endOffset: number;
+      };
+      msg: string;
+    }>;
+  }>;
   status: 'OPEN' | 'CONFIRMED' | 'REOPENED' | 'RESOLVED' | 'CLOSED';
   message: string;
   effort?: string;
@@ -42,7 +53,13 @@ export interface SonarQubeIssue {
   tags: string[];
   transitions: string[];
   actions: string[];
-  comments: any[];
+  comments: Array<{
+    key: string;
+    login: string;
+    htmlText: string;
+    markdown: string;
+    createdAt: string;
+  }>;
   creationDate: string;
   updateDate: string;
   type: 'CODE_SMELL' | 'BUG' | 'VULNERABILITY' | 'SECURITY_HOTSPOT';
@@ -101,14 +118,14 @@ export class SonarQubeService extends BaseSecurityService {
         if (!response?.component?.measures) return null;
 
         const metrics: Record<string, string> = {};
-        response.component.measures.forEach((measure: any) => {
+        response.component.measures.forEach((measure: { metric: string; value: string }) => {
           metrics[measure.metric] = measure.value;
         });
 
         // Send alert for critical vulnerabilities
         const vulnCount = parseInt(metrics.vulnerabilities || '0');
         const securityRating = parseInt(metrics.security_rating || '1');
-        
+
         if (vulnCount > 5 || securityRating > 2) {
           await this.notifications.sendAlert({
             id: `sonar-${Date.now()}`,
@@ -127,7 +144,7 @@ export class SonarQubeService extends BaseSecurityService {
           metrics,
         };
       },
-              () => { throw new Error('SonarQube not configured - no mock data in production'); },
+      () => { throw new Error('SonarQube not configured - no mock data in production'); },
       'getProjectMetrics'
     );
   }
@@ -137,7 +154,7 @@ export class SonarQubeService extends BaseSecurityService {
       async () => {
         if (!this.token) return null;
 
-        const params: any = {
+        const params: Record<string, string | number> = {
           componentKeys: this.projectKey,
           ps: 500, // page size
         };
@@ -158,14 +175,14 @@ export class SonarQubeService extends BaseSecurityService {
 
         return response?.issues || null;
       },
-              () => { throw new Error('SonarQube not configured - no mock data in production'); },
+      () => { throw new Error('SonarQube not configured - no mock data in production'); },
       'getIssues'
     );
   }
 
   async getHealthStatus() {
     const startTime = Date.now();
-    
+
     try {
       if (!this.token) {
         return {
@@ -197,13 +214,14 @@ export class SonarQubeService extends BaseSecurityService {
         lastCheck: new Date().toISOString(),
         message: isHealthy ? 'Service operational' : 'Health check failed'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as Error;
       return {
         service: 'sonarqube',
         status: 'unhealthy' as const,
         responseTime: Date.now() - startTime,
         lastCheck: new Date().toISOString(),
-        message: `Health check failed: ${error.message}`
+        message: `Health check failed: ${err.message || 'Unknown error'}`
       };
     }
   }
@@ -338,7 +356,19 @@ export class SonarQubeService extends BaseSecurityService {
     ];
   }
 
-  private getMockSecurityHotspots(): any[] {
+  private getMockSecurityHotspots(): Array<{
+    key: string;
+    component: string;
+    project: string;
+    securityCategory: string;
+    vulnerabilityProbability: string;
+    status: string;
+    line: number;
+    message: string;
+    author: string;
+    creationDate: string;
+    updateDate: string;
+  }> {
     return [
       {
         key: 'DWX9p5sUqFp-rCvMpjVo',
@@ -372,23 +402,23 @@ export class SonarQubeService extends BaseSecurityService {
   // Calculate security score based on metrics
   calculateSecurityScore(metrics: SonarQubeMetrics): number {
     const { metrics: m } = metrics;
-    
+
     const bugs = parseInt(m.bugs || '0');
     const vulnerabilities = parseInt(m.vulnerabilities || '0');
     const securityHotspots = parseInt(m.security_hotspots || '0');
     const securityRating = parseFloat(m.security_rating || '1.0');
     const reliabilityRating = parseFloat(m.reliability_rating || '1.0');
-    
+
     // Base score starts at 100
     let score = 100;
-    
+
     // Deduct points for issues
     score -= bugs * 5;                    // 5 points per bug
     score -= vulnerabilities * 10;        // 10 points per vulnerability  
     score -= securityHotspots * 3;        // 3 points per security hotspot
     score -= (securityRating - 1) * 15;   // 15 points per security rating level
     score -= (reliabilityRating - 1) * 10; // 10 points per reliability rating level
-    
+
     // Ensure score is between 0 and 100
     return Math.max(0, Math.min(100, Math.round(score)));
   }
