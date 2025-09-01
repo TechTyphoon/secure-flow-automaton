@@ -1,0 +1,52 @@
+# API Monitoring Dashboard Dockerfile
+FROM node:18-alpine AS base
+
+# Install system dependencies for monitoring
+RUN apk add --no-cache \
+    curl \
+    wget \
+    net-tools \
+    procps \
+    htop \
+    && rm -rf /var/cache/apk/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies
+RUN npm ci --omit=dev --no-audit --no-fund
+
+# Copy monitoring source code
+COPY docs/monitoring/ ./monitoring/
+COPY docs/api/ ./docs/api/
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S monitoring -u 1001
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/data && \
+    chown -R monitoring:nodejs /app
+
+# Switch to non-root user
+USER monitoring
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3002/health || exit 1
+
+# Expose monitoring port
+EXPOSE 3002
+
+# Environment variables
+ENV NODE_ENV=production
+ENV MONITORING_PORT=3002
+ENV API_BASE_URL=http://localhost:8080/api/v1
+ENV COLLECTION_INTERVAL=30000
+ENV METRICS_RETENTION=3600000
+
+# Start monitoring dashboard
+CMD ["npm", "run", "monitoring:start"]

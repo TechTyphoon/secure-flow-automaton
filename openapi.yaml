@@ -1,0 +1,2478 @@
+openapi: 3.0.3
+info:
+  title: Secure Flow Automaton API
+  version: 4.1.0
+  description: |
+    Enterprise-grade DevSecOps pipeline automation platform with comprehensive security integration.
+
+    ## Key Features
+    - 🔐 **Zero-Trust Identity Management** - Continuous authentication and authorization
+    - 🧠 **Cognitive Security Analysis** - AI-powered threat detection and response
+    - 📊 **Real-time Security Monitoring** - Live security event monitoring and alerting
+    - ⚡ **Performance Monitoring** - System performance optimization and monitoring
+    - 📝 **Comprehensive Logging** - Structured logging with security audit trails
+    - 🔧 **Extensible Architecture** - Plugin-based system for custom integrations
+
+    ## Authentication
+    This API uses Bearer token authentication with JWT tokens obtained through the identity provider.
+
+    ### Getting Started
+    1. **Authenticate** using `/auth/login` endpoint
+    2. **Use the returned JWT token** in the `Authorization: Bearer <token>` header
+    3. **Access protected endpoints** with the token
+
+    ### Example
+    ```bash
+    curl -X POST https://api.secureflow.com/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"email":"user@example.com","password":"secure-password"}'
+    ```
+  contact:
+    name: TechTyphoon
+    email: techtyphoon.html@gmail.com
+    url: https://github.com/TechTyphoon/secure-flow-automaton
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.secureflow.com/v1
+    description: Production server
+  - url: http://localhost:8080/api/v1
+    description: Development server
+  - url: https://staging.secureflow.com/v1
+    description: Staging server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  # Authentication endpoints
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login with MFA support
+      description: Authenticate user with email/password and optional MFA code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticationCredentials'
+            example:
+              email: "analyst@company.com"
+              password: "secure-password"
+              mfaCode: "123456"
+              deviceId: "device-123"
+              ipAddress: "192.168.1.100"
+              userAgent: "Mozilla/5.0..."
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResult'
+              example:
+                success: true
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                refreshToken: "refresh-token-123"
+                expiresIn: 3600
+                requiresMfa: false
+                user:
+                  id: "user-123"
+                  email: "analyst@company.com"
+                  name: "Security Analyst"
+                  roles: ["analyst", "admin"]
+                  permissions: ["read:security", "write:incidents"]
+                  riskScore: 0.2
+                  mfaEnabled: true
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many failed attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh JWT token
+      description: Obtain a new JWT token using refresh token
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  description: Refresh token obtained during login
+            example:
+              refreshToken: "refresh-token-123"
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  token:
+                    type: string
+                    example: "new-jwt-token"
+                  expiresIn:
+                    type: integer
+                    example: 3600
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Invalidate the current session and JWT token
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+        '401':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/verify:
+    post:
+      tags:
+        - Authentication
+      summary: Verify MFA code
+      description: Verify multi-factor authentication code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+                - mfaCode
+              properties:
+                sessionId:
+                  type: string
+                  description: Session ID from initial login
+                mfaCode:
+                  type: string
+                  description: 6-digit MFA code
+            example:
+              sessionId: "session-123"
+              mfaCode: "123456"
+      responses:
+        '200':
+          description: MFA verification successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResult'
+        '401':
+          description: Invalid MFA code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Security Assistant endpoints
+  /security/assistant/query:
+    post:
+      tags:
+        - Security Assistant
+      summary: Process security query with AI
+      description: |
+        Process natural language security queries using AI-powered analysis.
+
+        **Query Types Supported:**
+        - Security incident analysis
+        - Threat detection and response
+        - Vulnerability assessment
+        - Compliance monitoring
+        - Performance optimization
+        - Configuration recommendations
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecurityQuery'
+            example:
+              text: "Show me recent security incidents in production"
+              type: "analysis"
+              parameters:
+                timeRange: "24h"
+                severity: "high"
+                includeRecommendations: true
+              filters:
+                service: "production"
+                category: "authentication"
+      responses:
+        '200':
+          description: Query processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityResponse'
+              example:
+                queryId: "query-123"
+                text: "Found 3 high-severity incidents in the last 24 hours"
+                data:
+                  anomalies:
+                    - description: "Unusual login attempts from IP 192.168.1.100"
+                      type: "authentication"
+                    - description: "Elevated API error rate in payment service"
+                      type: "performance"
+                  threats:
+                    - id: "threat-001"
+                      severity: "high"
+                      description: "Potential brute force attack"
+                  recommendations:
+                    - id: "rec-001"
+                      priority: "high"
+                      description: "Enable rate limiting on authentication endpoints"
+                confidence: 0.95
+                sources: ["authentication-logs", "api-metrics", "threat-intelligence"]
+                followUpSuggestions:
+                  - "Show detailed logs for IP 192.168.1.100"
+                  - "Check MFA settings for affected users"
+                processingTime: 1250
+                timestamp: 1638360000000
+        '400':
+          description: Invalid query format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /security/assistant/history:
+    get:
+      tags:
+        - Security Assistant
+      summary: Get query history
+      description: Retrieve previous security assistant queries and responses
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of queries to retrieve
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of queries to skip
+        - name: sessionId
+          in: query
+          schema:
+            type: string
+          description: Filter by session ID
+      responses:
+        '200':
+          description: Query history retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  queries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SecurityQuery'
+                  total:
+                    type: integer
+                    example: 150
+                  limit:
+                    type: integer
+                    example: 20
+                  offset:
+                    type: integer
+                    example: 0
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /security/assistant/sessions/{sessionId}:
+    get:
+      tags:
+        - Security Assistant
+      summary: Get session details
+      description: Retrieve details of a specific security assistant session
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Session ID
+      responses:
+        '200':
+          description: Session details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationContext'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Health Monitoring endpoints
+  /health:
+    get:
+      tags:
+        - Health Monitoring
+      summary: System health check
+      description: Get overall system health status
+      responses:
+        '200':
+          description: System health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemHealth'
+              example:
+                overallStatus: "healthy"
+                services:
+                  - service: "authentication"
+                    status: "healthy"
+                    responseTime: 85
+                    uptime: 86400000
+                    lastCheck: "2024-01-15T10:30:00Z"
+                  - service: "security-monitor"
+                    status: "healthy"
+                    responseTime: 92
+                    uptime: 86400000
+                    lastCheck: "2024-01-15T10:30:00Z"
+                activeAlerts: 2
+                lastUpdated: "2024-01-15T10:30:00Z"
+        '503':
+          description: System unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health/{service}:
+    get:
+      tags:
+        - Health Monitoring
+      summary: Service health check
+      description: Get health status of a specific service
+      parameters:
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [sonarqube, snyk, github, authentication, monitoring]
+          description: Service name
+      responses:
+        '200':
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceHealth'
+        '404':
+          description: Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health/services:
+    get:
+      tags:
+        - Health Monitoring
+      summary: All services health check
+      description: Get health status of all monitored services
+      responses:
+        '200':
+          description: All services health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  services:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ServiceHealth'
+                  summary:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 5
+                      healthy:
+                        type: integer
+                        example: 4
+                      degraded:
+                        type: integer
+                        example: 1
+                      unhealthy:
+                        type: integer
+                        example: 0
+
+  # Performance Monitoring endpoints
+  /performance/report:
+    get:
+      tags:
+        - Performance Monitoring
+      summary: Generate performance report
+      description: Generate comprehensive performance report for the system
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: timeRange
+          in: query
+          schema:
+            type: string
+            enum: [1h, 24h, 7d, 30d]
+            default: 24h
+          description: Time range for the report
+        - name: includeMemory
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Include memory analysis
+        - name: includeCPU
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Include CPU analysis
+      responses:
+        '200':
+          description: Performance report generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceReport'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /performance/benchmark:
+    post:
+      tags:
+        - Performance Monitoring
+      summary: Run performance benchmark
+      description: Execute performance benchmark for specific operation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - operation
+              properties:
+                name:
+                  type: string
+                  description: Benchmark name
+                operation:
+                  type: string
+                  description: Operation to benchmark
+                iterations:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                  default: 100
+                  description: Number of iterations
+                baseline:
+                  type: number
+                  description: Expected baseline performance (ms)
+            example:
+              name: "Database Query Performance"
+              operation: "user-lookup"
+              iterations: 50
+              baseline: 100
+      responses:
+        '200':
+          description: Benchmark completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenchmarkResult'
+        '400':
+          description: Invalid benchmark parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /performance/metrics:
+    get:
+      tags:
+        - Performance Monitoring
+      summary: Get real-time metrics
+      description: Get current system performance metrics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current performance metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceMetrics'
+
+  # Security Monitoring endpoints
+  /security/events:
+    get:
+      tags:
+        - Security Monitoring
+      summary: Get security events
+      description: Retrieve security events with filtering and pagination
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+          description: Filter by severity level
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [authentication, authorization, data-access, network, system]
+          description: Filter by event type
+        - name: startTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start time for events (ISO 8601)
+        - name: endTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End time for events (ISO 8601)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+          description: Maximum number of events to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of events to skip
+      responses:
+        '200':
+          description: Security events retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SecurityEvent'
+                  total:
+                    type: integer
+                    example: 150
+                  limit:
+                    type: integer
+                    example: 100
+                  offset:
+                    type: integer
+                    example: 0
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /security/alerts:
+    get:
+      tags:
+        - Security Monitoring
+      summary: Get active security alerts
+      description: Retrieve currently active security alerts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, acknowledged, resolved]
+            default: active
+          description: Alert status filter
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+          description: Filter by severity level
+      responses:
+        '200':
+          description: Active alerts retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alerts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SecurityAlert'
+                  total:
+                    type: integer
+                    example: 5
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /security/alerts/{alertId}/acknowledge:
+    post:
+      tags:
+        - Security Monitoring
+      summary: Acknowledge security alert
+      description: Mark a security alert as acknowledged
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Alert ID
+      responses:
+        '200':
+          description: Alert acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  alert:
+                    $ref: '#/components/schemas/SecurityAlert'
+        '404':
+          description: Alert not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /security/alerts/{alertId}/resolve:
+    post:
+      tags:
+        - Security Monitoring
+      summary: Resolve security alert
+      description: Mark a security alert as resolved
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Alert ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - resolution
+              properties:
+                resolution:
+                  type: string
+                  description: Resolution description
+                notes:
+                  type: string
+                  description: Additional notes
+            example:
+              resolution: "Blocked malicious IP address"
+              notes: "Added to firewall rules, monitoring for recurrence"
+      responses:
+        '200':
+          description: Alert resolved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  alert:
+                    $ref: '#/components/schemas/SecurityAlert'
+        '404':
+          description: Alert not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Identity Management endpoints
+  /identity/users:
+    get:
+      tags:
+        - Identity Management
+      summary: List users
+      description: Get list of users with optional filtering
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+          description: Filter by role
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, suspended]
+          description: Filter by user status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of users to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of users to skip
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IdentityUser'
+                  total:
+                    type: integer
+                    example: 150
+                  limit:
+                    type: integer
+                    example: 20
+                  offset:
+                    type: integer
+                    example: 0
+
+  /identity/users/{userId}:
+    get:
+      tags:
+        - Identity Management
+      summary: Get user details
+      description: Get detailed information about a specific user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        '200':
+          description: User details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityUser'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Identity Management
+      summary: Update user
+      description: Update user information and permissions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: User's display name
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                roles:
+                  type: array
+                  items:
+                    type: string
+                  description: User's roles
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                  description: User's permissions
+                status:
+                  type: string
+                  enum: [active, inactive, suspended]
+                  description: User account status
+            example:
+              name: "Updated User Name"
+              roles: ["analyst", "admin"]
+              permissions: ["read:security", "write:incidents", "admin:users"]
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityUser'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /identity/users/{userId}/reset-password:
+    post:
+      tags:
+        - Identity Management
+      summary: Reset user password
+      description: Initiate password reset for a user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        '200':
+          description: Password reset initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Password reset email sent"
+                  resetToken:
+                    type: string
+                    description: Reset token (for internal use)
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Configuration endpoints
+  /config/services:
+    get:
+      tags:
+        - Configuration
+      summary: Get service configurations
+      description: Get current configuration for all integrated services
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Service configurations retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  services:
+                    type: object
+                    properties:
+                      sonarqube:
+                        $ref: '#/components/schemas/ServiceConfig'
+                      snyk:
+                        $ref: '#/components/schemas/ServiceConfig'
+                      github:
+                        $ref: '#/components/schemas/ServiceConfig'
+                      authentication:
+                        $ref: '#/components/schemas/ServiceConfig'
+                      monitoring:
+                        $ref: '#/components/schemas/ServiceConfig'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Configuration
+      summary: Update service configurations
+      description: Update configuration for one or more services
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sonarqube:
+                  $ref: '#/components/schemas/ServiceConfig'
+                snyk:
+                  $ref: '#/components/schemas/ServiceConfig'
+                github:
+                  $ref: '#/components/schemas/ServiceConfig'
+                authentication:
+                  $ref: '#/components/schemas/ServiceConfig'
+                monitoring:
+                  $ref: '#/components/schemas/ServiceConfig'
+            example:
+              sonarqube:
+                enabled: true
+                endpoint: "https://sonar.company.com"
+                token: "sonar-token-123"
+              snyk:
+                enabled: true
+                endpoint: "https://snyk.io"
+                token: "snyk-token-456"
+      responses:
+        '200':
+          description: Configurations updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Service configurations updated"
+                  updatedServices:
+                    type: array
+                    items:
+                      type: string
+                    example: ["sonarqube", "snyk"]
+        '400':
+          description: Invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Logs and Audit endpoints
+  /logs/audit:
+    get:
+      tags:
+        - Audit & Logging
+      summary: Get audit logs
+      description: Retrieve audit logs with filtering options
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: string
+          description: Filter by user ID
+        - name: action
+          in: query
+          schema:
+            type: string
+          description: Filter by action type
+        - name: resource
+          in: query
+          schema:
+            type: string
+          description: Filter by resource type
+        - name: startTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start time for logs (ISO 8601)
+        - name: endTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End time for logs (ISO 8601)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+          description: Maximum number of logs to return
+      responses:
+        '200':
+          description: Audit logs retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  total:
+                    type: integer
+                    example: 500
+                  limit:
+                    type: integer
+                    example: 100
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /logs/security:
+    get:
+      tags:
+        - Audit & Logging
+      summary: Get security logs
+      description: Retrieve security-related logs and events
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [debug, info, warn, error, critical]
+          description: Filter by log level
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [authentication, authorization, data-access, network, system]
+          description: Filter by security category
+        - name: startTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start time for logs (ISO 8601)
+        - name: endTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End time for logs (ISO 8601)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+          description: Maximum number of logs to return
+      responses:
+        '200':
+          description: Security logs retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SecurityLog'
+                  total:
+                    type: integer
+                    example: 250
+                  limit:
+                    type: integer
+                    example: 100
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for service-to-service authentication
+
+  schemas:
+    # Authentication schemas
+    AuthenticationCredentials:
+      type: object
+      required:
+        - email
+        - deviceId
+        - ipAddress
+        - userAgent
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+        password:
+          type: string
+          description: User's password (optional for token-based auth)
+        token:
+          type: string
+          description: Authentication token (optional)
+        mfaCode:
+          type: string
+          description: Multi-factor authentication code
+        deviceId:
+          type: string
+          description: Unique device identifier
+        ipAddress:
+          type: string
+          description: Client IP address
+        userAgent:
+          type: string
+          description: Browser/client user agent string
+
+    AuthenticationResult:
+      type: object
+      required:
+        - success
+        - expiresIn
+        - requiresMfa
+        - riskAssessment
+      properties:
+        success:
+          type: boolean
+          description: Whether authentication was successful
+        user:
+          $ref: '#/components/schemas/IdentityUser'
+        token:
+          type: string
+          description: JWT access token
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+        requiresMfa:
+          type: boolean
+          description: Whether MFA verification is required
+        riskAssessment:
+          $ref: '#/components/schemas/RiskAssessment'
+
+    RiskAssessment:
+      type: object
+      required:
+        - level
+        - factors
+        - score
+      properties:
+        level:
+          type: string
+          enum: [low, medium, high]
+          description: Risk level assessment
+        factors:
+          type: array
+          items:
+            type: string
+          description: Risk factors identified
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Risk score (0-1)
+
+    IdentityUser:
+      type: object
+      required:
+        - id
+        - email
+        - name
+        - roles
+        - permissions
+        - riskScore
+        - mfaEnabled
+        - deviceTrust
+      properties:
+        id:
+          type: string
+          description: Unique user identifier
+        email:
+          type: string
+          format: email
+          description: User's email address
+        name:
+          type: string
+          description: User's display name
+        roles:
+          type: array
+          items:
+            type: string
+          description: User's assigned roles
+        permissions:
+          type: array
+          items:
+            type: string
+          description: User's granted permissions
+        lastAuth:
+          type: string
+          format: date-time
+          description: Last authentication timestamp
+        riskScore:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: User risk score (0-1)
+        mfaEnabled:
+          type: boolean
+          description: Whether MFA is enabled for this user
+        deviceTrust:
+          type: string
+          enum: [trusted, untrusted, unknown]
+          description: Device trust level
+        location:
+          $ref: '#/components/schemas/UserLocation'
+
+    UserLocation:
+      type: object
+      properties:
+        country:
+          type: string
+          description: User's country
+        ip:
+          type: string
+          description: User's IP address
+        trusted:
+          type: boolean
+          description: Whether the location is trusted
+
+    # Security Assistant schemas
+    SecurityQuery:
+      type: object
+      required:
+        - text
+        - type
+      properties:
+        text:
+          type: string
+          description: Natural language security query
+        type:
+          type: string
+          enum: [analysis, monitoring, configuration, report]
+          description: Query type/category
+        parameters:
+          type: object
+          description: Query-specific parameters
+        filters:
+          $ref: '#/components/schemas/QueryFilters'
+        timeRange:
+          type: string
+          description: Time range for the query (e.g., "24h", "7d")
+
+    QueryFilters:
+      type: object
+      properties:
+        service:
+          type: string
+          description: Filter by service name
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+          description: Filter by severity level
+        category:
+          type: string
+          description: Filter by category
+        source:
+          type: string
+          description: Filter by data source
+
+    SecurityResponse:
+      type: object
+      required:
+        - queryId
+        - text
+        - confidence
+        - sources
+        - followUpSuggestions
+        - processingTime
+        - timestamp
+      properties:
+        queryId:
+          type: string
+          description: Unique query identifier
+        text:
+          type: string
+          description: AI-generated response text
+        data:
+          $ref: '#/components/schemas/SecurityData'
+        visualizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Visualization'
+          description: Data visualizations
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecommendedAction'
+          description: Recommended actions
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: AI confidence score (0-1)
+        sources:
+          type: array
+          items:
+            type: string
+          description: Data sources used for the response
+        followUpSuggestions:
+          type: array
+          items:
+            type: string
+          description: Suggested follow-up queries
+        processingTime:
+          type: integer
+          description: Processing time in milliseconds
+        timestamp:
+          type: integer
+          description: Response timestamp (Unix timestamp)
+
+    SecurityData:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Number of items found
+        riskLevel:
+          type: string
+          enum: [low, medium, high, critical]
+          description: Overall risk level
+        status:
+          type: string
+          description: Current status
+        anomalies:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              type:
+                type: string
+              severity:
+                type: string
+                enum: [low, medium, high, critical]
+        threats:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              severity:
+                type: string
+                enum: [low, medium, high, critical]
+              description:
+                type: string
+              source:
+                type: string
+        vulnerabilities:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              severity:
+                type: string
+                enum: [low, medium, high, critical]
+              description:
+                type: string
+              cvssScore:
+                type: number
+                minimum: 0
+                maximum: 10
+        recommendations:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              priority:
+                type: string
+                enum: [low, medium, high, critical]
+              description:
+                type: string
+              impact:
+                type: string
+              effort:
+                type: string
+                enum: [low, medium, high]
+        actions:
+          type: array
+          items:
+            type: object
+            properties:
+              urgency:
+                type: string
+                enum: [low, medium, high, critical]
+              description:
+                type: string
+              assignee:
+                type: string
+              deadline:
+                type: string
+                format: date-time
+        metrics:
+          type: object
+          properties:
+            systemHealth:
+              type: number
+              minimum: 0
+              maximum: 100
+            threatLevel:
+              type: string
+              enum: [low, medium, high, critical]
+            activeAlerts:
+              type: integer
+        changes:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [configuration, policy, alert]
+              description:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+
+    Visualization:
+      type: object
+      required:
+        - type
+        - data
+      properties:
+        type:
+          type: string
+          enum: [line, bar, pie, heatmap, table]
+          description: Visualization type
+        title:
+          type: string
+          description: Chart title
+        data:
+          type: object
+          description: Visualization data
+        config:
+          type: object
+          description: Chart configuration options
+
+    RecommendedAction:
+      type: object
+      required:
+        - type
+        - description
+        - priority
+      properties:
+        type:
+          type: string
+          enum: [investigate, mitigate, monitor, configure, alert]
+          description: Action type
+        description:
+          type: string
+          description: Action description
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          description: Action priority
+        assignee:
+          type: string
+          description: Recommended assignee
+        deadline:
+          type: string
+          format: date-time
+          description: Action deadline
+
+    ConversationContext:
+      type: object
+      required:
+        - sessionId
+        - previousQueries
+        - securityContext
+        - preferences
+      properties:
+        sessionId:
+          type: string
+          description: Unique session identifier
+        userId:
+          type: string
+          description: User identifier
+        previousQueries:
+          type: array
+          items:
+            type: string
+          description: Previous queries in this session
+        currentTopic:
+          type: string
+          description: Current conversation topic
+        securityContext:
+          type: object
+          required:
+            - clearanceLevel
+            - accessibleSystems
+            - currentIncidents
+          properties:
+            clearanceLevel:
+              type: string
+              enum: [LOW, MEDIUM, HIGH, TOP_SECRET]
+              description: User's security clearance level
+            accessibleSystems:
+              type: array
+              items:
+                type: string
+              description: Systems user can access
+            currentIncidents:
+              type: array
+              items:
+                type: string
+              description: Current active incidents
+        preferences:
+          type: object
+          required:
+            - verbosity
+            - visualizations
+            - realTimeUpdates
+          properties:
+            verbosity:
+              type: string
+              enum: [BRIEF, DETAILED, TECHNICAL]
+              description: Response verbosity level
+            visualizations:
+              type: boolean
+              description: Whether to include visualizations
+            realTimeUpdates:
+              type: boolean
+              description: Whether to enable real-time updates
+
+    # Health Monitoring schemas
+    SystemHealth:
+      type: object
+      required:
+        - overallStatus
+        - services
+        - activeAlerts
+        - lastUpdated
+      properties:
+        overallStatus:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall system health status
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceHealth'
+          description: Individual service health statuses
+        activeAlerts:
+          type: integer
+          description: Number of active alerts
+        lastUpdated:
+          type: string
+          format: date-time
+          description: Last health check timestamp
+
+    ServiceHealth:
+      type: object
+      required:
+        - service
+        - status
+        - responseTime
+        - lastCheck
+        - message
+      properties:
+        service:
+          type: string
+          description: Service name
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Service health status
+        responseTime:
+          type: integer
+          description: Response time in milliseconds
+        uptime:
+          type: integer
+          description: Service uptime in milliseconds
+        lastCheck:
+          type: string
+          format: date-time
+          description: Last health check timestamp
+        message:
+          type: string
+          description: Health check message
+        metrics:
+          type: object
+          description: Service-specific metrics
+        configuration:
+          type: object
+          required:
+            - enabled
+            - hasCredentials
+            - endpoint
+          properties:
+            enabled:
+              type: boolean
+              description: Whether the service is enabled
+            hasCredentials:
+              type: boolean
+              description: Whether credentials are configured
+            endpoint:
+              type: string
+              description: Service endpoint URL
+
+    # Performance Monitoring schemas
+    PerformanceReport:
+      type: object
+      required:
+        - timestamp
+        - summary
+        - profiles
+        - benchmarks
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Report generation timestamp
+        summary:
+          $ref: '#/components/schemas/PerformanceSummary'
+        profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceProfile'
+          description: Performance profiles
+        memoryAnalysis:
+          $ref: '#/components/schemas/MemoryAnalysis'
+        databaseProfile:
+          $ref: '#/components/schemas/DatabaseProfile'
+        cacheAnalysis:
+          $ref: '#/components/schemas/CacheAnalysis'
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/OptimizationRecommendation'
+          description: Optimization recommendations
+        benchmarks:
+          type: array
+          items:
+            $ref: '#/components/schemas/BenchmarkResult'
+          description: Benchmark results
+
+    PerformanceSummary:
+      type: object
+      required:
+        - overallScore
+        - responseTimeScore
+        - memoryEfficiency
+        - cpuEfficiency
+        - bottlenecks
+      properties:
+        overallScore:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Overall performance score (0-100)
+        responseTimeScore:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Response time performance score
+        memoryEfficiency:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Memory efficiency score
+        cpuEfficiency:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: CPU efficiency score
+        bottlenecks:
+          type: array
+          items:
+            type: string
+          description: Identified performance bottlenecks
+
+    PerformanceProfile:
+      type: object
+      required:
+        - name
+        - service
+        - duration
+        - startTime
+        - endTime
+      properties:
+        name:
+          type: string
+          description: Profile name
+        service:
+          type: string
+          description: Service being profiled
+        duration:
+          type: integer
+          description: Duration in milliseconds
+        memoryUsage:
+          $ref: '#/components/schemas/MemoryUsage'
+        cpuUsage:
+          type: number
+          description: CPU usage percentage
+        startTime:
+          type: string
+          format: date-time
+          description: Profile start time
+        endTime:
+          type: string
+          format: date-time
+          description: Profile end time
+
+    MemoryUsage:
+      type: object
+      properties:
+        heapUsed:
+          type: integer
+          description: Heap memory used (bytes)
+        heapTotal:
+          type: integer
+          description: Total heap memory (bytes)
+        external:
+          type: integer
+          description: External memory used (bytes)
+        rss:
+          type: integer
+          description: Resident set size (bytes)
+
+    MemoryAnalysis:
+      type: object
+      required:
+        - totalAllocated
+        - totalUsed
+        - heapUsage
+        - leaks
+        - fragmentation
+      properties:
+        totalAllocated:
+          type: integer
+          description: Total allocated memory (bytes)
+        totalUsed:
+          type: integer
+          description: Total used memory (bytes)
+        heapUsage:
+          type: integer
+          description: Heap memory usage (bytes)
+        externalMemory:
+          type: integer
+          description: External memory usage (bytes)
+        rss:
+          type: integer
+          description: Resident set size (bytes)
+        leaks:
+          type: array
+          items:
+            type: string
+          description: Detected memory leaks
+        fragmentation:
+          type: number
+          description: Memory fragmentation ratio
+        garbageCollection:
+          type: object
+          properties:
+            totalCollections:
+              type: integer
+              description: Total GC collections
+            totalTime:
+              type: integer
+              description: Total GC time (ms)
+            averagePause:
+              type: number
+              description: Average GC pause time (ms)
+            longestPause:
+              type: integer
+              description: Longest GC pause time (ms)
+            collectionsByType:
+              type: object
+              description: GC collections by type
+
+    DatabaseProfile:
+      type: object
+      properties:
+        connectionPoolStats:
+          type: object
+          properties:
+            totalConnections:
+              type: integer
+            activeConnections:
+              type: integer
+            idleConnections:
+              type: integer
+            waitingClients:
+              type: integer
+            averageWaitTime:
+              type: number
+        slowQueries:
+          type: array
+          items:
+            type: object
+            properties:
+              query:
+                type: string
+              duration:
+                type: integer
+              executionCount:
+                type: integer
+        queryStats:
+          type: object
+          properties:
+            totalQueries:
+              type: integer
+            averageQueryTime:
+              type: number
+            cacheHitRate:
+              type: number
+        connectionStats:
+          type: object
+          properties:
+            totalConnections:
+              type: integer
+            failedConnections:
+              type: integer
+            averageConnectionTime:
+              type: number
+
+    CacheAnalysis:
+      type: object
+      properties:
+        hitRate:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Cache hit rate (0-1)
+        missRate:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Cache miss rate (0-1)
+        evictionRate:
+          type: number
+          description: Cache eviction rate
+        memoryUsage:
+          type: integer
+          description: Cache memory usage (bytes)
+        itemsCount:
+          type: integer
+          description: Number of items in cache
+
+    OptimizationRecommendation:
+      type: object
+      required:
+        - type
+        - description
+        - priority
+        - effort
+        - impact
+      properties:
+        type:
+          type: string
+          enum: [memory, cpu, database, network, caching]
+          description: Optimization type
+        description:
+          type: string
+          description: Recommendation description
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          description: Recommendation priority
+        effort:
+          type: string
+          enum: [low, medium, high]
+          description: Implementation effort required
+        impact:
+          type: string
+          enum: [low, medium, high]
+          description: Expected performance impact
+        estimatedImprovement:
+          type: number
+          description: Estimated performance improvement (%)
+
+    BenchmarkResult:
+      type: object
+      required:
+        - name
+        - status
+        - iterations
+        - averageTime
+        - minTime
+        - maxTime
+        - standardDeviation
+      properties:
+        name:
+          type: string
+          description: Benchmark name
+        status:
+          type: string
+          enum: [passed, failed, warning]
+          description: Benchmark status
+        iterations:
+          type: integer
+          description: Number of iterations run
+        averageTime:
+          type: number
+          description: Average execution time (ms)
+        minTime:
+          type: number
+          description: Minimum execution time (ms)
+        maxTime:
+          type: number
+          description: Maximum execution time (ms)
+        standardDeviation:
+          type: number
+          description: Standard deviation of execution times
+        improvement:
+          type: number
+          description: Performance improvement (%)
+        baseline:
+          type: number
+          description: Baseline performance (ms)
+
+    PerformanceMetrics:
+      type: object
+      required:
+        - timestamp
+        - systemLoad
+        - memoryUsage
+        - cpuUsage
+        - networkIO
+        - diskIO
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Metrics timestamp
+        systemLoad:
+          type: object
+          properties:
+            '1m':
+              type: number
+              description: 1-minute load average
+            '5m':
+              type: number
+              description: 5-minute load average
+            '15m':
+              type: number
+              description: 15-minute load average
+        memoryUsage:
+          $ref: '#/components/schemas/MemoryUsage'
+        cpuUsage:
+          type: object
+          properties:
+            user:
+              type: number
+              description: User CPU usage (%)
+            system:
+              type: number
+              description: System CPU usage (%)
+            idle:
+              type: number
+              description: Idle CPU usage (%)
+            total:
+              type: number
+              description: Total CPU usage (%)
+        networkIO:
+          type: object
+          properties:
+            bytesIn:
+              type: integer
+              description: Network bytes received
+            bytesOut:
+              type: integer
+              description: Network bytes sent
+            packetsIn:
+              type: integer
+              description: Network packets received
+            packetsOut:
+              type: integer
+              description: Network packets sent
+        diskIO:
+          type: object
+          properties:
+            reads:
+              type: integer
+              description: Disk read operations
+            writes:
+              type: integer
+              description: Disk write operations
+            readBytes:
+              type: integer
+              description: Disk bytes read
+            writeBytes:
+              type: integer
+              description: Disk bytes written
+
+    # Security Monitoring schemas
+    SecurityEvent:
+      type: object
+      required:
+        - id
+        - timestamp
+        - type
+        - severity
+        - source
+        - description
+      properties:
+        id:
+          type: string
+          description: Unique event identifier
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp
+        type:
+          type: string
+          enum: [authentication, authorization, data-access, network, system]
+          description: Event type
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+          description: Event severity
+        source:
+          type: string
+          description: Event source (service/system)
+        description:
+          type: string
+          description: Event description
+        userId:
+          type: string
+          description: Associated user ID
+        ipAddress:
+          type: string
+          description: Associated IP address
+        resource:
+          type: string
+          description: Affected resource
+        metadata:
+          type: object
+          description: Additional event metadata
+
+    SecurityAlert:
+      type: object
+      required:
+        - id
+        - timestamp
+        - title
+        - description
+        - severity
+        - status
+        - source
+      properties:
+        id:
+          type: string
+          description: Unique alert identifier
+        timestamp:
+          type: string
+          format: date-time
+          description: Alert creation timestamp
+        title:
+          type: string
+          description: Alert title
+        description:
+          type: string
+          description: Alert description
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+          description: Alert severity
+        status:
+          type: string
+          enum: [active, acknowledged, resolved]
+          description: Alert status
+        source:
+          type: string
+          description: Alert source
+        ruleId:
+          type: string
+          description: Associated rule identifier
+        affectedResources:
+          type: array
+          items:
+            type: string
+          description: Affected resources
+        recommendedActions:
+          type: array
+          items:
+            type: string
+          description: Recommended actions
+        acknowledgedBy:
+          type: string
+          description: User who acknowledged the alert
+        acknowledgedAt:
+          type: string
+          format: date-time
+          description: Acknowledgment timestamp
+        resolvedBy:
+          type: string
+          description: User who resolved the alert
+        resolvedAt:
+          type: string
+          format: date-time
+          description: Resolution timestamp
+        resolution:
+          type: string
+          description: Resolution description
+
+    # Configuration schemas
+    ServiceConfig:
+      type: object
+      required:
+        - enabled
+        - endpoint
+      properties:
+        enabled:
+          type: boolean
+          description: Whether the service is enabled
+        endpoint:
+          type: string
+          format: uri
+          description: Service endpoint URL
+        token:
+          type: string
+          description: Authentication token
+        timeout:
+          type: integer
+          minimum: 1000
+          maximum: 60000
+          default: 30000
+          description: Request timeout in milliseconds
+        retryAttempts:
+          type: integer
+          minimum: 0
+          maximum: 10
+          default: 3
+          description: Number of retry attempts
+        rateLimit:
+          type: object
+          properties:
+            requests:
+              type: integer
+              description: Maximum requests per time window
+            window:
+              type: integer
+              description: Time window in milliseconds
+
+    # Logging schemas
+    AuditLog:
+      type: object
+      required:
+        - id
+        - timestamp
+        - userId
+        - action
+        - resource
+        - success
+      properties:
+        id:
+          type: string
+          description: Unique log entry identifier
+        timestamp:
+          type: string
+          format: date-time
+          description: Log entry timestamp
+        userId:
+          type: string
+          description: User who performed the action
+        action:
+          type: string
+          description: Action performed
+        resource:
+          type: string
+          description: Resource affected
+        success:
+          type: boolean
+          description: Whether the action was successful
+        details:
+          type: object
+          description: Additional action details
+        ipAddress:
+          type: string
+          description: Client IP address
+        userAgent:
+          type: string
+          description: Client user agent
+        sessionId:
+          type: string
+          description: User session identifier
+
+    SecurityLog:
+      type: object
+      required:
+        - id
+        - timestamp
+        - level
+        - category
+        - message
+      properties:
+        id:
+          type: string
+          description: Unique log entry identifier
+        timestamp:
+          type: string
+          format: date-time
+          description: Log entry timestamp
+        level:
+          type: string
+          enum: [debug, info, warn, error, critical]
+          description: Log level
+        category:
+          type: string
+          enum: [authentication, authorization, data-access, network, system]
+          description: Security category
+        message:
+          type: string
+          description: Log message
+        userId:
+          type: string
+          description: Associated user ID
+        sessionId:
+          type: string
+          description: User session identifier
+        ipAddress:
+          type: string
+          description: Client IP address
+        resource:
+          type: string
+          description: Affected resource
+        correlationId:
+          type: string
+          description: Request correlation identifier
+        metadata:
+          type: object
+          description: Additional log metadata
+
+    # Error schemas
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Error code
+            message:
+              type: string
+              description: Human-readable error message
+            category:
+              type: string
+              enum: [AUTHENTICATION, AUTHORIZATION, VALIDATION, SECURITY, PERFORMANCE, NETWORK, DATABASE, CONFIGURATION]
+              description: Error category
+            severity:
+              type: string
+              enum: [low, medium, high, critical]
+              description: Error severity
+            timestamp:
+              type: string
+              format: date-time
+              description: Error timestamp
+            correlationId:
+              type: string
+              description: Request correlation identifier
+            context:
+              type: object
+              properties:
+                service:
+                  type: string
+                  description: Service that generated the error
+                operation:
+                  type: string
+                  description: Operation that failed
+                userId:
+                  type: string
+                  description: User associated with the error
+            recovery:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [retry, redirect, escalate]
+                  description: Recovery action type
+                message:
+                  type: string
+                  description: Recovery instructions
+                retryAfter:
+                  type: integer
+                  description: Seconds to wait before retrying
+            cause:
+              type: string
+              description: Root cause of the error
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Security Assistant
+    description: AI-powered security analysis and assistance
+  - name: Health Monitoring
+    description: System and service health monitoring
+  - name: Performance Monitoring
+    description: System performance analysis and optimization
+  - name: Security Monitoring
+    description: Real-time security event monitoring and alerts
+  - name: Identity Management
+    description: User and identity management operations
+  - name: Configuration
+    description: Service configuration management
+  - name: Audit & Logging
+    description: Audit logs and security event logging

@@ -1,0 +1,728 @@
+{
+  "info": {
+    "name": "Secure Flow Automaton API",
+    "description": "Complete API collection for Secure Flow Automaton - Enterprise DevSecOps platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "4.1.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"analyst@company.com\",\n  \"password\": \"secure-password\",\n  \"deviceId\": \"postman-client-{{timestamp}}\",\n  \"ipAddress\": \"127.0.0.1\",\n  \"userAgent\": \"PostmanRuntime/{{postman_version}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticate user and obtain JWT token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 && pm.response.json().success) {",
+                  "    pm.collectionVariables.set('jwt_token', pm.response.json().token);",
+                  "    pm.collectionVariables.set('refresh_token', pm.response.json().refreshToken);",
+                  "    console.log('✅ Token saved to collection variables');",
+                  "} else {",
+                  "    console.log('❌ Login failed:', pm.response.json());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Refresh JWT token using refresh token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 && pm.response.json().success) {",
+                  "    pm.collectionVariables.set('jwt_token', pm.response.json().token);",
+                  "    console.log('✅ Token refreshed and saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logout and invalidate current session"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Security Assistant",
+      "item": [
+        {
+          "name": "Query Security Assistant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Show me recent security incidents in production\",\n  \"type\": \"analysis\",\n  \"parameters\": {\n    \"timeRange\": \"24h\",\n    \"severity\": \"high\",\n    \"includeRecommendations\": true\n  },\n  \"filters\": {\n    \"service\": \"production\",\n    \"category\": \"authentication\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/security/assistant/query",
+              "host": ["{{base_url}}"],
+              "path": ["security", "assistant", "query"]
+            },
+            "description": "Query the AI-powered security assistant for analysis and insights"
+          }
+        },
+        {
+          "name": "Get Query History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/security/assistant/history?limit=10&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["security", "assistant", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Get previous security assistant queries and responses"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Monitoring",
+      "item": [
+        {
+          "name": "Get System Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Get overall system health status"
+          }
+        },
+        {
+          "name": "Get Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/{{service}}",
+              "host": ["{{base_url}}"],
+              "path": ["health", "{{service}}"],
+              "variable": [
+                {
+                  "key": "service",
+                  "value": "authentication",
+                  "description": "Service name (sonarqube, snyk, github, authentication, monitoring)"
+                }
+              ]
+            },
+            "description": "Get health status of a specific service"
+          }
+        },
+        {
+          "name": "Get All Services Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/services",
+              "host": ["{{base_url}}"],
+              "path": ["health", "services"]
+            },
+            "description": "Get health status of all monitored services"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Performance Monitoring",
+      "item": [
+        {
+          "name": "Get Performance Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/performance/report?timeRange=24h&includeMemory=true&includeCPU=true",
+              "host": ["{{base_url}}"],
+              "path": ["performance", "report"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "24h"
+                },
+                {
+                  "key": "includeMemory",
+                  "value": "true"
+                },
+                {
+                  "key": "includeCPU",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Generate comprehensive performance report"
+          }
+        },
+        {
+          "name": "Run Performance Benchmark",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Database Query Performance\",\n  \"operation\": \"SELECT * FROM users LIMIT 100\",\n  \"iterations\": 50,\n  \"baseline\": 100\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/performance/benchmark",
+              "host": ["{{base_url}}"],
+              "path": ["performance", "benchmark"]
+            },
+            "description": "Run performance benchmark for specific operation"
+          }
+        },
+        {
+          "name": "Get Real-time Metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/performance/metrics",
+              "host": ["{{base_url}}"],
+              "path": ["performance", "metrics"]
+            },
+            "description": "Get current system performance metrics"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Security Monitoring",
+      "item": [
+        {
+          "name": "Get Security Events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/security/events?severity=high&limit=50&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["security", "events"],
+              "query": [
+                {
+                  "key": "severity",
+                  "value": "high"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Retrieve security events with filtering"
+          }
+        },
+        {
+          "name": "Get Active Alerts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/security/alerts?status=active&severity=high",
+              "host": ["{{base_url}}"],
+              "path": ["security", "alerts"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "severity",
+                  "value": "high"
+                }
+              ]
+            },
+            "description": "Get currently active security alerts"
+          }
+        },
+        {
+          "name": "Acknowledge Alert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/security/alerts/{{alert_id}}/acknowledge",
+              "host": ["{{base_url}}"],
+              "path": ["security", "alerts", "{{alert_id}}", "acknowledge"],
+              "variable": [
+                {
+                  "key": "alert_id",
+                  "value": "alert-123",
+                  "description": "Alert ID to acknowledge"
+                }
+              ]
+            },
+            "description": "Mark a security alert as acknowledged"
+          }
+        },
+        {
+          "name": "Resolve Alert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolution\": \"Blocked malicious IP address\",\n  \"notes\": \"Added to firewall rules, monitoring for recurrence\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/security/alerts/{{alert_id}}/resolve",
+              "host": ["{{base_url}}"],
+              "path": ["security", "alerts", "{{alert_id}}", "resolve"],
+              "variable": [
+                {
+                  "key": "alert_id",
+                  "value": "alert-123",
+                  "description": "Alert ID to resolve"
+                }
+              ]
+            },
+            "description": "Mark a security alert as resolved"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Identity Management",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identity/users?role=analyst&limit=20&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["identity", "users"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "analyst"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Get list of users with optional filtering"
+          }
+        },
+        {
+          "name": "Get User Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identity/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["identity", "users", "{{user_id}}"],
+              "variable": [
+                {
+                  "key": "user_id",
+                  "value": "user-123",
+                  "description": "User ID to retrieve"
+                }
+              ]
+            },
+            "description": "Get detailed information about a specific user"
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated User Name\",\n  \"roles\": [\"analyst\", \"admin\"],\n  \"permissions\": [\"read:security\", \"write:incidents\"],\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/identity/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["identity", "users", "{{user_id}}"],
+              "variable": [
+                {
+                  "key": "user_id",
+                  "value": "user-123",
+                  "description": "User ID to update"
+                }
+              ]
+            },
+            "description": "Update user information and permissions"
+          }
+        },
+        {
+          "name": "Reset User Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/identity/users/{{user_id}}/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["identity", "users", "{{user_id}}", "reset-password"],
+              "variable": [
+                {
+                  "key": "user_id",
+                  "value": "user-123",
+                  "description": "User ID for password reset"
+                }
+              ]
+            },
+            "description": "Initiate password reset for a user"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Configuration",
+      "item": [
+        {
+          "name": "Get Service Configurations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/config/services",
+              "host": ["{{base_url}}"],
+              "path": ["config", "services"]
+            },
+            "description": "Get current configuration for all integrated services"
+          }
+        },
+        {
+          "name": "Update Service Configurations",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sonarqube\": {\n    \"enabled\": true,\n    \"endpoint\": \"https://sonar.company.com\",\n    \"token\": \"sonar-token-123\"\n  },\n  \"snyk\": {\n    \"enabled\": true,\n    \"endpoint\": \"https://snyk.io\",\n    \"token\": \"snyk-token-456\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/config/services",
+              "host": ["{{base_url}}"],
+              "path": ["config", "services"]
+            },
+            "description": "Update configuration for one or more services"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit & Logging",
+      "item": [
+        {
+          "name": "Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logs/audit?userId=user-123&action=login&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["logs", "audit"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "user-123"
+                },
+                {
+                  "key": "action",
+                  "value": "login"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Retrieve audit logs with filtering options"
+          }
+        },
+        {
+          "name": "Get Security Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logs/security?level=warn&category=authentication&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["logs", "security"],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "warn"
+                },
+                {
+                  "key": "category",
+                  "value": "authentication"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Retrieve security-related logs and events"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp variable for unique device IDs",
+          "pm.collectionVariables.set('timestamp', Date.now());",
+          "",
+          "// Set Postman version for User-Agent",
+          "pm.collectionVariables.set('postman_version', pm.info.version);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script for all requests",
+          "pm.test('Status code is not 5xx', function () {",
+          "    pm.expect(pm.response.code).to.not.be.oneOf([500, 501, 502, 503, 504, 505]);",
+          "});",
+          "",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "if (pm.response.code === 200) {",
+          "    pm.test('Response has success field', function () {",
+          "        var jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('success');",
+          "    });",
+          "}",
+          "",
+          "console.log(`Response time: ${pm.response.responseTime}ms`);",
+          "console.log(`Status: ${pm.response.code}`);"
+        ]
+      }
+    }
+  ]
+}

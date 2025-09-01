@@ -1,0 +1,346 @@
+groups:
+  - name: api_performance_alerts
+    rules:
+      # High Response Time Alert
+      - alert: HighAPIResponseTime
+        expr: rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m]) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "High API Response Time"
+          description: "API response time is {{ $value }}s for {{ $labels.method }} {{ $labels.endpoint }}"
+          runbook_url: "https://wiki.company.com/api-performance-issues"
+
+      # Critical Response Time Alert
+      - alert: CriticalAPIResponseTime
+        expr: rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m]) > 2.0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+          service: api
+        annotations:
+          summary: "Critical API Response Time"
+          description: "API response time is critically high at {{ $value }}s for {{ $labels.method }} {{ $labels.endpoint }}"
+          runbook_url: "https://wiki.company.com/api-performance-emergency"
+
+      # High Error Rate Alert
+      - alert: HighAPIErrorRate
+        expr: rate(http_requests_total{status=~"[5-9].."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "High API Error Rate"
+          description: "API error rate is {{ $value }}% for {{ $labels.method }} {{ $labels.endpoint }}"
+          runbook_url: "https://wiki.company.com/api-error-handling"
+
+      # Critical Error Rate Alert
+      - alert: CriticalAPIErrorRate
+        expr: rate(http_requests_total{status=~"[5-9].."}[5m]) / rate(http_requests_total[5m]) * 100 > 15
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+          service: api
+        annotations:
+          summary: "Critical API Error Rate"
+          description: "API error rate is critically high at {{ $value }}% for {{ $labels.method }} {{ $labels.endpoint }}"
+          runbook_url: "https://wiki.company.com/api-error-emergency"
+
+      # API Down Alert
+      - alert: APIDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+          service: api
+        annotations:
+          summary: "API Service Down"
+          description: "API service {{ $labels.instance }} is down"
+          runbook_url: "https://wiki.company.com/api-service-down"
+
+      # High Memory Usage Alert
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "High Memory Usage"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/memory-optimization"
+
+      # Critical Memory Usage Alert
+      - alert: CriticalMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+          service: api
+        annotations:
+          summary: "Critical Memory Usage"
+          description: "Memory usage is critically high at {{ $value }}% on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/memory-emergency"
+
+      # High CPU Usage Alert
+      - alert: HighCPUUsage
+        expr: (1 - rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "High CPU Usage"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/cpu-optimization"
+
+      # Database Connection Pool Alert
+      - alert: DatabaseConnectionPoolExhausted
+        expr: pg_stat_activity_count / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+          service: api
+        annotations:
+          summary: "Database Connection Pool Nearly Exhausted"
+          description: "Database connection pool usage is {{ $value }}% on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/database-connection-issues"
+
+      # Slow Database Queries Alert
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(pg_stat_statements_total_time_seconds_bucket[5m]) / rate(pg_stat_statements_calls_total[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+          service: api
+        annotations:
+          summary: "Slow Database Queries Detected"
+          description: "95th percentile query time is {{ $value }}s on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/database-performance"
+
+  - name: api_security_alerts
+    rules:
+      # Authentication Failures Alert
+      - alert: HighAuthenticationFailures
+        expr: rate(authentication_failures_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+          service: api
+        annotations:
+          summary: "High Authentication Failure Rate"
+          description: "Authentication failures rate is {{ $value }} per second"
+          runbook_url: "https://wiki.company.com/authentication-issues"
+
+      # Suspicious Activity Alert
+      - alert: SuspiciousAPIActivity
+        expr: rate(suspicious_requests_total[5m]) > 5
+        for: 3m
+        labels:
+          severity: warning
+          team: security
+          service: api
+        annotations:
+          summary: "Suspicious API Activity Detected"
+          description: "Suspicious requests rate is {{ $value }} per second"
+          runbook_url: "https://wiki.company.com/security-incident-response"
+
+      # SQL Injection Attempts Alert
+      - alert: SQLInjectionAttempts
+        expr: rate(sql_injection_attempts_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+          service: api
+        annotations:
+          summary: "SQL Injection Attempt Detected"
+          description: "SQL injection attempt detected from {{ $labels.source_ip }}"
+          runbook_url: "https://wiki.company.com/sql-injection-response"
+
+      # XSS Attempts Alert
+      - alert: XSSAttempts
+        expr: rate(xss_attempts_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+          service: api
+        annotations:
+          summary: "XSS Attempt Detected"
+          description: "Cross-site scripting attempt detected from {{ $labels.source_ip }}"
+          runbook_url: "https://wiki.company.com/xss-response"
+
+      # Brute Force Attack Alert
+      - alert: BruteForceAttack
+        expr: rate(failed_login_attempts_total[5m]) > 20
+        for: 3m
+        labels:
+          severity: critical
+          team: security
+          service: api
+        annotations:
+          summary: "Brute Force Attack Detected"
+          description: "Brute force attack detected - {{ $value }} failed attempts per second from {{ $labels.source_ip }}"
+          runbook_url: "https://wiki.company.com/brute-force-response"
+
+      # Unusual Traffic Pattern Alert
+      - alert: UnusualTrafficPattern
+        expr: rate(http_requests_total[1m]) / rate(http_requests_total[1m] offset 1h) > 3
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+          service: api
+        annotations:
+          summary: "Unusual Traffic Pattern"
+          description: "Traffic has increased {{ $value }}x compared to 1 hour ago"
+          runbook_url: "https://wiki.company.com/traffic-anomaly"
+
+  - name: api_availability_alerts
+    rules:
+      # API Availability Alert
+      - alert: APIAvailabilityDegraded
+        expr: (1 - (rate(http_requests_total{status!~"5.."}[5m]) / rate(http_requests_total[5m]))) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "API Availability Degraded"
+          description: "API availability is {{ printf \"%.2f\" (100 - $value) }}% (target: 95%)"
+          runbook_url: "https://wiki.company.com/api-availability"
+
+      # API Completely Unavailable Alert
+      - alert: APIUnavailable
+        expr: (1 - (rate(http_requests_total{status!~"5.."}[5m]) / rate(http_requests_total[5m]))) * 100 > 50
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+          service: api
+        annotations:
+          summary: "API Unavailable"
+          description: "API availability has dropped to {{ printf \"%.2f\" (100 - $value) }}%"
+          runbook_url: "https://wiki.company.com/api-outage"
+
+      # Endpoint Specific Availability Alert
+      - alert: EndpointUnavailable
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "Endpoint Returning 5xx Errors"
+          description: "Endpoint {{ $labels.endpoint }} is returning 5xx errors at rate {{ $value }} req/s"
+          runbook_url: "https://wiki.company.com/endpoint-issues"
+
+      # Certificate Expiry Alert
+      - alert: CertificateExpiry
+        expr: (tls_cert_not_after - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "TLS Certificate Expiring Soon"
+          description: "TLS certificate for {{ $labels.instance }} expires in {{ printf \"%.0f\" $value }} days"
+          runbook_url: "https://wiki.company.com/certificate-renewal"
+
+      # Certificate Expired Alert
+      - alert: CertificateExpired
+        expr: tls_cert_not_after < time()
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+          service: api
+        annotations:
+          summary: "TLS Certificate Expired"
+          description: "TLS certificate for {{ $labels.instance }} has expired"
+          runbook_url: "https://wiki.company.com/certificate-expired"
+
+  - name: api_performance_alerts_detailed
+    rules:
+      # Slow Endpoint Alert
+      - alert: SlowEndpointDetected
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 5.0
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "Slow Endpoint Detected"
+          description: "95th percentile response time for {{ $labels.endpoint }} is {{ printf \"%.2f\" $value }}s"
+          runbook_url: "https://wiki.company.com/endpoint-optimization"
+
+      # Memory Leak Detection Alert
+      - alert: MemoryLeakDetected
+        expr: increase(process_resident_memory_bytes[1h]) > 100000000
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "Potential Memory Leak"
+          description: "Memory usage has increased by {{ printf \"%.2f\" ($value / 1000000) }}MB in the last hour"
+          runbook_url: "https://wiki.company.com/memory-leak-investigation"
+
+      # Thread Pool Exhaustion Alert
+      - alert: ThreadPoolExhaustion
+        expr: jvm_threads_daemon > jvm_threads_max * 0.9
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "Thread Pool Nearly Exhausted"
+          description: "Thread pool usage is at {{ printf \"%.1f\" ($value / jvm_threads_max * 100) }}% capacity"
+          runbook_url: "https://wiki.company.com/thread-pool-tuning"
+
+      # Disk Space Alert
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+          service: api
+        annotations:
+          summary: "Low Disk Space"
+          description: "Disk space is critically low at {{ printf \"%.1f\" $value }}% on {{ $labels.mountpoint }}"
+          runbook_url: "https://wiki.company.com/disk-space-cleanup"
+
+      # Network Errors Alert
+      - alert: HighNetworkErrors
+        expr: rate(node_network_receive_errs_total[5m]) + rate(node_network_transmit_errs_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "High Network Error Rate"
+          description: "Network error rate is {{ $value }} errors per second on {{ $labels.device }}"
+          runbook_url: "https://wiki.company.com/network-troubleshooting"

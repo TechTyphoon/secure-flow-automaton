@@ -1,0 +1,224 @@
+version: '3.8'
+
+services:
+  # API Monitoring Dashboard
+  api-monitoring:
+    build:
+      context: .
+      dockerfile: Dockerfile.monitoring
+      target: production
+    container_name: secureflow-api-monitoring
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - MONITORING_PORT=3002
+      - API_BASE_URL=${API_BASE_URL:-http://host.docker.internal:8080/api/v1}
+      - COLLECTION_INTERVAL=30000
+      - METRICS_RETENTION=3600000
+      - LOG_LEVEL=info
+    networks:
+      - monitoring-network
+    volumes:
+      - monitoring-logs:/app/logs
+      - monitoring-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.monitoring.rule=Host(`monitoring.localhost`)"
+      - "traefik.http.services.monitoring.loadbalancer.server.port=3002"
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: secureflow-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docs/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+      - prometheus-config:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.localhost`)"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: secureflow-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - grafana-config:/etc/grafana
+      - grafana-logs:/var/log/grafana
+      - ./docs/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docs/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`)"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+  # Alertmanager
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    container_name: secureflow-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./docs/monitoring/alertmanager.yml:/etc/alertmanager/config.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - monitoring-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alertmanager.rule=Host(`alertmanager.localhost`)"
+      - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
+
+  # Node Exporter (System Metrics)
+  node-exporter:
+    image: prom/node-exporter:v1.6.1
+    container_name: secureflow-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - monitoring-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Traefik Reverse Proxy (Optional)
+  traefik:
+    image: traefik:v2.10
+    container_name: secureflow-traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docs/monitoring/traefik.yml:/etc/traefik/traefik.yml:ro
+    networks:
+      - monitoring-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    profiles:
+      - with-traefik
+
+  # Mock API Server for Testing (Optional)
+  api-server:
+    image: node:18-alpine
+    container_name: secureflow-api-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    working_dir: /app
+    volumes:
+      - .:/app:ro
+      - /app/node_modules
+    command: ["npm", "run", "start"]
+    networks:
+      - monitoring-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    profiles:
+      - with-api-server
+
+networks:
+  monitoring-network:
+    driver: bridge
+    name: secureflow-monitoring
+
+volumes:
+  monitoring-logs:
+    driver: local
+    name: secureflow-monitoring-logs
+  monitoring-data:
+    driver: local
+    name: secureflow-monitoring-data
+  prometheus-data:
+    driver: local
+    name: secureflow-prometheus-data
+  prometheus-config:
+    driver: local
+    name: secureflow-prometheus-config
+  grafana-data:
+    driver: local
+    name: secureflow-grafana-data
+  grafana-config:
+    driver: local
+    name: secureflow-grafana-config
+  grafana-logs:
+    driver: local
+    name: secureflow-grafana-logs
+  alertmanager-data:
+    driver: local
+    name: secureflow-alertmanager-data

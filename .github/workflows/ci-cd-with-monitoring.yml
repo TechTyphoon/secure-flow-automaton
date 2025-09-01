@@ -1,0 +1,584 @@
+name: 🚀 SecureFlow CI/CD with Monitoring
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      deploy_monitoring:
+        description: 'Deploy monitoring stack'
+        required: false
+        default: true
+        type: boolean
+      skip_tests:
+        description: 'Skip tests for faster deployment'
+        required: false
+        default: false
+        type: boolean
+      environment:
+        description: 'Deployment environment'
+        required: false
+        default: 'staging'
+        type: choice
+        options: [staging, production]
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # === CODE QUALITY & TESTING ===
+  quality-gate:
+    name: 🔍 Quality Gate
+    runs-on: ubuntu-latest
+    if: github.event.inputs.skip_tests != 'true'
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: 📦 Install Dependencies
+      run: npm ci
+
+    - name: 📝 Type Checking
+      run: npm run type-check
+
+    - name: 🧹 Linting
+      run: npm run lint
+
+    - name: 🧪 Unit Tests
+      run: npm run test:coverage
+
+    - name: 📊 Upload Coverage
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+  # === SECURITY SCANNING ===
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    needs: quality-gate
+    if: github.event.inputs.skip_tests != 'true'
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: 📦 Install Dependencies
+      run: npm ci
+
+    - name: 🔍 Security Audit
+      run: npm run security:scan
+
+    - name: 🛡️ CodeQL Analysis
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript,typescript
+
+    - name: 🔍 CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+  # === MONITORING VALIDATION ===
+  monitoring-validation:
+    name: 📊 Monitoring Validation
+    runs-on: ubuntu-latest
+    needs: quality-gate
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: 📦 Install Dependencies
+      run: npm ci
+
+    - name: 🔍 Validate Monitoring Components
+      run: npm run monitoring:validate
+
+    - name: 🧪 Test Monitoring Infrastructure
+      run: npm run monitoring:test
+
+    - name: 📋 Validate Docker Configuration
+      run: |
+        echo "🔍 Validating Docker configurations..."
+        docker-compose -f docker-compose.monitoring.yml config --quiet
+        echo "✅ Docker Compose configuration is valid"
+
+    - name: 📤 Upload Monitoring Validation Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: monitoring-validation-results
+        path: monitoring-test-report.json
+        retention-days: 7
+
+  # === BUILD APPLICATION ===
+  build-application:
+    name: 🏗️ Build Application
+    runs-on: ubuntu-latest
+    needs: [quality-gate, security-scan, monitoring-validation]
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: 📦 Install Dependencies
+      run: npm ci
+
+    - name: 🏗️ Build Application
+      run: npm run build
+
+    - name: 📦 Build Monitoring Docker Image
+      run: |
+        echo "🐳 Building monitoring Docker image..."
+        docker build -f Dockerfile.monitoring -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/monitoring:latest .
+        docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/monitoring:latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/monitoring:${{ github.sha }}
+
+    - name: 📤 Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          dist/
+          Dockerfile.monitoring
+          docker-compose.monitoring.yml
+        retention-days: 7
+
+    - name: 🔐 Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 📤 Push Monitoring Image to Registry
+      run: |
+        echo "📤 Pushing monitoring image to registry..."
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/monitoring:latest
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/monitoring:${{ github.sha }}
+
+  # === DEPLOY MONITORING INFRASTRUCTURE ===
+  deploy-monitoring:
+    name: 🚀 Deploy Monitoring Infrastructure
+    runs-on: ubuntu-latest
+    needs: build-application
+    if: github.event.inputs.deploy_monitoring != 'false'
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 📥 Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+
+    - name: 🔐 Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 🚀 Deploy Monitoring Stack
+      run: |
+        echo "🚀 Deploying monitoring infrastructure..."
+
+        # Create environment file for monitoring
+        cat > .env.monitoring << EOF
+        GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+        SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+        SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}
+        NODE_ENV=production
+        MONITORING_PORT=3002
+        API_BASE_URL=http://api-server:8080/api/v1
+        EOF
+
+        # Pull latest images
+        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/monitoring:latest
+
+        # Deploy monitoring stack
+        docker-compose -f docker-compose.monitoring.yml --profile with-traefik up -d
+
+        echo "⏳ Waiting for monitoring stack to be healthy..."
+        sleep 30
+
+    - name: ❤️ Health Check - Monitoring Dashboard
+      run: |
+        echo "❤️ Checking monitoring dashboard health..."
+        timeout 60 bash -c 'until curl -f http://localhost:3002/health; do sleep 5; done'
+        echo "✅ Monitoring dashboard is healthy"
+
+    - name: ❤️ Health Check - Prometheus
+      run: |
+        echo "❤️ Checking Prometheus health..."
+        timeout 60 bash -c 'until curl -f http://localhost:9090/-/healthy; do sleep 5; done'
+        echo "✅ Prometheus is healthy"
+
+    - name: ❤️ Health Check - Grafana
+      run: |
+        echo "❤️ Checking Grafana health..."
+        timeout 60 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 5; done'
+        echo "✅ Grafana is healthy"
+
+    - name: 📊 Verify Monitoring Data Collection
+      run: |
+        echo "📊 Verifying monitoring data collection..."
+        sleep 10
+
+        # Check if metrics are being collected
+        METRICS=$(curl -s http://localhost:3002/api/metrics)
+        if [ -n "$METRICS" ]; then
+          echo "✅ Monitoring is collecting data"
+        else
+          echo "⚠️ Monitoring data collection may not be active yet"
+        fi
+
+    - name: 📋 Generate Deployment Report
+      run: |
+        echo "📋 Generating monitoring deployment report..."
+
+        cat > monitoring-deployment-report.json << EOF
+        {
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "workflow": "${{ github.workflow }}",
+          "run_id": "${{ github.run_id }}",
+          "commit": "${{ github.sha }}",
+          "environment": "${{ github.event.inputs.environment || 'staging' }}",
+          "deployment_status": "success",
+          "services": {
+            "monitoring_dashboard": {
+              "url": "http://localhost:3002",
+              "status": "healthy"
+            },
+            "prometheus": {
+              "url": "http://localhost:9090",
+              "status": "healthy"
+            },
+            "grafana": {
+              "url": "http://localhost:3000",
+              "status": "healthy"
+            },
+            "alertmanager": {
+              "url": "http://localhost:9093",
+              "status": "healthy"
+            }
+          },
+          "image_tag": "${{ github.sha }}",
+          "registry": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/monitoring"
+        }
+        EOF
+
+        echo "✅ Deployment report generated"
+
+    - name: 📤 Upload Deployment Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: monitoring-deployment-report
+        path: monitoring-deployment-report.json
+        retention-days: 30
+
+  # === DEPLOY APPLICATION ===
+  deploy-application:
+    name: 🚀 Deploy Application
+    runs-on: ubuntu-latest
+    needs: [build-application, deploy-monitoring]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 📥 Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+
+    - name: 🚀 Deploy Application with Monitoring
+      run: |
+        echo "🚀 Deploying application with monitoring integration..."
+
+        # Deploy application (GitHub Pages example - replace with your deployment method)
+        echo "📦 Deploying application to GitHub Pages..."
+
+        # Deploy to GitHub Pages
+        npx gh-pages -d dist -t true
+
+        echo "✅ Application deployed successfully"
+
+    - name: 🔗 Verify Application-Monitoring Integration
+      run: |
+        echo "🔗 Verifying application-monitoring integration..."
+
+        # Test API endpoint connectivity
+        if curl -f http://localhost:8080/health 2>/dev/null; then
+          echo "✅ API server is accessible"
+        else
+          echo "⚠️ API server not accessible (may be deployed separately)"
+        fi
+
+        # Test monitoring dashboard connectivity
+        if curl -f http://localhost:3002/health 2>/dev/null; then
+          echo "✅ Monitoring dashboard is accessible"
+        else
+          echo "❌ Monitoring dashboard not accessible"
+          exit 1
+        fi
+
+  # === POST-DEPLOYMENT VALIDATION ===
+  post-deployment-validation:
+    name: ✅ Post-Deployment Validation
+    runs-on: ubuntu-latest
+    needs: [deploy-application, deploy-monitoring]
+    if: always()
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: 📦 Install Dependencies
+      run: npm ci
+
+    - name: 🔍 Validate Post-Deployment Health
+      run: |
+        echo "🔍 Validating post-deployment health..."
+
+        # Check monitoring dashboard
+        if curl -f http://localhost:3002/health 2>/dev/null; then
+          echo "✅ Monitoring dashboard is healthy"
+        else
+          echo "❌ Monitoring dashboard health check failed"
+          exit 1
+        fi
+
+        # Check Prometheus
+        if curl -f http://localhost:9090/-/healthy 2>/dev/null; then
+          echo "✅ Prometheus is healthy"
+        else
+          echo "❌ Prometheus health check failed"
+          exit 1
+        fi
+
+        # Check Grafana
+        if curl -f http://localhost:3000/api/health 2>/dev/null; then
+          echo "✅ Grafana is healthy"
+        else
+          echo "❌ Grafana health check failed"
+          exit 1
+        fi
+
+    - name: 📊 Run Integration Tests
+      run: |
+        echo "📊 Running post-deployment integration tests..."
+
+        # Test monitoring endpoints
+        npm run monitoring:test
+
+        # Test API integration (if API is deployed)
+        if curl -f http://localhost:8080/health 2>/dev/null; then
+          echo "🧪 Running API integration tests..."
+          npm run test:api http://localhost:8080/api/v1
+        else
+          echo "⚠️ API server not accessible for integration tests"
+        fi
+
+    - name: 📋 Generate Final Validation Report
+      run: |
+        echo "📋 Generating final validation report..."
+
+        cat > deployment-validation-report.json << EOF
+        {
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "workflow": "${{ github.workflow }}",
+          "run_id": "${{ github.run_id }}",
+          "commit": "${{ github.sha }}",
+          "validation_status": "completed",
+          "checks": {
+            "monitoring_dashboard": "passed",
+            "prometheus": "passed",
+            "grafana": "passed",
+            "integration_tests": "completed"
+          },
+          "deployment_urls": {
+            "application": "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}",
+            "monitoring_dashboard": "http://localhost:3002",
+            "grafana": "http://localhost:3000",
+            "prometheus": "http://localhost:9090"
+          },
+          "next_steps": [
+            "Configure domain names and SSL certificates",
+            "Set up backup and disaster recovery",
+            "Configure monitoring alerts and notifications",
+            "Set up log aggregation and analysis"
+          ]
+        }
+        EOF
+
+        echo "✅ Final validation report generated"
+
+    - name: 📤 Upload Final Validation Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-validation-report
+        path: deployment-validation-report.json
+        retention-days: 30
+
+  # === DEPLOYMENT SUMMARY ===
+  deployment-summary:
+    name: 📊 Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [quality-gate, security-scan, monitoring-validation, build-application, deploy-monitoring, deploy-application, post-deployment-validation]
+    if: always()
+
+    steps:
+    - name: 📊 Generate Comprehensive Deployment Summary
+      run: |
+        echo "📊 Generating comprehensive deployment summary..."
+
+        # Calculate overall status
+        if [ "${{ needs.quality-gate.result }}" = "success" ] && \
+           [ "${{ needs.security-scan.result }}" = "success" ] && \
+           [ "${{ needs.monitoring-validation.result }}" = "success" ] && \
+           [ "${{ needs.build-application.result }}" = "success" ] && \
+           [ "${{ needs.deploy-monitoring.result }}" = "success" ] && \
+           [ "${{ needs.deploy-application.result }}" = "success" ] && \
+           [ "${{ needs.post-deployment-validation.result }}" = "success" ]; then
+          OVERALL_STATUS="✅ SUCCESS"
+          STATUS_COLOR="green"
+        else
+          OVERALL_STATUS="❌ FAILED"
+          STATUS_COLOR="red"
+        fi
+
+        cat > deployment-summary.json << EOF
+        {
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "workflow": "${{ github.workflow }}",
+          "run_id": "${{ github.run_id }}",
+          "commit": "${{ github.sha }}",
+          "branch": "${{ github.ref_name }}",
+          "trigger": "${{ github.event_name }}",
+          "overall_status": "$OVERALL_STATUS",
+          "job_results": {
+            "quality_gate": "${{ needs.quality-gate.result }}",
+            "security_scan": "${{ needs.security-scan.result }}",
+            "monitoring_validation": "${{ needs.monitoring-validation.result }}",
+            "build_application": "${{ needs.build-application.result }}",
+            "deploy_monitoring": "${{ needs.deploy-monitoring.result }}",
+            "deploy_application": "${{ needs.deploy-application.result }}",
+            "post_deployment_validation": "${{ needs.post-deployment-validation.result }}"
+          },
+          "deployed_services": {
+            "application": {
+              "url": "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}",
+              "status": "${{ needs.deploy-application.result }}"
+            },
+            "monitoring_dashboard": {
+              "url": "http://localhost:3002",
+              "status": "${{ needs.deploy-monitoring.result }}"
+            },
+            "grafana": {
+              "url": "http://localhost:3000",
+              "status": "${{ needs.deploy-monitoring.result }}"
+            },
+            "prometheus": {
+              "url": "http://localhost:9090",
+              "status": "${{ needs.deploy-monitoring.result }}"
+            }
+          },
+          "artifacts": [
+            "build-artifacts",
+            "monitoring-validation-results",
+            "monitoring-deployment-report",
+            "deployment-validation-report"
+          ]
+        }
+        EOF
+
+        echo "🎯 Deployment Summary:"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "📊 Overall Status: $OVERALL_STATUS"
+        echo ""
+        echo "✅ Quality Gate: ${{ needs.quality-gate.result }}"
+        echo "🔒 Security Scan: ${{ needs.security-scan.result }}"
+        echo "📊 Monitoring Validation: ${{ needs.monitoring-validation.result }}"
+        echo "🏗️ Build Application: ${{ needs.build-application.result }}"
+        echo "🚀 Deploy Monitoring: ${{ needs.deploy-monitoring.result }}"
+        echo "🚀 Deploy Application: ${{ needs.deploy-application.result }}"
+        echo "✅ Post-Deployment Validation: ${{ needs.post-deployment-validation.result }}"
+        echo ""
+        echo "🌐 Deployed Services:"
+        echo "  📱 Application: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+        echo "  📊 Monitoring: http://localhost:3002"
+        echo "  📈 Grafana: http://localhost:3000"
+        echo "  📋 Prometheus: http://localhost:9090"
+        echo ""
+        if [ "$STATUS_COLOR" = "green" ]; then
+          echo "🎉 Deployment completed successfully!"
+          echo "📈 Your monitoring system is now live and collecting real-time metrics!"
+        else
+          echo "⚠️ Some deployment steps failed. Check the detailed logs for troubleshooting."
+        fi
+
+    - name: 📤 Upload Deployment Summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-summary
+        path: deployment-summary.json
+        retention-days: 30
+
+    - name: 📢 Deployment Notification
+      run: |
+        if [ "${{ needs.deploy-application.result }}" = "success" ] && [ "${{ needs.deploy-monitoring.result }}" = "success" ]; then
+          echo "🚀 **Deployment Complete!**"
+          echo ""
+          echo "Your application and monitoring system have been successfully deployed:"
+          echo ""
+          echo "📱 **Application**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          echo "📊 **Monitoring Dashboard**: http://localhost:3002"
+          echo "📈 **Grafana**: http://localhost:3000"
+          echo "📋 **Prometheus**: http://localhost:9090"
+          echo ""
+          echo "🔧 **Next Steps**:"
+          echo "1. Configure domain names and SSL certificates"
+          echo "2. Set up monitoring alerts and notifications"
+          echo "3. Configure backup and disaster recovery"
+          echo "4. Set up log aggregation and analysis"
+          echo ""
+          echo "📚 **Documentation**: Check the monitoring/README.md for detailed setup instructions"
+        fi

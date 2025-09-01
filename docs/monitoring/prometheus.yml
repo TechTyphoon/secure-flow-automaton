@@ -1,0 +1,95 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+rule_files:
+  - "alerting-rules.yaml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # API Server Metrics
+  - job_name: 'secure-flow-api'
+    static_configs:
+      - targets: ['localhost:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # Monitoring Dashboard Metrics
+  - job_name: 'api-monitoring-dashboard'
+    static_configs:
+      - targets: ['localhost:3002']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Node Exporter (System Metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # PostgreSQL Metrics (if using Postgres)
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['localhost:9187']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Redis Metrics (if using Redis)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['localhost:9121']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Nginx Metrics (if using Nginx)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['localhost:9113']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Custom API Health Check
+  - job_name: 'api-health-check'
+    static_configs:
+      - targets: ['localhost:8080']
+    metrics_path: '/health'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    params:
+      format: ['prometheus']
+
+  # CI/CD Pipeline Metrics
+  - job_name: 'github-actions'
+    static_configs:
+      - targets: ['localhost:8080']
+    metrics_path: '/metrics/github-actions'
+    scrape_interval: 60s
+    scrape_timeout: 30s
+
+# Remote Write Configuration (for long-term storage)
+remote_write:
+  - url: "http://localhost:9201/write"
+    remote_timeout: 30s
+    queue_config:
+      capacity: 10000
+      max_shards: 30
+      min_shards: 1
+      max_samples_per_send: 1000
+      batch_send_deadline: 5s
+      min_backoff: 30ms
+      max_backoff: 5s
+
+# Remote Read Configuration (for querying historical data)
+remote_read:
+  - url: "http://localhost:9201/read"
+    remote_timeout: 30s
+    read_recent: true

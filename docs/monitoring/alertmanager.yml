@@ -1,0 +1,113 @@
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@yourdomain.com'
+  smtp_auth_username: 'alerts@yourdomain.com'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_require_tls: true
+
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+route:
+  group_by: ['alertname', 'job', 'severity']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'default'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical'
+      continue: true
+    - match:
+        severity: warning
+      receiver: 'warning'
+      continue: true
+    - match:
+        team: security
+      receiver: 'security'
+      continue: true
+    - match:
+        team: platform
+      receiver: 'platform'
+      continue: true
+
+receivers:
+  - name: 'default'
+    email_configs:
+      - to: 'devops@yourdomain.com'
+        subject: '[{{ .GroupLabels.alertname }}] {{ .Annotations.summary }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Instance: {{ .Labels.instance }}
+          Started: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+          {{ end }}
+
+  - name: 'critical'
+    email_configs:
+      - to: 'oncall@yourdomain.com,pager@yourdomain.com'
+        subject: '🚨 CRITICAL: [{{ .GroupLabels.alertname }}] {{ .Annotations.summary }}'
+        headers:
+          X-Priority: '1'
+          X-MSMail-Priority: 'High'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-critical'
+        title: '🚨 Critical Alert'
+        text: |
+          *{{ .GroupLabels.alertname }}*
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+        color: 'danger'
+
+  - name: 'warning'
+    email_configs:
+      - to: 'devops@yourdomain.com'
+        subject: '⚠️ WARNING: [{{ .GroupLabels.alertname }}] {{ .Annotations.summary }}'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-warning'
+        title: '⚠️ Warning Alert'
+        text: |
+          *{{ .GroupLabels.alertname }}*
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+        color: 'warning'
+
+  - name: 'security'
+    email_configs:
+      - to: 'security@yourdomain.com'
+        subject: '🔒 SECURITY: [{{ .GroupLabels.alertname }}] {{ .Annotations.summary }}'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#security-alerts'
+        title: '🔒 Security Alert'
+        text: |
+          *{{ .GroupLabels.alertname }}*
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+        color: 'danger'
+
+  - name: 'platform'
+    email_configs:
+      - to: 'platform@yourdomain.com'
+        subject: '🏗️ PLATFORM: [{{ .GroupLabels.alertname }}] {{ .Annotations.summary }}'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#platform-alerts'
+        title: '🏗️ Platform Alert'
+        text: |
+          *{{ .GroupLabels.alertname }}*
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+        color: 'good'
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'job', 'instance']
