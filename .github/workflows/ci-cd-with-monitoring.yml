@@ -334,10 +334,13 @@ jobs:
         # Deploy application (GitHub Pages example - replace with your deployment method)
         echo "📦 Deploying application to GitHub Pages..."
 
+        # Install gh-pages globally
+        npm install -g gh-pages
+
         # Deploy to GitHub Pages
         npx gh-pages -d dist -t true
 
-        echo "✅ Application deployed successfully"
+        echo "✅ Application deployed successfully (check if GitHub Pages is enabled in repository settings)"
 
     - name: 🔗 Verify Application-Monitoring Integration
       run: |

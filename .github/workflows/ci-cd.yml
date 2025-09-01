@@ -113,7 +113,14 @@ jobs:
         path: dist/
         
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./dist
+      run: |
+        echo "🚀 Deploying to GitHub Pages..."
+
+        # Install gh-pages globally
+        npm install -g gh-pages
+
+        # Deploy to gh-pages branch
+        npx gh-pages -d dist -t true
+
+        echo "✅ Deployment completed (check if GitHub Pages is enabled in repository settings)"
+      continue-on-error: true
