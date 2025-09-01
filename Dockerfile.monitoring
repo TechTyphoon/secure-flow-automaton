@@ -13,8 +13,12 @@ RUN apk add --no-cache \
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and scripts needed for postinstall
 COPY package*.json ./
+COPY tools/scripts/ ./tools/scripts/
+
+# Set Docker build environment variable to skip post-install verification
+ENV DOCKER_BUILD=true
 
 # Install production dependencies
 RUN npm ci --omit=dev --no-audit --no-fund

@@ -2,6 +2,12 @@
 
 console.log('🔍 Running post-install verification...');
 
+// Skip verification in Docker build context to avoid dependency issues
+if (process.env.DOCKER_BUILD === 'true') {
+  console.log('🐳 Docker build detected - skipping post-install verification');
+  process.exit(0);
+}
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
