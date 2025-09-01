@@ -8,6 +8,20 @@ import MultiFactorAuthEngine, { MfaConfig, MfaChallenge, MfaMethod, MfaVerificat
 import ContinuousAuthenticationSystem, { AuthenticationSession, ContinuousAuthConfig } from './continuousAuth';
 import PrivilegedAccessManager, { AccessRequest, ActivePrivilegedSession, PamConfig } from './privilegedAccess';
 import IdentityGovernanceAdmin, { IdentityProfile, Role, IgaConfig } from './governance';
+import {
+  BaseError,
+  AuthenticationError,
+  AuthorizationError,
+  ValidationError,
+  SecurityError,
+  InternalError,
+  ErrorHandler,
+  withErrorHandling,
+  createErrorContext,
+  ErrorContext
+} from '../common/errors';
+import { getLogger } from '../common/logger';
+import { validateEmail, validatePassword, sanitizeUserInput, getValidator } from '../common/validation';
 
 // Type definitions for better type safety
 export interface AuthenticationActionOptions {
@@ -145,25 +159,74 @@ export class ZeroTrustIdentityService {
   private governance: IdentityGovernanceAdmin;
   private sessions: Map<string, ZeroTrustSession> = new Map();
   private config: ZeroTrustIdentityConfig;
-  
+  private logger = getLogger();
+
   constructor(config: ZeroTrustIdentityConfig) {
-    this.config = config;
-    this.identityProvider = new ZeroTrustIdentityProvider(config.identityProvider);
-    this.mfaEngine = new MultiFactorAuthEngine(config.mfa);
-    this.continuousAuth = new ContinuousAuthenticationSystem(config.continuousAuth);
-    this.privilegedAccess = new PrivilegedAccessManager(config.privilegedAccess);
-    this.governance = new IdentityGovernanceAdmin(config.governance);
+    // Initialize error handling system
+    ErrorHandler.initializeWithLogger();
+
+    const context = createErrorContext('ZeroTrustIdentityService', 'constructor');
+
+    try {
+      this.logger.info('Initializing Zero Trust Identity Service...', context);
+
+      if (!config) {
+        throw new ValidationError('Configuration is required', context, 'config');
+      }
+
+      this.config = config;
+
+      // Initialize components with error handling
+      this.identityProvider = new ZeroTrustIdentityProvider(config.identityProvider);
+      this.mfaEngine = new MultiFactorAuthEngine(config.mfa);
+      this.continuousAuth = new ContinuousAuthenticationSystem(config.continuousAuth);
+      this.privilegedAccess = new PrivilegedAccessManager(config.privilegedAccess);
+      this.governance = new IdentityGovernanceAdmin(config.governance);
+
+      this.logger.info('Zero Trust Identity Service initialized successfully', context);
+
+    } catch (error) {
+      const baseError = ErrorHandler.handle(error, context);
+      this.logger.error('Failed to initialize Zero Trust Identity Service', context, baseError);
+      throw baseError;
+    }
   }
 
   /**
    * Authenticate user with Zero Trust principles
    */
   async authenticate(request: ZeroTrustAuthenticationRequest): Promise<ZeroTrustAuthenticationResponse> {
+    const context = createErrorContext('ZeroTrustIdentityService', 'authenticate', request.userId, request.sessionId, request.requestId);
+    const endTimer = this.logger.startTimer('authenticate', context);
+
     try {
+      this.logger.debug('Starting Zero Trust authentication', { ...context, metadata: { hasCredentials: !!request.credentials } });
+
+      // Validate request
+      if (!request || !request.credentials) {
+        throw new ValidationError('Authentication request and credentials are required', context, 'request');
+      }
+
+      // Validate and sanitize credentials
+      const sanitizedEmail = sanitizeUserInput(request.credentials.email);
+      const sanitizedPassword = request.credentials.password ? sanitizeUserInput(request.credentials.password) : undefined;
+
+      const emailValidation = validateEmail(sanitizedEmail, context);
+      if (!emailValidation.isValid) {
+        throw emailValidation.errors[0];
+      }
+
+      if (sanitizedPassword) {
+        const passwordValidation = validatePassword(sanitizedPassword, context);
+        if (!passwordValidation.isValid) {
+          throw passwordValidation.errors[0];
+        }
+      }
+
       // Step 1: Initial authentication
       const authResult = await this.identityProvider.authenticate(
-        request.credentials.email,
-        request.credentials.password || request.credentials.token
+        sanitizedEmail,
+        sanitizedPassword || request.credentials.token
       );
 
       if (!authResult.success || !authResult.user) {
@@ -283,19 +346,23 @@ export class ZeroTrustIdentityService {
       };
 
     } catch (error) {
-      console.error('Zero Trust authentication failed:', error);
+      endTimer();
+      const baseError = ErrorHandler.handle(error, context);
+      this.logger.error('Zero Trust authentication failed', context, baseError);
+
+      // Return a safe failure response
       return {
         success: false,
         expiresIn: 0,
         trustLevel: 'none',
         nextActions: [{
           type: 'access_denied',
-          reason: 'Authentication system error',
+          reason: baseError.message || 'Authentication system error',
         }],
         riskAssessment: {
           overall: 100,
           factors: ['system_error'],
-          recommendations: ['Contact system administrator'],
+          recommendations: ['Contact system administrator', 'Try again later'],
         },
         policies: { applied: [], violations: ['system_error'] },
       };

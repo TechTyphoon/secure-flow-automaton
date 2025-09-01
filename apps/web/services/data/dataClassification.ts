@@ -4,6 +4,24 @@
  * Provides automated data sensitivity assessment and compliance mapping
  */
 
+import {
+  BaseError,
+  ValidationError,
+  SecurityError,
+  ErrorHandler,
+  withErrorHandling,
+  createErrorContext,
+  ErrorContext
+} from '../common/errors';
+import { getLogger } from '../common/logger';
+import {
+  sanitizeUserInput,
+  getValidator,
+  DataValidators,
+  SecurityValidators,
+  CommonValidators
+} from '../common/validation';
+
 export interface DataClassification {
   id: string;
   name: string;
@@ -256,8 +274,14 @@ export class DataClassificationService {
   private discoveryResults: Map<string, DataDiscoveryResult> = new Map();
   private mlClassifier: MLDataClassifier;
   private complianceEngine: DataComplianceEngine;
+  private logger = getLogger();
 
   constructor() {
+    // Initialize error handling system
+    ErrorHandler.initializeWithLogger();
+
+    this.logger.info('Initializing Data Classification Service', createErrorContext('DataClassificationService', 'constructor'));
+
     this.mlClassifier = new MLDataClassifier();
     this.complianceEngine = new DataComplianceEngine();
     this.initializeClassificationService();
@@ -762,6 +786,49 @@ export class DataClassificationService {
     assetData: Partial<DataAsset>,
     autoApply: boolean = false
   ): Promise<{ classification: DataClassification; confidence: number; reasons: string[] }> {
+    const context = createErrorContext('DataClassificationService', 'classifyAsset');
+
+    // Validate assetData parameter
+    if (!assetData || typeof assetData !== 'object') {
+      throw new ValidationError('Asset data is required and must be an object', context, 'assetData');
+    }
+
+    // Validate required fields
+    if (!assetData.name || typeof assetData.name !== 'string') {
+      throw new ValidationError('Asset name is required and must be a string', context, 'assetData.name');
+    }
+
+    // Sanitize asset name
+    const sanitizedName = sanitizeUserInput(assetData.name);
+    if (sanitizedName !== assetData.name) {
+      this.logger.warn('Asset name was sanitized', {
+        ...context,
+        metadata: { originalName: assetData.name, sanitizedName }
+      });
+      assetData.name = sanitizedName;
+    }
+
+    // Validate content if provided
+    if (assetData.content && typeof assetData.content === 'string') {
+      if (assetData.content.length > 10 * 1024 * 1024) { // 10MB limit
+        throw new ValidationError('Asset content exceeds maximum size limit (10MB)', context, 'assetData.content');
+      }
+
+      // Check for dangerous content patterns
+      const dangerousPatterns = SecurityValidators.noSqlInjection();
+      if (!dangerousPatterns.validate(assetData.content)) {
+        this.logger.security('Potentially dangerous content detected in asset', {
+          ...context,
+          metadata: { assetName: assetData.name, threatLevel: 'medium' }
+        });
+      }
+    }
+
+    this.logger.info('Classifying asset', {
+      ...context,
+      metadata: { assetName: assetData.name, autoApply }
+    });
+
     try {
       // Use ML classifier for initial assessment
       const mlResult = await this.mlClassifier.classifyContent(assetData);
@@ -1163,7 +1230,29 @@ export class DataClassificationService {
   }
 
   getClassification(id: string): DataClassification | undefined {
-    return this.classifications.get(id);
+    const context = createErrorContext('DataClassificationService', 'getClassification');
+
+    // Validate id parameter
+    if (!id || typeof id !== 'string') {
+      throw new ValidationError('Classification ID is required and must be a string', context, 'id');
+    }
+
+    // Sanitize ID to prevent injection
+    const sanitizedId = sanitizeUserInput(id);
+    if (sanitizedId !== id) {
+      this.logger.warn('Classification ID was sanitized', {
+        ...context,
+        metadata: { originalId: id, sanitizedId }
+      });
+    }
+
+    const classification = this.classifications.get(sanitizedId);
+
+    if (!classification) {
+      this.logger.debug('Classification not found', { ...context, metadata: { id: sanitizedId } });
+    }
+
+    return classification;
   }
 
   getAssets(): DataAsset[] {

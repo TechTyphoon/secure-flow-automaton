@@ -1,4 +1,20 @@
 import { SecurityConfigManager } from '../security/config';
+import {
+  BaseError,
+  ValidationError,
+  ErrorHandler,
+  withErrorHandling,
+  createErrorContext,
+  ErrorContext
+} from '../common/errors';
+import { getLogger } from '../common/logger';
+import {
+  sanitizeUserInput,
+  getValidator,
+  NotificationValidators,
+  SecurityValidators,
+  CommonValidators
+} from '../common/validation';
 
 /**
  * Real Notification Service - Production Implementation
@@ -40,8 +56,14 @@ export interface Incident {
 }
 export class RealNotificationService {
   private config: SecurityConfigManager;
+  private logger = getLogger();
 
   constructor() {
+    // Initialize error handling system
+    ErrorHandler.initializeWithLogger();
+
+    this.logger.info('Initializing Real Notification Service', createErrorContext('RealNotificationService', 'constructor'));
+
     this.config = SecurityConfigManager.getInstance();
   }
 
@@ -49,16 +71,48 @@ export class RealNotificationService {
    * Send Slack Notification
    */
   async sendSlackNotification(message: string, channel?: string): Promise<boolean> {
+    const context = createErrorContext('RealNotificationService', 'sendSlackNotification');
+
+    // Validate message parameter
+    if (!message || typeof message !== 'string') {
+      throw new ValidationError('Message is required and must be a string', context, 'message');
+    }
+
+    // Validate message content
+    const messageValidation = getValidator().validate(message, NotificationValidators.messageContent(), context, 'message');
+    if (!messageValidation.isValid) {
+      throw messageValidation.errors[0];
+    }
+
+    // Sanitize message
+    const sanitizedMessage = sanitizeUserInput(message);
+    if (sanitizedMessage !== message) {
+      this.logger.warn('Message was sanitized', {
+        ...context,
+        metadata: { originalLength: message.length, sanitizedLength: sanitizedMessage.length }
+      });
+    }
+
+    // Validate channel if provided
+    if (channel && typeof channel !== 'string') {
+      throw new ValidationError('Channel must be a string', context, 'channel');
+    }
+
     const slackConfig = this.config.getNotificationConfig().slack;
-    
+
     if (!slackConfig.enabled) {
-      console.warn('Slack notifications not configured');
+      this.logger.warn('Slack notifications not configured', context);
       return false;
     }
 
+    this.logger.info('Sending Slack notification', {
+      ...context,
+      metadata: { channel: channel || slackConfig.channel, messageLength: sanitizedMessage.length }
+    });
+
     try {
       const payload = {
-        text: message,
+        text: sanitizedMessage,
         channel: channel || slackConfig.channel,
         username: 'SecureFlow Bot',
         icon_emoji: ':shield:',
@@ -68,7 +122,7 @@ export class RealNotificationService {
             fields: [
               {
                 title: 'Security Alert',
-                value: message,
+                value: sanitizedMessage,
                 short: false
               },
               {

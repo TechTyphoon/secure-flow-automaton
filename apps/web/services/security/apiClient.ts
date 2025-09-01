@@ -34,7 +34,7 @@ export class SecurityAPIClient {
         
         const response: AxiosResponse<T> = await axios({
           ...options,
-          timeout: serviceConfig.timeout || 30000,
+          timeout: (serviceConfig as any).timeout || 30000,
           headers: {
             ...options.headers,
             'User-Agent': 'SecureFlow-Automaton/1.0.0',
@@ -93,7 +93,7 @@ export class SecurityAPIClient {
   getCacheStats(): { keys: number; totalSize: number } {
     return {
       keys: this.cache.size,
-      totalSize: JSON.stringify([...this.cache.values()]).length
+      totalSize: JSON.stringify(Array.from(this.cache.values())).length
     };
   }
 }

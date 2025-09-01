@@ -4,6 +4,26 @@
  * Provides OWASP API Top 10 compliance and runtime security monitoring
  */
 
+import {
+  BaseError,
+  ValidationError,
+  SecurityError,
+  ErrorHandler,
+  withErrorHandling,
+  createErrorContext,
+  ErrorContext
+} from '../common/errors';
+import { getLogger } from '../common/logger';
+import {
+  validateEmail,
+  validatePassword,
+  sanitizeUserInput,
+  getValidator,
+  ApiValidators,
+  SecurityValidators,
+  CommonValidators
+} from '../common/validation';
+
 export interface APIEndpoint {
   id: string;
   applicationId: string;
@@ -253,8 +273,13 @@ export class APISecurityScannerService {
   private scans: Map<string, APISecurityScan> = new Map();
   private vulnerabilities: Map<string, APIVulnerability> = new Map();
   private securityTests: Map<string, APISecurityTest> = new Map();
+  private logger = getLogger();
 
   constructor() {
+    // Initialize error handling system
+    ErrorHandler.initializeWithLogger();
+
+    this.logger.info('Initializing API Security Scanner Service', createErrorContext('APISecurityScannerService', 'constructor'));
     this.initializeAPISecurityService();
   }
 
@@ -1470,6 +1495,49 @@ export class APISecurityScannerService {
    * Generate API security metrics
    */
   generateSecurityMetrics(timeframe: { start: Date; end: Date }): APISecurityMetrics {
+    const context = createErrorContext('APISecurityScannerService', 'generateSecurityMetrics');
+
+    // Validate timeframe parameter
+    if (!timeframe || !timeframe.start || !timeframe.end) {
+      throw new ValidationError('Timeframe with start and end dates is required', context, 'timeframe');
+    }
+
+    if (!(timeframe.start instanceof Date) || !(timeframe.end instanceof Date)) {
+      throw new ValidationError('Start and end must be valid Date objects', context, 'timeframe');
+    }
+
+    if (isNaN(timeframe.start.getTime()) || isNaN(timeframe.end.getTime())) {
+      throw new ValidationError('Start and end dates must be valid', context, 'timeframe');
+    }
+
+    if (timeframe.start >= timeframe.end) {
+      throw new ValidationError('Start date must be before end date', context, 'timeframe');
+    }
+
+    // Check for reasonable date range (not too far in the past/future)
+    const now = new Date();
+    const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+    const oneYearFromNow = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+    if (timeframe.start < oneYearAgo || timeframe.end > oneYearFromNow) {
+      this.logger.warn('Timeframe range is unusually large', {
+        ...context,
+        metadata: {
+          start: timeframe.start.toISOString(),
+          end: timeframe.end.toISOString(),
+          days: Math.round((timeframe.end.getTime() - timeframe.start.getTime()) / (24 * 60 * 60 * 1000))
+        }
+      });
+    }
+
+    this.logger.info('Generating security metrics', {
+      ...context,
+      metadata: {
+        startDate: timeframe.start.toISOString(),
+        endDate: timeframe.end.toISOString()
+      }
+    });
+
     const endpoints = Array.from(this.endpoints.values());
     const scans = Array.from(this.scans.values()).filter(scan =>
       scan.startTime >= timeframe.start && scan.startTime <= timeframe.end
@@ -1564,7 +1632,24 @@ export class APISecurityScannerService {
   }
 
   getEndpoint(endpointId: string): APIEndpoint | undefined {
-    return this.endpoints.get(endpointId);
+    const context = createErrorContext('APISecurityScannerService', 'getEndpoint');
+
+    // Validate endpointId parameter
+    if (!endpointId || typeof endpointId !== 'string') {
+      throw new ValidationError('Endpoint ID is required and must be a string', context, 'endpointId');
+    }
+
+    const sanitizedId = sanitizeUserInput(endpointId);
+    if (sanitizedId !== endpointId) {
+      this.logger.warn('Endpoint ID was sanitized', { ...context, metadata: { originalId: endpointId, sanitizedId } });
+    }
+
+    const endpoint = this.endpoints.get(sanitizedId);
+    if (!endpoint) {
+      this.logger.debug('Endpoint not found', { ...context, metadata: { endpointId: sanitizedId } });
+    }
+
+    return endpoint;
   }
 
   getScans(): APISecurityScan[] {
@@ -1574,7 +1659,24 @@ export class APISecurityScannerService {
   }
 
   getScan(scanId: string): APISecurityScan | undefined {
-    return this.scans.get(scanId);
+    const context = createErrorContext('APISecurityScannerService', 'getScan');
+
+    // Validate scanId parameter
+    if (!scanId || typeof scanId !== 'string') {
+      throw new ValidationError('Scan ID is required and must be a string', context, 'scanId');
+    }
+
+    const sanitizedId = sanitizeUserInput(scanId);
+    if (sanitizedId !== scanId) {
+      this.logger.warn('Scan ID was sanitized', { ...context, metadata: { originalId: scanId, sanitizedId } });
+    }
+
+    const scan = this.scans.get(sanitizedId);
+    if (!scan) {
+      this.logger.debug('Scan not found', { ...context, metadata: { scanId: sanitizedId } });
+    }
+
+    return scan;
   }
 
   getVulnerabilities(): APIVulnerability[] {

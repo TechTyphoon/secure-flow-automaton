@@ -1,4 +1,4 @@
-import { BaseSecurityService } from './apiClient';
+import { SecurityAPIClient } from './apiClient';
 import { SecurityConfigManager } from './config';
 import { SecurityNotificationService } from './notifications';
 
@@ -77,7 +77,7 @@ export class SecurityHealthMonitor {
       message: '',
       configuration: {
         enabled: this.config.isServiceEnabled(service),
-        hasCredentials: !!serviceConfig.token,
+        hasCredentials: !!(serviceConfig as any).token,
         endpoint: this.getServiceEndpoint(service, serviceConfig)
       }
     };
@@ -90,7 +90,7 @@ export class SecurityHealthMonitor {
       };
     }
 
-    if (!serviceConfig.token) {
+    if (!(serviceConfig as any).token) {
       return {
         ...baseStatus,
         status: 'unhealthy',
@@ -115,7 +115,7 @@ export class SecurityHealthMonitor {
         ...baseStatus,
         status: 'unhealthy',
         responseTime,
-        message: `Health check failed: ${error.message}`
+        message: `Health check failed: ${error instanceof Error ? error.message : String(error)}`
       };
     }
   }

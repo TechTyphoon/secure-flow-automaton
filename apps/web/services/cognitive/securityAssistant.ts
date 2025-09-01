@@ -5,6 +5,21 @@
 
 import { EventEmitter } from 'events';
 import SecurityNLPEngine from './nlpEngine';
+import {
+  BaseError,
+  AuthenticationError,
+  AuthorizationError,
+  ValidationError,
+  SecurityError,
+  InternalError,
+  ErrorHandler,
+  withErrorHandling,
+  createErrorContext,
+  ErrorContext
+} from '../common/errors';
+import { getLogger, LogContext, SecurityContext, PerformanceContext, AuditContext } from '../common/logger';
+import { createMonitoringService, MonitoringService } from '../common/monitoring';
+import { validateSecurityQuery, validateSessionId, sanitizeQuery, getValidator } from '../common/validation';
 
 // Core interfaces for conversational AI
 interface SecurityQuery {
@@ -464,7 +479,7 @@ class SecurityResponseGenerator {
     };
 
     for (const [placeholder, value] of Object.entries(replacements)) {
-      response = response.replace(placeholder, value);
+      response = response.replace(placeholder, String(value));
     }
 
     return response;
@@ -566,7 +581,7 @@ class SecurityResponseGenerator {
         visualizations.push({
           type: 'TIMELINE',
           title: 'Security Events Timeline',
-          data: data.timelineData || this.generateSampleTimelineData(),
+          data: (data.timelineData as VisualizationData) || this.generateSampleTimelineData(),
           config: { showGrid: true, zoomable: true },
           description: 'Chronological view of security events'
         });
@@ -576,7 +591,7 @@ class SecurityResponseGenerator {
         visualizations.push({
           type: 'HEATMAP',
           title: 'Threat Risk Heatmap',
-          data: data.heatmapData || this.generateSampleHeatmapData(),
+          data: (data.heatmapData as VisualizationData) || this.generateSampleHeatmapData(),
           config: { colorScale: 'risk', interactive: true },
           description: 'Risk intensity across different areas'
         });
@@ -586,7 +601,7 @@ class SecurityResponseGenerator {
         visualizations.push({
           type: 'CHART',
           title: 'Security Metrics',
-          data: data.chartData || this.generateSampleChartData(),
+          data: (data.chartData as VisualizationData) || this.generateSampleChartData(),
           config: { type: 'line', animated: true },
           description: 'Key security performance indicators'
         });
@@ -596,7 +611,7 @@ class SecurityResponseGenerator {
         visualizations.push({
           type: 'TABLE',
           title: 'Detailed Data',
-          data: data.tableData || this.generateSampleTableData(),
+          data: (data.tableData as VisualizationData) || this.generateSampleTableData(),
           config: { sortable: true, filterable: true },
           description: 'Tabular view of security data'
         });
@@ -703,7 +718,7 @@ class SecurityResponseGenerator {
     const sources = ['Security Analytics Engine'];
     
     if (data?.sourceTypes) {
-      sources.push(...data.sourceTypes);
+      sources.push(...(data.sourceTypes as string[]));
     } else {
       // Default sources based on intent
       switch (query.intent.primary) {
@@ -741,6 +756,9 @@ class SecurityResponseGenerator {
   // Sample data generators for visualizations
   private generateSampleTimelineData(): VisualizationData {
     return {
+      labels: ['10:30', '11:15', '12:00'],
+      values: [Date.now() - 3600000, Date.now() - 1800000, Date.now() - 900000],
+      categories: ['Anomaly Detected', 'Threat Blocked', 'System Update'],
       events: [
         { time: Date.now() - 3600000, type: 'anomaly', severity: 'medium' },
         { time: Date.now() - 1800000, type: 'alert', severity: 'high' },
@@ -751,12 +769,15 @@ class SecurityResponseGenerator {
 
   private generateSampleHeatmapData(): VisualizationData {
     return {
+      values: [0.1, 0.3, 0.8, 0.4, 0.7, 0.2, 0.9, 0.1, 0.5],
+      categories: ['Network', 'Endpoints', 'Cloud'],
+      labels: ['Low', 'Medium', 'High'],
       matrix: [
         [0.1, 0.3, 0.8],
         [0.4, 0.7, 0.2],
         [0.9, 0.1, 0.5]
       ],
-      labels: { x: ['Network', 'Endpoints', 'Cloud'], y: ['Low', 'Medium', 'High'] }
+      heatmapLabels: { x: ['Network', 'Endpoints', 'Cloud'], y: ['Low', 'Medium', 'High'] }
     };
   }
 
@@ -772,8 +793,14 @@ class SecurityResponseGenerator {
 
   private generateSampleTableData(): VisualizationData {
     return {
-      headers: ['Time', 'Event', 'Severity', 'Status'],
+      labels: ['Time', 'Event', 'Severity', 'Status'],
       rows: [
+        { Time: '10:30', Event: 'Anomaly Detected', Severity: 'Medium', Status: 'Investigating' },
+        { Time: '11:15', Event: 'Threat Blocked', Severity: 'High', Status: 'Resolved' },
+        { Time: '12:00', Event: 'System Update', Severity: 'Low', Status: 'Complete' }
+      ],
+      headers: ['Time', 'Event', 'Severity', 'Status'],
+      tableData: [
         ['10:30', 'Anomaly Detected', 'Medium', 'Investigating'],
         ['11:15', 'Threat Blocked', 'High', 'Resolved'],
         ['12:00', 'System Update', 'Low', 'Complete']
@@ -792,44 +819,101 @@ export class SecurityAssistant extends EventEmitter {
   private conversationFlows: Map<string, ConversationFlow> = new Map();
   private isInitialized: boolean = false;
 
-  constructor() {
+  private logger = getLogger();
+  private monitoring: MonitoringService;
+
+  constructor(
+    nlpEngine?: SecurityNLPEngine,
+    intentClassifier?: SecurityIntentClassifier,
+    entityExtractor?: SecurityQueryEntityExtractor,
+    responseGenerator?: SecurityResponseGenerator
+  ) {
     super();
-    
-    this.nlpEngine = new SecurityNLPEngine();
-    this.intentClassifier = new SecurityIntentClassifier();
-    this.entityExtractor = new SecurityQueryEntityExtractor();
-    this.responseGenerator = new SecurityResponseGenerator();
-    
+
+    // Use provided dependencies or create defaults
+    this.nlpEngine = nlpEngine || new SecurityNLPEngine();
+    this.intentClassifier = intentClassifier || new SecurityIntentClassifier();
+    this.entityExtractor = entityExtractor || new SecurityQueryEntityExtractor();
+    this.responseGenerator = responseGenerator || new SecurityResponseGenerator();
+
+    // Initialize error handling system
+    ErrorHandler.initializeWithLogger();
+
+    // Initialize monitoring service
+    this.monitoring = createMonitoringService(this.logger, {
+      enabled: true,
+      metricsInterval: 30000,
+      healthCheckInterval: 60000
+    });
+
+    // Register health check
+    this.monitoring.registerHealthCheck('SecurityAssistant', async () => ({
+      service: 'SecurityAssistant',
+      status: this.isInitialized ? 'healthy' : 'degraded',
+      lastCheck: new Date(),
+      uptime: process.uptime(),
+      metrics: {
+        requestsTotal: this.conversations.size,
+        requestsPerSecond: 0,
+        averageResponseTime: 0,
+        errorRate: 0,
+        memoryUsage: Math.round((process.memoryUsage().heapUsed / process.memoryUsage().heapTotal) * 100),
+        cpuUsage: 0,
+        activeConnections: this.conversations.size,
+        queueDepth: 0
+      },
+      dependencies: []
+    }));
+
     this.initialize();
   }
 
   private async initialize(): Promise<void> {
+    const context = createErrorContext('SecurityAssistant', 'initialize');
+
     try {
+      this.logger.info('Initializing Security Assistant...', context);
+
       // Wait for NLP engine to initialize
-      await new Promise<void>(resolve => {
-        if (this.nlpEngine.getProcessingStatistics().isInitialized) {
-          resolve();
-        } else {
-          this.nlpEngine.once('initialized', resolve);
-        }
-      });
+      await withErrorHandling(
+        () => new Promise<void>((resolve, reject) => {
+          if (this.nlpEngine.getProcessingStatistics().isInitialized) {
+            resolve();
+          } else {
+            this.nlpEngine.once('initialized', resolve);
+            // Add timeout for safety
+            setTimeout(() => {
+              reject(new Error('NLP Engine initialization timeout'));
+            }, 30000); // 30 second timeout
+          }
+        }),
+        createErrorContext('SecurityAssistant', 'nlp_engine_initialization'),
+        () => { throw new InternalError('NLP Engine failed to initialize', context); }
+      );
 
       this.isInitialized = true;
-      
+
+      const capabilities = this.getCapabilities();
       this.emit('initialized', {
-        capabilities: this.getCapabilities(),
+        capabilities,
         timestamp: Date.now()
       });
-      
-      console.log('🤖 Security Assistant initialized successfully');
+
+      this.logger.info('Security Assistant initialized successfully', {
+        ...context,
+        metadata: { capabilities: Object.keys(capabilities) }
+      });
+
     } catch (error) {
-      console.error('❌ Failed to initialize Security Assistant:', error);
-      this.emit('error', { type: 'initialization', error });
+      const baseError = ErrorHandler.handle(error, context);
+      this.logger.error('Failed to initialize Security Assistant', context, baseError);
+      this.emit('error', { type: 'initialization', error: baseError });
+      throw baseError;
     }
   }
 
   async processQuery(
-    text: string, 
+    query: SecurityQuery,
     sessionId: string,
     options?: {
       userId?: string;
@@ -837,49 +921,114 @@ export class SecurityAssistant extends EventEmitter {
       context?: Partial<ConversationContext>;
     }
   ): Promise<SecurityResponse> {
-    if (!this.isInitialized) {
-      throw new Error('Security Assistant not initialized');
-    }
-
+    const context = createErrorContext('SecurityAssistant', 'processQuery', options?.userId, sessionId, query.id);
+    const endTimer = this.logger.startTimer('processQuery', context);
     const startTime = Date.now();
-    const queryId = `query_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Validate and sanitize inputs
+    const sanitizedQuery = sanitizeQuery(query.text);
 
     try {
+      if (!this.isInitialized) {
+        throw new InternalError('Security Assistant not initialized', context);
+      }
+      if (sanitizedQuery !== query.text) {
+        this.logger.warn('Query text was sanitized', { ...context, metadata: { originalLength: query.text.length, sanitizedLength: sanitizedQuery.length } });
+      }
+
+      const queryValidation = validateSecurityQuery(sanitizedQuery, context);
+      if (!queryValidation.isValid) {
+        throw queryValidation.errors[0]; // Throw first validation error
+      }
+
+      const sessionValidation = validateSessionId(sessionId, context);
+      if (!sessionValidation.isValid) {
+        throw sessionValidation.errors[0];
+      }
+
+      const startTime = Date.now();
+      const queryId = query.id || `query_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      this.logger.debug('Processing security query', { ...context, metadata: { queryText: sanitizedQuery.substring(0, 100) } });
+
       // Get or create conversation context
-      const context = this.getOrCreateContext(sessionId, options);
-      
-      // Analyze the query text
-      const textAnalysis = await this.nlpEngine.analyzeText(text);
-      
-      // Classify intent
-      const intent = this.intentClassifier.classifyIntent(text);
-      
-      // Extract entities
-      const entities = this.entityExtractor.extractEntities(text);
-      
+      const conversationContext = this.getOrCreateContext(sessionId, options);
+
+      // Analyze the query text with error handling
+      const textAnalysis = await withErrorHandling(
+        () => this.nlpEngine.analyzeText(query.text),
+        createErrorContext('SecurityAssistant', 'nlp_analysis', options?.userId, sessionId, queryId),
+        null
+      );
+
+      if (!textAnalysis) {
+        throw new ValidationError('Failed to analyze query text', context, 'text');
+      }
+
+      // Classify intent with error handling
+      const intent = await withErrorHandling(
+        () => this.intentClassifier.classifyIntent(query.text),
+        createErrorContext('SecurityAssistant', 'intent_classification', options?.userId, sessionId, queryId),
+        { primary: 'UNKNOWN', confidence: 0, category: 'INVESTIGATION' as const }
+      );
+
+      // Extract entities with error handling
+      const entities = await withErrorHandling(
+        () => this.entityExtractor.extractEntities(query.text),
+        createErrorContext('SecurityAssistant', 'entity_extraction', options?.userId, sessionId, queryId),
+        []
+      );
+
       // Determine urgency
       const urgency = options?.urgency || this.determineUrgency(textAnalysis, intent);
-      
+
       // Create security query
-      const query: SecurityQuery = {
+      const securityQuery: SecurityQuery = {
         id: queryId,
-        text,
+        text: sanitizedQuery, // Use sanitized query text
         intent,
         entities,
-        context,
+        context: conversationContext,
         urgency,
         timestamp: Date.now()
       };
 
       // Update conversation context
-      this.updateConversationContext(sessionId, query);
-      
-      // Generate response data (this would integrate with actual security systems)
-      const responseData = await this.fetchResponseData(query);
-      
-      // Generate response
-      const response = this.responseGenerator.generateResponse(query, responseData, context);
+      this.updateConversationContext(sessionId, securityQuery);
+
+      // Generate response data with error handling
+      const responseData = await withErrorHandling(
+        () => this.fetchResponseData(securityQuery),
+        createErrorContext('SecurityAssistant', 'response_data_fetch', options?.userId, sessionId, queryId),
+        {}
+      );
+
+      // Generate response with error handling
+      const response = await withErrorHandling(
+        () => this.responseGenerator.generateResponse(securityQuery, responseData, conversationContext),
+        createErrorContext('SecurityAssistant', 'response_generation', options?.userId, sessionId, queryId),
+        {
+          text: 'I apologize, but I encountered an error processing your request. Please try again.',
+          confidence: 0,
+          intent: 'ERROR',
+          entities: [],
+          processingTime: Date.now() - startTime,
+          queryId
+        }
+      );
+
       response.processingTime = Date.now() - startTime;
+      response.queryId = queryId;
+
+      this.logger.info('Query processed successfully', {
+        ...context,
+        metadata: {
+          intent: intent.primary,
+          urgency,
+          processingTime: response.processingTime,
+          entityCount: entities.length
+        }
+      });
 
       this.emit('query_processed', {
         queryId,
@@ -890,11 +1039,54 @@ export class SecurityAssistant extends EventEmitter {
         timestamp: Date.now()
       });
 
+      // Record performance metrics
+      this.monitoring.recordPerformanceMetrics('SecurityAssistant', {
+        responseTime: response.processingTime,
+        memoryUsage: Math.round((process.memoryUsage().heapUsed / process.memoryUsage().heapTotal) * 100),
+        throughput: 1,
+        errorRate: 0
+      }, context);
+
+      // Audit successful query processing
+      this.logger.audit('Security query processed successfully', context, {
+        action: 'query_processing',
+        resource: queryId,
+        resourceType: 'security_query',
+        compliance: ['data_processing', 'user_tracking']
+      });
+
+      endTimer();
       return response;
+
     } catch (error) {
-      console.error('❌ Query processing failed:', error);
-      this.emit('error', { type: 'query_processing', error, queryId });
-      throw error;
+      endTimer();
+      const baseError = ErrorHandler.handle(error, context);
+
+      // Record error metrics and security events
+      this.monitoring.recordPerformanceMetrics('SecurityAssistant', {
+        responseTime: Date.now() - startTime,
+        memoryUsage: Math.round((process.memoryUsage().heapUsed / process.memoryUsage().heapTotal) * 100),
+        errorRate: 100
+      }, context);
+
+      // Record security event if it's a security-related error
+      if (error instanceof SecurityError || error instanceof ValidationError) {
+        this.monitoring.recordSecurityEvent(
+          'query_processing_failed',
+          baseError.severity === 'critical' ? 'high' : baseError.severity === 'high' ? 'medium' : 'low',
+          context,
+          {
+            errorType: baseError.category,
+            errorCode: baseError.code,
+            queryText: sanitizedQuery?.substring(0, 100)
+          },
+          baseError.severity === 'critical' ? 80 : baseError.severity === 'high' ? 60 : 30
+        );
+      }
+
+      this.logger.error('Query processing failed', context, baseError);
+      this.emit('error', { type: 'query_processing', error: baseError, queryId: context.requestId });
+      throw baseError;
     }
   }
 
@@ -1002,19 +1194,13 @@ export class SecurityAssistant extends EventEmitter {
       timestamp: Date.now()
     };
   }
-}
-
-interface ContextOptions {
-  userId?: string;
-  context?: Partial<ConversationContext>;
-}
 
   private getOrCreateContext(
-    sessionId: string, 
+    sessionId: string,
     options?: ContextOptions
   ): ConversationContext {
     let context = this.conversations.get(sessionId);
-    
+
     if (!context) {
       context = {
         sessionId,
@@ -1032,36 +1218,15 @@ interface ContextOptions {
         },
         ...options?.context
       };
-      
+
       this.conversations.set(sessionId, context);
     }
-    
+
     return context;
   }
 
-  private updateConversationContext(sessionId: string, query: SecurityQuery): void {
-    const context = this.conversations.get(sessionId);
-    if (context) {
-      context.previousQueries.push(query.text);
-      context.currentTopic = query.intent.primary;
-      
-      // Keep only recent queries
-      if (context.previousQueries.length > 10) {
-        context.previousQueries = context.previousQueries.slice(-10);
-      }
-      
-      this.conversations.set(sessionId, context);
-    }
-  }
-
-interface TextAnalysis {
-  sentiment: {
-    urgency: number;
-  };
-}
-
   private determineUrgency(
-    textAnalysis: TextAnalysis, 
+    textAnalysis: { sentiment: { urgency: number } },
     intent: QueryIntent
   ): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
     if (textAnalysis.sentiment.urgency > 0.7) return 'CRITICAL';
@@ -1071,27 +1236,46 @@ interface TextAnalysis {
     return 'LOW';
   }
 
+  private updateConversationContext(sessionId: string, query: SecurityQuery): void {
+    const context = this.conversations.get(sessionId);
+    if (context) {
+      context.previousQueries.push(query.text);
+      context.currentTopic = query.intent.primary;
+
+      // Keep only recent queries
+      if (context.previousQueries.length > 10) {
+        context.previousQueries = context.previousQueries.slice(-10);
+      }
+    }
+  }
+
   private async fetchResponseData(query: SecurityQuery): Promise<SecurityData> {
     // This would integrate with actual security systems
     // For now, return mock data based on intent
-    
+
     switch (query.intent.primary) {
       case 'SHOW_ANOMALIES':
         return {
           count: Math.floor(Math.random() * 10) + 1,
           anomalies: [
-            { type: 'network_spike', severity: 'medium', timestamp: Date.now() },
-            { type: 'unusual_login', severity: 'high', timestamp: Date.now() - 300000 }
+            { type: 'network_spike', description: 'Network spike detected' },
+            { type: 'unusual_login', description: 'Unusual login activity' }
           ]
         };
-        
+
       case 'THREAT_ANALYSIS':
         return {
-          riskLevel: ['LOW', 'MEDIUM', 'HIGH'][Math.floor(Math.random() * 3)],
-          threats: ['malware', 'phishing'],
-          recommendations: ['update_firewall', 'patch_systems']
+          riskLevel: ['LOW', 'MEDIUM', 'HIGH'][Math.floor(Math.random() * 3)] as 'LOW' | 'MEDIUM' | 'HIGH',
+          threats: [
+            { id: 'malware', severity: 'HIGH', description: 'Malware detected' },
+            { id: 'phishing', severity: 'MEDIUM', description: 'Phishing attempt detected' }
+          ],
+          recommendations: [
+            { id: 'update_firewall', priority: 'HIGH', description: 'Update firewall rules' },
+            { id: 'patch_systems', priority: 'MEDIUM', description: 'Apply system patches' }
+          ]
         };
-        
+
       case 'MONITORING_STATUS':
         return {
           status: 'HEALTHY',
@@ -1101,9 +1285,9 @@ interface TextAnalysis {
             activeAlerts: 3
           }
         };
-        
+
       default:
-        return null;
+        return {} as SecurityData;
     }
   }
 
@@ -1131,11 +1315,24 @@ interface TextAnalysis {
             expectedResponse: 'string'
           }
         ],
-        context: {},
+        context: {
+          sessionId: '',
+          previousQueries: [],
+          securityContext: {
+            clearanceLevel: 'MEDIUM',
+            accessibleSystems: [],
+            currentIncidents: []
+          },
+          preferences: {
+            verbosity: 'DETAILED',
+            visualizations: true,
+            realTimeUpdates: true
+          }
+        },
         isComplete: false
       };
     }
-    
+
     // Default flow
     return {
       currentStep: 'general',
@@ -1151,14 +1348,20 @@ interface TextAnalysis {
     };
   }
 
-  private async processFlowResult(flow: ConversationFlow): Promise<FlowResult> {
+  private async processFlowResult(flow: ConversationFlow): Promise<SecurityData> {
     // Process the completed flow context to generate results
     return {
-      summary: 'Flow completed successfully',
-      data: flow.context,
-      recommendations: ['Review findings', 'Take appropriate action']
+      recommendations: [
+        { id: 'review_findings', priority: 'HIGH', description: 'Review findings' },
+        { id: 'take_action', priority: 'MEDIUM', description: 'Take appropriate action' }
+      ]
     };
   }
+}
+
+interface ContextOptions {
+  userId?: string;
+  context?: Partial<ConversationContext>;
 }
 
 // Type definitions for security assistant

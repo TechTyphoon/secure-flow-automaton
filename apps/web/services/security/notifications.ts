@@ -124,7 +124,7 @@ export class SecurityNotificationService {
           name: "View Dashboard",
           targets: [{
             os: "default",
-            uri: `${import.meta.env.VITE_APP_URL || 'http://localhost:5173'}/dashboard`
+            uri: `${process.env.VITE_APP_URL || 'http://localhost:5173'}/dashboard`
           }]
         }]
       };
