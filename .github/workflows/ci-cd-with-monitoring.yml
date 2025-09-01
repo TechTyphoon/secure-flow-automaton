@@ -334,11 +334,15 @@ jobs:
         # Deploy application (GitHub Pages example - replace with your deployment method)
         echo "📦 Deploying application to GitHub Pages..."
 
+        # Configure git for deployment
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
         # Install gh-pages globally
         npm install -g gh-pages
 
-        # Deploy to GitHub Pages
-        npx gh-pages -d dist -t true
+        # Deploy to GitHub Pages using PAT
+        npx gh-pages -d dist -t true -u "github-actions[bot] <github-actions[bot]@users.noreply.github.com>" -r https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
 
         echo "✅ Application deployed successfully (check if GitHub Pages is enabled in repository settings)"
 

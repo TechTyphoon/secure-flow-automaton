@@ -116,11 +116,15 @@ jobs:
       run: |
         echo "🚀 Deploying to GitHub Pages..."
 
+        # Configure git for deployment
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
         # Install gh-pages globally
         npm install -g gh-pages
 
-        # Deploy to gh-pages branch
-        npx gh-pages -d dist -t true
+        # Deploy to gh-pages branch using PAT
+        npx gh-pages -d dist -t true -u "github-actions[bot] <github-actions[bot]@users.noreply.github.com>" -r https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
 
         echo "✅ Deployment completed (check if GitHub Pages is enabled in repository settings)"
       continue-on-error: true
