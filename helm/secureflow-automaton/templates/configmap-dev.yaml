@@ -1,0 +1,27 @@
+{{- if eq .Values.environment "dev" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "secureflow-automaton.fullname" . }}-config-dev
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "secureflow-automaton.labels" . | nindent 4 }}
+    environment: dev
+data:
+  # Development-specific configuration
+  NODE_ENV: "development"
+  LOG_LEVEL: "debug"
+  METRICS_ENABLED: "true"
+  TRACING_ENABLED: "false"
+
+  # Development database (lighter load)
+  MAX_WORKERS: "2"
+  CACHE_TTL: "300"
+  RATE_LIMIT_MAX: "500"
+
+  # Development features
+  QUANTUM_FEATURES_ENABLED: "false"
+  AI_ASSISTANT_ENABLED: "true"
+  AUTOMATION_ENABLED: "true"
+  MONITORING_ENABLED: "true"
+{{- end }}

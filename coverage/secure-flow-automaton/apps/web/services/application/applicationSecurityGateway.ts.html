@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/1156</span>
+                <span class='fraction'>0/1160</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/1156</span>
+                <span class='fraction'>0/1160</span>
             </div>
         
             
@@ -1718,7 +1718,11 @@
 <a name='L1653'></a><a href='#L1653'>1653</a>
 <a name='L1654'></a><a href='#L1654'>1654</a>
 <a name='L1655'></a><a href='#L1655'>1655</a>
-<a name='L1656'></a><a href='#L1656'>1656</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L1656'></a><a href='#L1656'>1656</a>
+<a name='L1657'></a><a href='#L1657'>1657</a>
+<a name='L1658'></a><a href='#L1658'>1658</a>
+<a name='L1659'></a><a href='#L1659'>1659</a>
+<a name='L1660'></a><a href='#L1660'>1660</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3043,6 +3047,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -4608,14 +4616,14 @@ export interface RuleExclusion {
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  /**</span>
-   * Evaluate individual condition
+   * Evaluate a single condition
 <span class="cstat-no" title="statement not covered" >   */</span>
 <span class="cstat-no" title="statement not covered" >  private evaluateCondition(</span>
-<span class="cstat-no" title="statement not covered" >    condition: SecurityRule['condition'][0],</span>
+<span class="cstat-no" title="statement not covered" >    condition: AccessCondition,</span>
 <span class="cstat-no" title="statement not covered" >    request: ApplicationAccessRequest,</span>
 <span class="cstat-no" title="statement not covered" >    application: ApplicationDefinition</span>
 <span class="cstat-no" title="statement not covered" >  ): boolean {</span>
-<span class="cstat-no" title="statement not covered" >    let actualValue: any;</span>
+<span class="cstat-no" title="statement not covered" >    let actualValue: string | number | boolean | string[] | number[] | null;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    // Extract the actual value based on condition type and field</span>
 <span class="cstat-no" title="statement not covered" >    switch (condition.type) {</span>
@@ -4645,7 +4653,7 @@ export interface RuleExclusion {
 <span class="cstat-no" title="statement not covered" >    return this.evaluateOperator(condition.operator, actualValue, condition.value);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private getUserFieldValue(field: string, request: ApplicationAccessRequest): any {</span>
+<span class="cstat-no" title="statement not covered" >  private getUserFieldValue(field: string, request: ApplicationAccessRequest): string | number | boolean | string[] | number[] | null {</span>
 <span class="cstat-no" title="statement not covered" >    // Simplified - would integrate with user service</span>
 <span class="cstat-no" title="statement not covered" >    switch (field) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'id': return request.userId;</span>
@@ -4654,7 +4662,7 @@ export interface RuleExclusion {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private getDeviceFieldValue(field: string, request: ApplicationAccessRequest): any {</span>
+<span class="cstat-no" title="statement not covered" >  private getDeviceFieldValue(field: string, request: ApplicationAccessRequest): string | number | boolean | string[] | number[] | null {</span>
 <span class="cstat-no" title="statement not covered" >    switch (field) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'id': return request.deviceId;</span>
 <span class="cstat-no" title="statement not covered" >      case 'trustScore': return 100 - request.riskFactors.deviceRisk; // Inverse of risk</span>
@@ -4662,15 +4670,15 @@ export interface RuleExclusion {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private getNetworkFieldValue(field: string, request: ApplicationAccessRequest): any {</span>
+<span class="cstat-no" title="statement not covered" >  private getNetworkFieldValue(field: string, request: ApplicationAccessRequest): string | number | boolean | string[] | number[] | null {</span>
 <span class="cstat-no" title="statement not covered" >    switch (field) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'sourceIP': return request.context.sourceIP;</span>
-<span class="cstat-no" title="statement not covered" >      case 'location.country': return request.context.location?.country;</span>
+<span class="cstat-no" title="statement not covered" >      case 'location.country': return request.context.location?.country || null;</span>
 <span class="cstat-no" title="statement not covered" >      default: return null;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private getApplicationFieldValue(field: string, application: ApplicationDefinition): any {</span>
+<span class="cstat-no" title="statement not covered" >  private getApplicationFieldValue(field: string, application: ApplicationDefinition): string | number | boolean | string[] | number[] | null {</span>
 <span class="cstat-no" title="statement not covered" >    switch (field) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'endpoint.path': return application.network.endpoints.map(e =&gt; e.path);</span>
 <span class="cstat-no" title="statement not covered" >      case 'criticality': return application.criticality;</span>
@@ -4678,7 +4686,7 @@ export interface RuleExclusion {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private getTimeFieldValue(field: string, request: ApplicationAccessRequest): any {</span>
+<span class="cstat-no" title="statement not covered" >  private getTimeFieldValue(field: string, request: ApplicationAccessRequest): string | number | boolean | string[] | number[] | null {</span>
 <span class="cstat-no" title="statement not covered" >    switch (field) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'hour': return request.context.time.getHours();</span>
 <span class="cstat-no" title="statement not covered" >      case 'dayOfWeek': return request.context.time.getDay();</span>
@@ -4686,7 +4694,7 @@ export interface RuleExclusion {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private getRiskFieldValue(field: string, request: ApplicationAccessRequest): any {</span>
+<span class="cstat-no" title="statement not covered" >  private getRiskFieldValue(field: string, request: ApplicationAccessRequest): string | number | boolean | string[] | number[] | null {</span>
 <span class="cstat-no" title="statement not covered" >    switch (field) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'overall': return this.calculateRiskScore(request);</span>
 <span class="cstat-no" title="statement not covered" >      case 'user': return request.riskFactors.userRisk;</span>
@@ -4698,7 +4706,11 @@ export interface RuleExclusion {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private evaluateOperator(operator: string, actualValue: any, expectedValue: any): boolean {</span>
+<span class="cstat-no" title="statement not covered" >  private evaluateOperator(</span>
+<span class="cstat-no" title="statement not covered" >    operator: string, </span>
+<span class="cstat-no" title="statement not covered" >    actualValue: string | number | boolean | string[] | number[] | null, </span>
+<span class="cstat-no" title="statement not covered" >    expectedValue: string | number | boolean | string[] | number[]</span>
+<span class="cstat-no" title="statement not covered" >  ): boolean {</span>
 <span class="cstat-no" title="statement not covered" >    switch (operator) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'equals':</span>
 <span class="cstat-no" title="statement not covered" >        return actualValue === expectedValue;</span>
@@ -5035,7 +5047,7 @@ export interface RuleExclusion {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

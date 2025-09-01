@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "secureflow-automaton.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "secureflow-automaton.labels" . | nindent 4 }}
+data:
+  # Application Configuration
+  NODE_ENV: {{ .Values.config.nodeEnv | quote }}
+  PORT: {{ .Values.config.port | quote }}
+  SECURITY_LEVEL: {{ .Values.config.securityLevel | quote }}
+  SESSION_TIMEOUT: {{ .Values.config.sessionTimeout | quote }}
+  MAX_LOGIN_ATTEMPTS: {{ .Values.config.maxLoginAttempts | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  METRICS_ENABLED: {{ .Values.config.metricsEnabled | quote }}
+  TRACING_ENABLED: {{ .Values.config.tracingEnabled | quote }}
+
+  # Database Configuration
+  {{- if not .Values.externalDatabase.enabled }}
+  DB_TYPE: "postgresql"
+  DB_HOST: {{ include "secureflow-automaton.postgresql.fullname" . }}
+  DB_PORT: "5432"
+  DB_NAME: {{ .Values.postgresql.auth.database | quote }}
+  {{- end }}
+
+  # Redis Configuration
+  {{- if .Values.redis.enabled }}
+  REDIS_HOST: {{ include "secureflow-automaton.redis.fullname" . }}
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  {{- end }}
+
+  # Security Tools Configuration
+  SONAR_URL: {{ .Values.securityTools.sonar.url | quote }}
+  {{- if .Values.securityTools.snyk.orgId }}
+  SNYK_ORG_ID: {{ .Values.securityTools.snyk.orgId | quote }}
+  {{- end }}
+
+  # Feature Flags
+  QUANTUM_FEATURES_ENABLED: {{ .Values.features.quantumEnabled | quote }}
+  AI_ASSISTANT_ENABLED: {{ .Values.features.aiAssistantEnabled | quote }}
+  AUTOMATION_ENABLED: {{ .Values.features.automationEnabled | quote }}
+  MONITORING_ENABLED: {{ .Values.features.monitoringEnabled | quote }}
+
+  # Performance Configuration
+  MAX_WORKERS: {{ .Values.performance.maxWorkers | quote }}
+  CACHE_TTL: {{ .Values.performance.cacheTtl | quote }}
+  RATE_LIMIT_WINDOW: {{ .Values.performance.rateLimitWindow | quote }}
+  RATE_LIMIT_MAX: {{ .Values.performance.rateLimitMax | quote }}

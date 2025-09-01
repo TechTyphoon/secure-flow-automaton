@@ -1,0 +1,245 @@
+# Default values for secureflow-automaton
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global configuration
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+  labels: {}
+
+# Application configuration
+replicaCount: 3
+
+image:
+  repository: secureflow-automaton
+  pullPolicy: IfNotPresent
+  tag: "latest"
+  registry: ""
+
+# Service account configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "secureflow-service-account"
+  automountServiceAccountToken: false
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101
+  runAsGroup: 101
+  fsGroup: 101
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 101
+  runAsGroup: 101
+  capabilities:
+    drop:
+      - ALL
+
+# Application configuration
+config:
+  nodeEnv: "production"
+  port: 8080
+  securityLevel: "high"
+  sessionTimeout: "3600"
+  maxLoginAttempts: "5"
+  logLevel: "info"
+  metricsEnabled: "true"
+  tracingEnabled: "true"
+
+# Feature flags
+features:
+  quantumEnabled: true
+  aiAssistantEnabled: true
+  automationEnabled: true
+  monitoringEnabled: true
+
+# Performance configuration
+performance:
+  maxWorkers: "4"
+  cacheTtl: "3600"
+  rateLimitWindow: "900000"
+  rateLimitMax: "100"
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+  httpsPort: 443
+  httpsTargetPort: 8443
+  metricsPort: 9090
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+  hosts:
+    - host: secureflow.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: secureflow-tls
+      hosts:
+        - secureflow.yourdomain.com
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+# Autoscaling configuration
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Network policy configuration
+networkPolicy:
+  enabled: true
+  ingressRules:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8443
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+          podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 8080
+
+# External database configuration
+externalDatabase:
+  enabled: false
+  host: ""
+  port: 5432
+  database: ""
+  username: ""
+  password: ""
+
+# PostgreSQL configuration (when using included PostgreSQL)
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "changeme123"
+    username: "secureflow"
+    password: "changeme123"
+    database: "secureflow_db"
+  architecture: standalone
+  persistence:
+    enabled: true
+    size: 10Gi
+  metrics:
+    enabled: true
+
+# Redis configuration (when using included Redis)
+redis:
+  enabled: true
+  auth:
+    password: "changeme123"
+  architecture: standalone
+  persistence:
+    enabled: true
+    size: 1Gi
+  metrics:
+    enabled: true
+
+# Monitoring configuration
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 10s
+  grafana:
+    enabled: true
+    adminPassword: "changeme123"
+    service:
+      type: ClusterIP
+
+# Logging configuration
+logging:
+  enabled: true
+  level: "info"
+  format: "json"
+  persistentVolume:
+    enabled: true
+    size: 5Gi
+
+# Backup configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"
+  retention: "30d"
+  s3:
+    enabled: false
+    bucket: ""
+    region: ""
+
+# Security tools configuration
+securityTools:
+  sonar:
+    enabled: true
+    url: "https://sonarcloud.io"
+  snyk:
+    enabled: true
+    orgId: ""
+  containerScanning:
+    enabled: true
+
+# Environment-specific overrides
+environment: "production"
+
+# Node selectors and tolerations
+nodeSelector: {}
+tolerations: []
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - secureflow-automaton
+          topologyKey: kubernetes.io/hostname

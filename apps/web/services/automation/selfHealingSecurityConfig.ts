@@ -277,15 +277,7 @@ class AIConfigurationAnalyzer {
             recommendations: this.generatePerformanceRecommendations(performanceScore)
         };
     }
-}
-
-interface AnalysisResult {
-    drift: { hasDrift: boolean; score: number };
-    vulnerabilities: { hasVulnerabilities: boolean; score: number };
-    compliance: { isCompliant: boolean; score: number };
-    performance: { score: number };
-}
-
+    
     private async generateRecommendations(config: SecurityConfiguration, analysis: AnalysisResult): Promise<string[]> {
         const recommendations: string[] = [];
 
@@ -307,10 +299,6 @@ interface AnalysisResult {
 
         return recommendations;
     }
-
-interface ScoreComponents {
-    score: number;
-}
 
     private calculateOverallScore(drift: ScoreComponents, vuln: ScoreComponents, comp: ScoreComponents, perf: ScoreComponents): number {
         const weights = { drift: 0.3, vulnerability: 0.4, compliance: 0.2, performance: 0.1 };
@@ -336,14 +324,6 @@ interface ScoreComponents {
         return drifted;
     }
 
-interface Vulnerability {
-    id: string;
-    type: string;
-    severity: string;
-    description: string;
-    cve?: string;
-}
-
     private generateVulnerabilities(): Vulnerability[] {
         return [
             {
@@ -355,13 +335,6 @@ interface Vulnerability {
             }
         ];
     }
-
-interface ComplianceViolation {
-    framework: string;
-    requirement: string;
-    violation: string;
-    severity: string;
-}
 
     private generateComplianceViolations(config: SecurityConfiguration): ComplianceViolation[] {
         return [
@@ -406,7 +379,10 @@ interface ComplianceViolation {
         return ['Configuration performance is acceptable'];
     }
 
-    private identifyRisks(vulnAnalysis: ScoreComponents, compAnalysis: ScoreComponents): string[] {
+    private identifyRisks(
+        vulnAnalysis: { hasVulnerabilities: boolean; score: number },
+        compAnalysis: { isCompliant: boolean; score: number }
+    ): string[] {
         const risks: string[] = [];
         
         if (vulnAnalysis.hasVulnerabilities) {
@@ -446,6 +422,42 @@ interface ComplianceViolation {
         };
     }
 }
+
+interface AnalysisResult {
+    drift: { hasDrift: boolean; score: number };
+    vulnerabilities: { hasVulnerabilities: boolean; score: number };
+    compliance: { isCompliant: boolean; score: number };
+    performance: { score: number };
+}
+
+interface ScoreComponents {
+    score: number;
+}
+
+
+interface Vulnerability {
+    id: string;
+    type: string;
+    severity: string;
+    description: string;
+    cve?: string;
+}
+
+interface ComplianceViolation {
+    framework: string;
+    requirement: string;
+    violation: string;
+    severity: string;
+}
+
+
+
+
+
+
+
+
+
 
 // =================== MAIN SERVICE CLASS ===================
 

@@ -1239,7 +1239,36 @@
 <a name='L1174'></a><a href='#L1174'>1174</a>
 <a name='L1175'></a><a href='#L1175'>1175</a>
 <a name='L1176'></a><a href='#L1176'>1176</a>
-<a name='L1177'></a><a href='#L1177'>1177</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L1177'></a><a href='#L1177'>1177</a>
+<a name='L1178'></a><a href='#L1178'>1178</a>
+<a name='L1179'></a><a href='#L1179'>1179</a>
+<a name='L1180'></a><a href='#L1180'>1180</a>
+<a name='L1181'></a><a href='#L1181'>1181</a>
+<a name='L1182'></a><a href='#L1182'>1182</a>
+<a name='L1183'></a><a href='#L1183'>1183</a>
+<a name='L1184'></a><a href='#L1184'>1184</a>
+<a name='L1185'></a><a href='#L1185'>1185</a>
+<a name='L1186'></a><a href='#L1186'>1186</a>
+<a name='L1187'></a><a href='#L1187'>1187</a>
+<a name='L1188'></a><a href='#L1188'>1188</a>
+<a name='L1189'></a><a href='#L1189'>1189</a>
+<a name='L1190'></a><a href='#L1190'>1190</a>
+<a name='L1191'></a><a href='#L1191'>1191</a>
+<a name='L1192'></a><a href='#L1192'>1192</a>
+<a name='L1193'></a><a href='#L1193'>1193</a>
+<a name='L1194'></a><a href='#L1194'>1194</a>
+<a name='L1195'></a><a href='#L1195'>1195</a>
+<a name='L1196'></a><a href='#L1196'>1196</a>
+<a name='L1197'></a><a href='#L1197'>1197</a>
+<a name='L1198'></a><a href='#L1198'>1198</a>
+<a name='L1199'></a><a href='#L1199'>1199</a>
+<a name='L1200'></a><a href='#L1200'>1200</a>
+<a name='L1201'></a><a href='#L1201'>1201</a>
+<a name='L1202'></a><a href='#L1202'>1202</a>
+<a name='L1203'></a><a href='#L1203'>1203</a>
+<a name='L1204'></a><a href='#L1204'>1204</a>
+<a name='L1205'></a><a href='#L1205'>1205</a>
+<a name='L1206'></a><a href='#L1206'>1206</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2413,6 +2442,35 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
@@ -2426,7 +2484,7 @@
 interface SecurityEntity {
   id: string;
   type: EntityType;
-  properties: { [key: string]: any };
+  properties: { [key: string]: EntityProperty };
   metadata: EntityMetadata;
   timestamp: number;
 }
@@ -2436,7 +2494,7 @@ interface SecurityRelationship {
   source: string; // Entity ID
   target: string; // Entity ID
   type: RelationshipType;
-  properties: { [key: string]: any };
+  properties: { [key: string]: RelationshipProperty };
   confidence: number;
   temporal: TemporalInfo;
   metadata: RelationshipMetadata;
@@ -2497,7 +2555,7 @@ interface TemporalInfo {
 &nbsp;
 interface GraphQuery {
   query: string;
-  parameters?: { [key: string]: any };
+  parameters?: { [key: string]: QueryParameter };
   resultLimit?: number;
   includeRelationships?: boolean;
   traversalDepth?: number;
@@ -2771,7 +2829,7 @@ interface AttackTechnique {
 <span class="cstat-no" title="statement not covered" >    return results;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  getStatistics(): any {</span>
+<span class="cstat-no" title="statement not covered" >  getStatistics(): GraphStatistics {</span>
 <span class="cstat-no" title="statement not covered" >    const entityTypeCounts: { [key: string]: number } = {};</span>
 <span class="cstat-no" title="statement not covered" >    const relationshipTypeCounts: { [key: string]: number } = {};</span>
     
@@ -3284,7 +3342,7 @@ interface AttackTechnique {
 <span class="cstat-no" title="statement not covered" >  analyzeThreatLandscape(): {</span>
     topThreats: ThreatIntelligenceEntry[];
     emergingPatterns: TemporalPattern[];
-    riskAssessment: any;
+    riskAssessment: RiskAssessment;
 <span class="cstat-no" title="statement not covered" >  } {</span>
 <span class="cstat-no" title="statement not covered" >    const entities = Array.from(this.storage['entities'].values());</span>
 <span class="cstat-no" title="statement not covered" >    const threatEntities = entities.filter(e =&gt; </span>
@@ -3315,7 +3373,7 @@ interface AttackTechnique {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  getGraphStatistics(): any {</span>
+<span class="cstat-no" title="statement not covered" >  getGraphStatistics(): ExtendedGraphStatistics {</span>
 <span class="cstat-no" title="statement not covered" >    const baseStats = this.storage.getStatistics();</span>
 <span class="cstat-no" title="statement not covered" >    const centrality = this.analytics.calculateCentrality();</span>
 <span class="cstat-no" title="statement not covered" >    const communities = this.analytics.detectCommunities();</span>
@@ -3590,6 +3648,35 @@ interface AttackTechnique {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
+// Type definitions for knowledge graph
+type EntityProperty = string | number | boolean | string[] | Record&lt;string, unknown&gt;;
+&nbsp;
+type RelationshipProperty = string | number | boolean | string[] | Record&lt;string, unknown&gt;;
+&nbsp;
+type QueryParameter = string | number | boolean | string[];
+&nbsp;
+interface GraphStatistics {
+  totalEntities: number;
+  totalRelationships: number;
+  entityTypeCounts: Record&lt;string, number&gt;;
+  relationshipTypeCounts: Record&lt;string, number&gt;;
+  avgRelationshipsPerEntity: number;
+}
+&nbsp;
+interface RiskAssessment {
+  overallRiskLevel: string;
+  criticalAssets: string[];
+  vulnerabilityExposure: { exposed: number; total: number; percentage: number };
+}
+&nbsp;
+interface ExtendedGraphStatistics extends GraphStatistics {
+  topCentralEntities: [string, number][];
+  communityCount: number;
+  cacheSize: number;
+  isInitialized: boolean;
+  timestamp: number;
+}
+&nbsp;
 <span class="cstat-no" title="statement not covered" >export default SecurityKnowledgeGraph;</span>
 &nbsp;</pre></td></tr></table></pre>
 
@@ -3598,7 +3685,7 @@ interface AttackTechnique {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

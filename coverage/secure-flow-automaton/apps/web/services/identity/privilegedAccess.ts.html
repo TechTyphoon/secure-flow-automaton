@@ -896,7 +896,33 @@
 <a name='L831'></a><a href='#L831'>831</a>
 <a name='L832'></a><a href='#L832'>832</a>
 <a name='L833'></a><a href='#L833'>833</a>
-<a name='L834'></a><a href='#L834'>834</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L834'></a><a href='#L834'>834</a>
+<a name='L835'></a><a href='#L835'>835</a>
+<a name='L836'></a><a href='#L836'>836</a>
+<a name='L837'></a><a href='#L837'>837</a>
+<a name='L838'></a><a href='#L838'>838</a>
+<a name='L839'></a><a href='#L839'>839</a>
+<a name='L840'></a><a href='#L840'>840</a>
+<a name='L841'></a><a href='#L841'>841</a>
+<a name='L842'></a><a href='#L842'>842</a>
+<a name='L843'></a><a href='#L843'>843</a>
+<a name='L844'></a><a href='#L844'>844</a>
+<a name='L845'></a><a href='#L845'>845</a>
+<a name='L846'></a><a href='#L846'>846</a>
+<a name='L847'></a><a href='#L847'>847</a>
+<a name='L848'></a><a href='#L848'>848</a>
+<a name='L849'></a><a href='#L849'>849</a>
+<a name='L850'></a><a href='#L850'>850</a>
+<a name='L851'></a><a href='#L851'>851</a>
+<a name='L852'></a><a href='#L852'>852</a>
+<a name='L853'></a><a href='#L853'>853</a>
+<a name='L854'></a><a href='#L854'>854</a>
+<a name='L855'></a><a href='#L855'>855</a>
+<a name='L856'></a><a href='#L856'>856</a>
+<a name='L857'></a><a href='#L857'>857</a>
+<a name='L858'></a><a href='#L858'>858</a>
+<a name='L859'></a><a href='#L859'>859</a>
+<a name='L860'></a><a href='#L860'>860</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1727,6 +1753,32 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
@@ -1757,7 +1809,7 @@ export interface Permission {
 export interface PermissionCondition {
   type: 'time' | 'location' | 'device' | 'network';
   operator: 'equals' | 'not_equals' | 'in' | 'not_in';
-  value: any;
+  value: ConditionValue;
 }
 &nbsp;
 export interface TimeWindow {
@@ -1804,7 +1856,7 @@ export interface PrivilegedActivity {
   timestamp: Date;
   action: string;
   resource: string;
-  details: any;
+  details: ActivityDetails;
   riskScore: number;
   blocked: boolean;
   reason?: string;
@@ -2014,7 +2066,7 @@ export interface PamConfig {
 <span class="cstat-no" title="statement not covered" >    userId: string,</span>
 <span class="cstat-no" title="statement not covered" >    resource: string,</span>
 <span class="cstat-no" title="statement not covered" >    action: string,</span>
-<span class="cstat-no" title="statement not covered" >    context?: any</span>
+<span class="cstat-no" title="statement not covered" >    context?: PermissionContext</span>
   ): Promise&lt;{
     allowed: boolean;
     sessionId?: string;
@@ -2067,7 +2119,7 @@ export interface PamConfig {
 <span class="cstat-no" title="statement not covered" >    activity: {</span>
       action: string;
       resource: string;
-      details: any;
+      details: ActivityDetails;
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const session = this.activeSessions.get(sessionId);</span>
@@ -2195,7 +2247,7 @@ export interface PamConfig {
 <span class="cstat-no" title="statement not covered" >  /**</span>
    * Private methods
 <span class="cstat-no" title="statement not covered" >   */</span>
-<span class="cstat-no" title="statement not covered" >  private async validateAccessRequest(request: any): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async validateAccessRequest(request: AccessRequest): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!request.justification || request.justification.length &lt; this.config.requiredJustificationLength) {</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Insufficient justification provided');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -2207,7 +2259,7 @@ export interface PamConfig {
 <span class="cstat-no" title="statement not covered" >    // Additional validations...</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async assessRequestRisk(request: any, role: PrivilegedRole): Promise&lt;any&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async assessRequestRisk(request: AccessRequest, role: PrivilegedRole): Promise&lt;RiskAssessmentResult&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const factors: string[] = [];</span>
 <span class="cstat-no" title="statement not covered" >    let score = role.riskLevel === 'critical' ? 60 : </span>
 <span class="cstat-no" title="statement not covered" >                role.riskLevel === 'high' ? 40 : </span>
@@ -2257,7 +2309,7 @@ export interface PamConfig {
 <span class="cstat-no" title="statement not covered" >    return regex.test(resource);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async evaluateConditions(conditions: PermissionCondition[], context: any): Promise&lt;boolean&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async evaluateConditions(conditions: PermissionCondition[], context: PermissionContext): Promise&lt;boolean&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    for (const condition of conditions) {</span>
 <span class="cstat-no" title="statement not covered" >      if (!this.evaluateCondition(condition, context)) {</span>
 <span class="cstat-no" title="statement not covered" >        return false;</span>
@@ -2266,7 +2318,7 @@ export interface PamConfig {
 <span class="cstat-no" title="statement not covered" >    return true;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private evaluateCondition(condition: PermissionCondition, context: any): boolean {</span>
+<span class="cstat-no" title="statement not covered" >  private evaluateCondition(condition: PermissionCondition, context: PermissionContext): boolean {</span>
 <span class="cstat-no" title="statement not covered" >    const contextValue = context[condition.type];</span>
     
 <span class="cstat-no" title="statement not covered" >    switch (condition.operator) {</span>
@@ -2412,7 +2464,7 @@ export interface PamConfig {
 <span class="cstat-no" title="statement not covered" >    console.log(`Stopped monitoring privileged session: ${session.id}`);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  async assessActivityRisk(activity: any, session: ActivePrivilegedSession): Promise&lt;number&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  async assessActivityRisk(activity: PrivilegedActivity, session: ActivePrivilegedSession): Promise&lt;number&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    let risk = 0;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    // High-risk actions</span>
@@ -2561,6 +2613,32 @@ export interface PamConfig {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
+// Type definitions for privileged access
+interface ConditionValue {
+  value: string | number | boolean | string[];
+  [key: string]: unknown;
+}
+&nbsp;
+interface ActivityDetails {
+  action: string;
+  resource: string;
+  [key: string]: unknown;
+}
+&nbsp;
+interface PermissionContext {
+  time?: string;
+  location?: string;
+  device?: string;
+  network?: string;
+  [key: string]: unknown;
+}
+&nbsp;
+interface RiskAssessmentResult {
+  score: number;
+  factors: string[];
+  level: 'low' | 'medium' | 'high' | 'critical';
+}
+&nbsp;
 <span class="cstat-no" title="statement not covered" >export default PrivilegedAccessManager;</span>
 &nbsp;</pre></td></tr></table></pre>
 
@@ -2569,7 +2647,7 @@ export interface PamConfig {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

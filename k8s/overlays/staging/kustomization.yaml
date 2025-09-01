@@ -1,0 +1,59 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: secureflow-automaton-staging
+
+# Inherit from base
+bases:
+  - ../../base
+
+# Environment-specific labels
+commonLabels:
+  environment: staging
+  app.kubernetes.io/version: staging-latest
+
+# Namespace override
+namespace: secureflow-automaton-staging
+
+# Environment-specific ConfigMaps
+configMapGenerator:
+  - name: secureflow-automaton-config
+    behavior: replace
+    literals:
+      - ENVIRONMENT=staging
+      - NODE_ENV=staging
+      - LOG_LEVEL=info
+      - METRICS_ENABLED=true
+      - TRACING_ENABLED=true
+      - MAX_WORKERS=4
+      - CACHE_TTL=1800
+      - RATE_LIMIT_MAX=200
+      - QUANTUM_FEATURES_ENABLED=true
+      - BUILD_INFO=kustomize-staging
+
+# Environment-specific Secrets
+secretGenerator:
+  - name: secureflow-automaton-secrets
+    behavior: replace
+    literals:
+      - jwt-secret=staging-jwt-secret-key-67890
+      - session-secret=staging-session-secret-key-67890
+      - sonar-token=staging-sonar-token-placeholder
+      - snyk-token=staging-snyk-token-placeholder
+    type: Opaque
+
+# Staging-specific patches
+patchesStrategicMerge:
+  - deployment-staging.yaml
+  - service-staging.yaml
+
+# Replica count for staging
+replicas:
+  - name: secureflow-automaton
+    count: 3
+
+# Image for staging
+images:
+  - name: secureflow-automaton
+    newTag: staging-latest

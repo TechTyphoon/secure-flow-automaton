@@ -74,7 +74,8 @@
     "docker:demo": "docker-compose -f docker-compose.demo.yml up --build -d",
     "docker:stop": "docker-compose -f docker-compose.ultimate.yml down",
     "docker:logs": "docker-compose -f docker-compose.ultimate.yml logs -f",
-    "docker:clean": "docker system prune -f && docker volume prune -f"
+    "docker:clean": "docker system prune -f && docker volume prune -f",
+    "mcp:browser": "ts-node scripts/mcp-playwright.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -146,6 +147,7 @@
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@jest/globals": "^30.0.5",
+    "@modelcontextprotocol/sdk": "^1.17.4",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
@@ -170,12 +172,14 @@
     "husky": "^8.0.3",
     "jsdom": "^24.1.3",
     "lint-staged": "^15.5.2",
+    "playwright": "^1.55.0",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "rollup-plugin-visualizer": "^6.0.3",
     "serve": "^14.2.4",
     "tailwindcss": "^3.4.11",
-    "typescript": "^5.5.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^6.0.0",
     "vite-bundle-analyzer": "^1.1.0",

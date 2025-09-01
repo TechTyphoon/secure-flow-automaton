@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secureflow-automaton
+  labels:
+    name: secureflow-automaton
+    app.kubernetes.io/name: secureflow-automaton
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: secureflow-platform

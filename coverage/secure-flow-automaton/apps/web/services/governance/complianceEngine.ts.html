@@ -1064,7 +1064,12 @@
 <a name='L999'></a><a href='#L999'>999</a>
 <a name='L1000'></a><a href='#L1000'>1000</a>
 <a name='L1001'></a><a href='#L1001'>1001</a>
-<a name='L1002'></a><a href='#L1002'>1002</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L1002'></a><a href='#L1002'>1002</a>
+<a name='L1003'></a><a href='#L1003'>1003</a>
+<a name='L1004'></a><a href='#L1004'>1004</a>
+<a name='L1005'></a><a href='#L1005'>1005</a>
+<a name='L1006'></a><a href='#L1006'>1006</a>
+<a name='L1007'></a><a href='#L1007'>1007</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2054,6 +2059,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2111,7 +2121,7 @@ export interface ComplianceCheck {
   method: 'api' | 'file-scan' | 'config-check' | 'log-analysis' | 'manual';
   endpoint?: string;
   query?: string;
-  expectedResult: any;
+  expectedResult: ExpectedResult;
   frequency: 'real-time' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
   timeout: number;
 }
@@ -2488,7 +2498,7 @@ export interface RiskFactor {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async checkAPICompliance(endpoint: string, expectedResult: any): Promise&lt;boolean&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async checkAPICompliance(endpoint: string, expectedResult: ExpectedResult): Promise&lt;boolean&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      const response = await fetch(endpoint);</span>
 <span class="cstat-no" title="statement not covered" >      const data = await response.json();</span>
@@ -2498,25 +2508,25 @@ export interface RiskFactor {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async checkFileCompliance(pattern: string, expectedResult: any): Promise&lt;boolean&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async checkFileCompliance(pattern: string, expectedResult: ExpectedResult): Promise&lt;boolean&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    // File system compliance checks</span>
 <span class="cstat-no" title="statement not covered" >    // Implementation would depend on specific file patterns</span>
 <span class="cstat-no" title="statement not covered" >    return true;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async checkConfigCompliance(configPath: string, expectedResult: any): Promise&lt;boolean&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async checkConfigCompliance(configPath: string, expectedResult: ExpectedResult): Promise&lt;boolean&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    // Configuration compliance checks</span>
 <span class="cstat-no" title="statement not covered" >    // Implementation would check configuration files</span>
 <span class="cstat-no" title="statement not covered" >    return true;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async checkLogCompliance(logQuery: string, expectedResult: any): Promise&lt;boolean&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async checkLogCompliance(logQuery: string, expectedResult: ExpectedResult): Promise&lt;boolean&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    // Log analysis compliance checks</span>
 <span class="cstat-no" title="statement not covered" >    // Implementation would analyze logs for compliance patterns</span>
 <span class="cstat-no" title="statement not covered" >    return true;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private compareResults(actual: any, expected: any): boolean {</span>
+<span class="cstat-no" title="statement not covered" >  private compareResults(actual: ComplianceResult, expected: ExpectedResult): boolean {</span>
 <span class="cstat-no" title="statement not covered" >    // Deep comparison logic for compliance results</span>
 <span class="cstat-no" title="statement not covered" >    return JSON.stringify(actual) === JSON.stringify(expected);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -3064,6 +3074,11 @@ interface RemediationResult {
   timestamp: string;
 }
 &nbsp;
+// Type definitions for compliance engine
+type ExpectedResult = string | number | boolean | Record&lt;string, unknown&gt;;
+&nbsp;
+type ComplianceResult = string | number | boolean | Record&lt;string, unknown&gt;;
+&nbsp;
 <span class="cstat-no" title="statement not covered" >// Export singleton instance</span>
 <span class="cstat-no" title="statement not covered" >export const complianceEngine = new ComplianceEngine();</span>
 &nbsp;</pre></td></tr></table></pre>
@@ -3073,7 +3088,7 @@ interface RemediationResult {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

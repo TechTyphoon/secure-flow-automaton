@@ -1018,7 +1018,28 @@
 <a name='L953'></a><a href='#L953'>953</a>
 <a name='L954'></a><a href='#L954'>954</a>
 <a name='L955'></a><a href='#L955'>955</a>
-<a name='L956'></a><a href='#L956'>956</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L956'></a><a href='#L956'>956</a>
+<a name='L957'></a><a href='#L957'>957</a>
+<a name='L958'></a><a href='#L958'>958</a>
+<a name='L959'></a><a href='#L959'>959</a>
+<a name='L960'></a><a href='#L960'>960</a>
+<a name='L961'></a><a href='#L961'>961</a>
+<a name='L962'></a><a href='#L962'>962</a>
+<a name='L963'></a><a href='#L963'>963</a>
+<a name='L964'></a><a href='#L964'>964</a>
+<a name='L965'></a><a href='#L965'>965</a>
+<a name='L966'></a><a href='#L966'>966</a>
+<a name='L967'></a><a href='#L967'>967</a>
+<a name='L968'></a><a href='#L968'>968</a>
+<a name='L969'></a><a href='#L969'>969</a>
+<a name='L970'></a><a href='#L970'>970</a>
+<a name='L971'></a><a href='#L971'>971</a>
+<a name='L972'></a><a href='#L972'>972</a>
+<a name='L973'></a><a href='#L973'>973</a>
+<a name='L974'></a><a href='#L974'>974</a>
+<a name='L975'></a><a href='#L975'>975</a>
+<a name='L976'></a><a href='#L976'>976</a>
+<a name='L977'></a><a href='#L977'>977</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1954,6 +1975,27 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2430,7 +2472,7 @@ interface MLModel {
 <span class="cstat-no" title="statement not covered" >    return new Map(this.models);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  async retrainModel(modelId: string, trainingData: any[]): Promise&lt;boolean&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  async retrainModel(modelId: string, trainingData: TrainingData[]): Promise&lt;boolean&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const model = this.models.get(modelId);</span>
 <span class="cstat-no" title="statement not covered" >    if (!model) return false;</span>
 &nbsp;
@@ -2801,7 +2843,7 @@ interface MLModel {
 <span class="cstat-no" title="statement not covered" >    return this.mlEngine.getModelStatus();</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  async retrainMLModel(modelId: string, trainingData?: any[]): Promise&lt;boolean&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  async retrainMLModel(modelId: string, trainingData?: TrainingData[]): Promise&lt;boolean&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const data = trainingData || this.metricsHistory.slice(-100);</span>
 <span class="cstat-no" title="statement not covered" >    return await this.mlEngine.retrainModel(modelId, data);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -2846,7 +2888,7 @@ interface MLModel {
 <span class="cstat-no" title="statement not covered" >    return Math.round(overallScore);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  getAnalyticsSummary(): any {</span>
+<span class="cstat-no" title="statement not covered" >  getAnalyticsSummary(): AnalyticsSummary {</span>
 <span class="cstat-no" title="statement not covered" >    const currentMetrics = this.getCurrentMetrics();</span>
 <span class="cstat-no" title="statement not covered" >    const activeAlerts = this.getActiveAlerts();</span>
 <span class="cstat-no" title="statement not covered" >    const healthScore = this.getNetworkHealthScore();</span>
@@ -2927,6 +2969,27 @@ export type {
   MLModel
 };
 &nbsp;
+// Type definitions for quantum network analytics
+type TrainingData = QuantumNetworkMetrics;
+&nbsp;
+interface AnalyticsSummary {
+  healthScore: number;
+  totalNodes: number;
+  activeNodes: number;
+  totalServices: number;
+  healthyServices: number;
+  quantumReadiness: number;
+  averageLatency: number;
+  overallThroughput: number;
+  securityScore: number;
+  threatLevel: string;
+  activeAlerts: number;
+  criticalAlerts: number;
+  metricsHistorySize: number;
+  isCollecting: boolean;
+  timestamp: number;
+}
+&nbsp;
 <span class="cstat-no" title="statement not covered" >export default QuantumNetworkAnalyticsEngine;</span>
 &nbsp;</pre></td></tr></table></pre>
 
@@ -2935,7 +2998,7 @@ export type {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

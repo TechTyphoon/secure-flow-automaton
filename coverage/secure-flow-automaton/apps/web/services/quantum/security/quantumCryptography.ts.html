@@ -306,7 +306,18 @@
 <a name='L241'></a><a href='#L241'>241</a>
 <a name='L242'></a><a href='#L242'>242</a>
 <a name='L243'></a><a href='#L243'>243</a>
-<a name='L244'></a><a href='#L244'>244</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L244'></a><a href='#L244'>244</a>
+<a name='L245'></a><a href='#L245'>245</a>
+<a name='L246'></a><a href='#L246'>246</a>
+<a name='L247'></a><a href='#L247'>247</a>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a>
+<a name='L251'></a><a href='#L251'>251</a>
+<a name='L252'></a><a href='#L252'>252</a>
+<a name='L253'></a><a href='#L253'>253</a>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -549,6 +560,17 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
  * Phase 6.1: Quantum Cryptography Service
  * 
@@ -602,7 +624,7 @@ export interface EncryptionResult {
 <span class="cstat-no" title="statement not covered" >    console.log('✅ Quantum Cryptography Service initialized successfully');</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  async verifyTransaction(transaction: any): Promise&lt;CryptoVerificationResult&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  async verifyTransaction(transaction: TransactionData): Promise&lt;CryptoVerificationResult&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!this.isInitialized) {</span>
 <span class="cstat-no" title="statement not covered" >      await this.initialize();</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -638,7 +660,7 @@ export interface EncryptionResult {
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  async encryptTransaction(</span>
-<span class="cstat-no" title="statement not covered" >    transaction: any,</span>
+<span class="cstat-no" title="statement not covered" >    transaction: TransactionData,</span>
 <span class="cstat-no" title="statement not covered" >    securityLevel: 'standard' | 'high' | 'quantum_safe'</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;EncryptionResult&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!this.isInitialized) {</span>
@@ -774,7 +796,7 @@ export interface EncryptionResult {
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  private async performQuantumEncryption(</span>
-<span class="cstat-no" title="statement not covered" >    data: any,</span>
+<span class="cstat-no" title="statement not covered" >    data: TransactionData,</span>
 <span class="cstat-no" title="statement not covered" >    keyId: string,</span>
 <span class="cstat-no" title="statement not covered" >    algorithm: string</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;string&gt; {</span>
@@ -792,6 +814,17 @@ export interface EncryptionResult {
 <span class="cstat-no" title="statement not covered" >    return Math.random().toString(36).substr(2, 16);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
+&nbsp;
+// Type definitions for quantum cryptography
+interface TransactionData {
+  id: string;
+  amount: number;
+  currency: string;
+  sender: string;
+  recipient: string;
+  timestamp: Date;
+  [key: string]: unknown;
+}
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -799,7 +832,7 @@ export interface EncryptionResult {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>

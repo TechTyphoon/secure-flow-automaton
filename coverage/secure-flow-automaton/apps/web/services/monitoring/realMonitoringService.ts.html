@@ -337,7 +337,18 @@
 <a name='L272'></a><a href='#L272'>272</a>
 <a name='L273'></a><a href='#L273'>273</a>
 <a name='L274'></a><a href='#L274'>274</a>
-<a name='L275'></a><a href='#L275'>275</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a>
+<a name='L277'></a><a href='#L277'>277</a>
+<a name='L278'></a><a href='#L278'>278</a>
+<a name='L279'></a><a href='#L279'>279</a>
+<a name='L280'></a><a href='#L280'>280</a>
+<a name='L281'></a><a href='#L281'>281</a>
+<a name='L282'></a><a href='#L282'>282</a>
+<a name='L283'></a><a href='#L283'>283</a>
+<a name='L284'></a><a href='#L284'>284</a>
+<a name='L285'></a><a href='#L285'>285</a>
+<a name='L286'></a><a href='#L286'>286</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -611,7 +622,18 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import { SecurityConfigManager } from '../security/config';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import { SecurityConfigManager } from '../security/config';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >/**</span>
  * Real Monitoring Service - Production Implementation
@@ -651,7 +673,7 @@
 <span class="cstat-no" title="statement not covered" >  /**</span>
    * Capture Error
 <span class="cstat-no" title="statement not covered" >   */</span>
-<span class="cstat-no" title="statement not covered" >  async captureError(error: Error, context?: any): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  async captureError(error: Error, context?: ErrorContext): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (this.sentryInitialized) {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        // In a real implementation: Sentry.captureException(error, { extra: context });</span>
@@ -693,7 +715,7 @@
 <span class="cstat-no" title="statement not covered" >  async captureSecurityEvent(</span>
 <span class="cstat-no" title="statement not covered" >    eventType: string,</span>
 <span class="cstat-no" title="statement not covered" >    severity: 'low' | 'medium' | 'high' | 'critical',</span>
-<span class="cstat-no" title="statement not covered" >    details: any</span>
+<span class="cstat-no" title="statement not covered" >    details: SecurityEventDetails</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (this.sentryInitialized) {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
@@ -824,11 +846,11 @@
 <span class="cstat-no" title="statement not covered" >  startTransaction(name: string, operation: string): {</span>
     finish: () =&gt; void;
     setTag: (key: string, value: string) =&gt; void;
-    setData: (key: string, value: any) =&gt; void;
+    setData: (key: string, value: TransactionData) =&gt; void;
 <span class="cstat-no" title="statement not covered" >  } {</span>
 <span class="cstat-no" title="statement not covered" >    const startTime = performance.now();</span>
 <span class="cstat-no" title="statement not covered" >    const tags: Record&lt;string, string&gt; = {};</span>
-<span class="cstat-no" title="statement not covered" >    const data: Record&lt;string, any&gt; = {};</span>
+<span class="cstat-no" title="statement not covered" >    const data: Record&lt;string, TransactionData&gt; = {};</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return {</span>
 <span class="cstat-no" title="statement not covered" >      finish: () =&gt; {</span>
@@ -838,7 +860,7 @@
 <span class="cstat-no" title="statement not covered" >      setTag: (key: string, value: string) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        tags[key] = value;</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
-<span class="cstat-no" title="statement not covered" >      setData: (key: string, value: any) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      setData: (key: string, value: TransactionData) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        data[key] = value;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
@@ -885,14 +907,25 @@
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
-<span class="cstat-no" title="statement not covered" >} </span></pre></td></tr></table></pre>
+<span class="cstat-no" title="statement not covered" >}</span>
+&nbsp;
+// Type definitions for real monitoring service
+interface ErrorContext {
+  [key: string]: unknown;
+}
+&nbsp;
+interface SecurityEventDetails {
+  [key: string]: unknown;
+}
+&nbsp;
+type TransactionData = string | number | boolean | Record&lt;string, unknown&gt;;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

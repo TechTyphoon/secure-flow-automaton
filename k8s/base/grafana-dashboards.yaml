@@ -1,0 +1,375 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: dashboards
+data:
+  secureflow-overview.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "SecureFlow Automaton - Overview",
+        "tags": ["secureflow", "kubernetes", "devsecops"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Application Health",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "up{job=\"secureflow-automaton\"}",
+                "legendFormat": "Application Status"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "mappings": [
+                  {
+                    "options": {
+                      "0": {
+                        "text": "DOWN",
+                        "color": "red"
+                      },
+                      "1": {
+                        "text": "UP",
+                        "color": "green"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": 2,
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job=\"secureflow-automaton\"}[5m])",
+                "legendFormat": "Requests/sec"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"secureflow-automaton\"}[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"secureflow-automaton\"}[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Error Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{status=~\"5..\", job=\"secureflow-automaton\"}[5m]) / rate(http_requests_total{job=\"secureflow-automaton\"}[5m]) * 100",
+                "legendFormat": "Error Rate %"
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "CPU Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~\"secureflow-automaton-.*\"}[5m]) * 100",
+                "legendFormat": "CPU Usage %"
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Memory Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "container_memory_usage_bytes{pod=~\"secureflow-automaton-.*\"} / container_spec_memory_limit_bytes * 100",
+                "legendFormat": "Memory Usage %"
+              }
+            ]
+          },
+          {
+            "id": 7,
+            "title": "Database Connections",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "secureflow_db_active_connections",
+                "legendFormat": "Active Connections"
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "title": "Security Events",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "increase(secureflow_security_events_total[5m])",
+                "legendFormat": "Security Events"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "timepicker": {},
+        "templating": {
+          "list": []
+        },
+        "annotations": {
+          "list": []
+        },
+        "refresh": "5s",
+        "schemaVersion": 27,
+        "version": 0,
+        "links": []
+      }
+    }
+
+  secureflow-security.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "SecureFlow Automaton - Security Dashboard",
+        "tags": ["secureflow", "security", "devsecops"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Authentication Success Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(secureflow_auth_success_total[5m]) / (rate(secureflow_auth_success_total[5m]) + rate(secureflow_auth_failures_total[5m])) * 100",
+                "legendFormat": "Success Rate %"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Failed Authentication Attempts",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "increase(secureflow_auth_failures_total[5m])",
+                "legendFormat": "Failed Attempts"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Active Sessions",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "secureflow_active_sessions",
+                "legendFormat": "Active Sessions"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Security Events by Type",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "increase(secureflow_security_events_total[5m])",
+                "legendFormat": "{{event_type}}"
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Vulnerability Scan Results",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "secureflow_vulnerability_count{severity=\"critical\"}",
+                "legendFormat": "Critical"
+              },
+              {
+                "expr": "secureflow_vulnerability_count{severity=\"high\"}",
+                "legendFormat": "High"
+              },
+              {
+                "expr": "secureflow_vulnerability_count{severity=\"medium\"}",
+                "legendFormat": "Medium"
+              },
+              {
+                "expr": "secureflow_vulnerability_count{severity=\"low\"}",
+                "legendFormat": "Low"
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "API Security Score",
+            "type": "gauge",
+            "targets": [
+              {
+                "expr": "secureflow_api_security_score",
+                "legendFormat": "Security Score"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "min": 0,
+                "max": 100,
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 60
+                    },
+                    {
+                      "color": "green",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "time": {
+          "from": "now-24h",
+          "to": "now"
+        },
+        "timepicker": {},
+        "templating": {
+          "list": []
+        },
+        "annotations": {
+          "list": []
+        },
+        "refresh": "30s",
+        "schemaVersion": 27,
+        "version": 0,
+        "links": []
+      }
+    }
+
+  secureflow-performance.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "SecureFlow Automaton - Performance Dashboard",
+        "tags": ["secureflow", "performance", "monitoring"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Application Throughput",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job=\"secureflow-automaton\"}[5m])",
+                "legendFormat": "Requests/sec"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Response Time Distribution",
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "rate(http_request_duration_seconds_bucket{job=\"secureflow-automaton\"}[5m])",
+                "legendFormat": "{{le}}"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Database Query Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(secureflow_db_query_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(secureflow_db_query_duration_seconds_bucket[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Cache Hit Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(secureflow_cache_hits_total[5m]) / (rate(secureflow_cache_hits_total[5m]) + rate(secureflow_cache_misses_total[5m])) * 100",
+                "legendFormat": "Cache Hit Rate %"
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Quantum Service Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(secureflow_quantum_operation_duration_seconds_bucket[5m]))",
+                "legendFormat": "Quantum Operation 95th percentile"
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Resource Utilization",
+            "type": "bargauge",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~\"secureflow-automaton-.*\"}[5m]) * 100",
+                "legendFormat": "{{pod}} CPU"
+              },
+              {
+                "expr": "container_memory_usage_bytes{pod=~\"secureflow-automaton-.*\"} / container_spec_memory_limit_bytes * 100",
+                "legendFormat": "{{pod}} Memory"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "timepicker": {},
+        "templating": {
+          "list": []
+        },
+        "annotations": {
+          "list": []
+        },
+        "refresh": "15s",
+        "schemaVersion": 27,
+        "version": 0,
+        "links": []
+      }
+    }

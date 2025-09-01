@@ -1,0 +1,27 @@
+{{- if eq .Values.environment "staging" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "secureflow-automaton.fullname" . }}-config-staging
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "secureflow-automaton.labels" . | nindent 4 }}
+    environment: staging
+data:
+  # Staging-specific configuration
+  NODE_ENV: "staging"
+  LOG_LEVEL: "info"
+  METRICS_ENABLED: "true"
+  TRACING_ENABLED: "true"
+
+  # Staging performance (moderate load)
+  MAX_WORKERS: "4"
+  CACHE_TTL: "1800"
+  RATE_LIMIT_MAX: "200"
+
+  # Staging features (partial quantum)
+  QUANTUM_FEATURES_ENABLED: "true"
+  AI_ASSISTANT_ENABLED: "true"
+  AUTOMATION_ENABLED: "true"
+  MONITORING_ENABLED: "true"
+{{- end }}

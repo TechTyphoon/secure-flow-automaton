@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secureflow-automaton
+spec:
+  template:
+    spec:
+      containers:
+      - name: secureflow-automaton
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "300m"
+        env:
+        - name: NODE_ENV
+          value: "development"
+        - name: LOG_LEVEL
+          value: "debug"
+        - name: METRICS_ENABLED
+          value: "true"
+        - name: QUANTUM_FEATURES_ENABLED
+          value: "false"

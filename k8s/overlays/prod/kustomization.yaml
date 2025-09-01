@@ -1,0 +1,52 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: secureflow-automaton-prod
+
+# Inherit from base
+bases:
+  - ../../base
+
+# Environment-specific labels
+commonLabels:
+  environment: production
+  app.kubernetes.io/version: v4.1.0
+
+# Namespace override
+namespace: secureflow-automaton-prod
+
+# Environment-specific ConfigMaps
+configMapGenerator:
+  - name: secureflow-automaton-config
+    behavior: replace
+    literals:
+      - ENVIRONMENT=production
+      - NODE_ENV=production
+      - LOG_LEVEL=warn
+      - METRICS_ENABLED=true
+      - TRACING_ENABLED=true
+      - MAX_WORKERS=8
+      - CACHE_TTL=3600
+      - RATE_LIMIT_MAX=100
+      - QUANTUM_FEATURES_ENABLED=true
+      - BUILD_INFO=kustomize-prod
+
+# Production secrets should come from external secret management
+# No secretGenerator here - secrets should be managed by external systems
+
+# Production-specific patches
+patchesStrategicMerge:
+  - deployment-prod.yaml
+  - service-prod.yaml
+  - ingress-prod.yaml
+
+# Replica count for production
+replicas:
+  - name: secureflow-automaton
+    count: 5
+
+# Image for production
+images:
+  - name: secureflow-automaton
+    newTag: v4.1.0

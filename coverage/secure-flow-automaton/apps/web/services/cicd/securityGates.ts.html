@@ -1599,7 +1599,32 @@
 <a name='L1534'></a><a href='#L1534'>1534</a>
 <a name='L1535'></a><a href='#L1535'>1535</a>
 <a name='L1536'></a><a href='#L1536'>1536</a>
-<a name='L1537'></a><a href='#L1537'>1537</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L1537'></a><a href='#L1537'>1537</a>
+<a name='L1538'></a><a href='#L1538'>1538</a>
+<a name='L1539'></a><a href='#L1539'>1539</a>
+<a name='L1540'></a><a href='#L1540'>1540</a>
+<a name='L1541'></a><a href='#L1541'>1541</a>
+<a name='L1542'></a><a href='#L1542'>1542</a>
+<a name='L1543'></a><a href='#L1543'>1543</a>
+<a name='L1544'></a><a href='#L1544'>1544</a>
+<a name='L1545'></a><a href='#L1545'>1545</a>
+<a name='L1546'></a><a href='#L1546'>1546</a>
+<a name='L1547'></a><a href='#L1547'>1547</a>
+<a name='L1548'></a><a href='#L1548'>1548</a>
+<a name='L1549'></a><a href='#L1549'>1549</a>
+<a name='L1550'></a><a href='#L1550'>1550</a>
+<a name='L1551'></a><a href='#L1551'>1551</a>
+<a name='L1552'></a><a href='#L1552'>1552</a>
+<a name='L1553'></a><a href='#L1553'>1553</a>
+<a name='L1554'></a><a href='#L1554'>1554</a>
+<a name='L1555'></a><a href='#L1555'>1555</a>
+<a name='L1556'></a><a href='#L1556'>1556</a>
+<a name='L1557'></a><a href='#L1557'>1557</a>
+<a name='L1558'></a><a href='#L1558'>1558</a>
+<a name='L1559'></a><a href='#L1559'>1559</a>
+<a name='L1560'></a><a href='#L1560'>1560</a>
+<a name='L1561'></a><a href='#L1561'>1561</a>
+<a name='L1562'></a><a href='#L1562'>1562</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3049,6 +3074,31 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3193,7 +3243,7 @@ export interface GateCondition {
   id: string;
   type: 'branch' | 'environment' | 'user' | 'time' | 'dependency' | 'custom';
   operator: 'equals' | 'not_equals' | 'contains' | 'matches' | 'in' | 'greater_than' | 'less_than';
-  value: any;
+  value: ConditionValue;
   parameter?: string;
 }
 &nbsp;
@@ -3220,7 +3270,7 @@ export interface ValidationRule {
   description: string;
   pattern: string;
   type: 'regex' | 'json-path' | 'xml-path' | 'custom';
-  expected: any;
+  expected: ValidationExpected;
   errorMessage: string;
 }
 &nbsp;
@@ -3561,7 +3611,7 @@ export type SecurityFindingType = 'vulnerability' | 'security-hotspot' | 'code-s
 <span class="cstat-no" title="statement not covered" >  /**</span>
    * Validate pipeline security configuration
 <span class="cstat-no" title="statement not covered" >   */</span>
-<span class="cstat-no" title="statement not covered" >  async validatePipelineConfiguration(pipelineConfig: any): Promise&lt;PipelineValidationResult&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  async validatePipelineConfiguration(pipelineConfig: PipelineConfig): Promise&lt;PipelineValidationResult&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const pipelineId = pipelineConfig.id || 'unknown';</span>
 <span class="cstat-no" title="statement not covered" >    const issues: ValidationIssue[] = [];</span>
 <span class="cstat-no" title="statement not covered" >    const securityGates: SecurityGateSummary[] = [];</span>
@@ -3892,7 +3942,7 @@ export type SecurityFindingType = 'vulnerability' | 'security-hotspot' | 'code-s
 <span class="cstat-no" title="statement not covered" >    });</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private evaluateCondition(actual: any, operator: string, expected: any): boolean {</span>
+<span class="cstat-no" title="statement not covered" >  private evaluateCondition(actual: unknown, operator: string, expected: ConditionValue): boolean {</span>
 <span class="cstat-no" title="statement not covered" >    switch (operator) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'equals':</span>
 <span class="cstat-no" title="statement not covered" >        return actual === expected;</span>
@@ -4291,12 +4341,12 @@ export type SecurityFindingType = 'vulnerability' | 'security-hotspot' | 'code-s
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  // Additional helper methods for metrics and analysis</span>
-<span class="cstat-no" title="statement not covered" >  private extractStagesFromConfig(pipelineConfig: any): PipelineStage[] {</span>
+<span class="cstat-no" title="statement not covered" >  private extractStagesFromConfig(pipelineConfig: PipelineConfig): PipelineStage[] {</span>
 <span class="cstat-no" title="statement not covered" >    // Mock implementation - would extract actual stages from pipeline config</span>
 <span class="cstat-no" title="statement not covered" >    return ['build', 'test', 'deploy'];</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async validateSecurityToolsConfig(pipelineConfig: any, issues: ValidationIssue[]): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async validateSecurityToolsConfig(pipelineConfig: PipelineConfig, issues: ValidationIssue[]): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    // Mock validation - would validate actual security tools configuration</span>
 <span class="cstat-no" title="statement not covered" >    if (!pipelineConfig.security?.tools) {</span>
 <span class="cstat-no" title="statement not covered" >      issues.push({</span>
@@ -4310,7 +4360,7 @@ export type SecurityFindingType = 'vulnerability' | 'security-hotspot' | 'code-s
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async validateComplianceRequirements(pipelineConfig: any): Promise&lt;ComplianceStatus&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async validateComplianceRequirements(pipelineConfig: PipelineConfig): Promise&lt;ComplianceStatus&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    // Mock compliance validation</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
 <span class="cstat-no" title="statement not covered" >      frameworks: ['SOC2', 'ISO27001'],</span>
@@ -4502,7 +4552,7 @@ export type SecurityFindingType = 'vulnerability' | 'security-hotspot' | 'code-s
 <span class="cstat-no" title="statement not covered" >    return 'stable';</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private identifyFixableIssues(execution: GateExecution, options?: any): FixableIssue[] {</span>
+<span class="cstat-no" title="statement not covered" >  private identifyFixableIssues(execution: GateExecution, options?: FixOptions): FixableIssue[] {</span>
 <span class="cstat-no" title="statement not covered" >    const fixableIssues: FixableIssue[] = [];</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    execution.checkResults.forEach(checkResult =&gt; {</span>
@@ -4669,6 +4719,31 @@ interface FixableIssue {
   confidence: number;
 }
 &nbsp;
+// Type definitions for security gates
+interface ConditionValue {
+  value: string | number | boolean | string[];
+  [key: string]: unknown;
+}
+&nbsp;
+interface ValidationExpected {
+  value: string | number | boolean | string[];
+  [key: string]: unknown;
+}
+&nbsp;
+interface PipelineConfig {
+  id: string;
+  security?: {
+    tools?: Record&lt;string, unknown&gt;;
+  };
+  [key: string]: unknown;
+}
+&nbsp;
+interface FixOptions {
+  dryRun?: boolean;
+  maxFixes?: number;
+  [key: string]: unknown;
+}
+&nbsp;
 <span class="cstat-no" title="statement not covered" >// Export singleton instance</span>
 <span class="cstat-no" title="statement not covered" >export const securityGatesEngine = new SecurityGatesEngine();</span>
 &nbsp;</pre></td></tr></table></pre>
@@ -4678,7 +4753,7 @@ interface FixableIssue {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

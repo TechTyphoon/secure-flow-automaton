@@ -1,0 +1,27 @@
+{{- if eq .Values.environment "production" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "secureflow-automaton.fullname" . }}-config-prod
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "secureflow-automaton.labels" . | nindent 4 }}
+    environment: production
+data:
+  # Production-specific configuration
+  NODE_ENV: "production"
+  LOG_LEVEL: "warn"
+  METRICS_ENABLED: "true"
+  TRACING_ENABLED: "true"
+
+  # Production performance (high load)
+  MAX_WORKERS: "8"
+  CACHE_TTL: "3600"
+  RATE_LIMIT_MAX: "100"
+
+  # Production features (full quantum)
+  QUANTUM_FEATURES_ENABLED: "true"
+  AI_ASSISTANT_ENABLED: "true"
+  AUTOMATION_ENABLED: "true"
+  MONITORING_ENABLED: "true"
+{{- end }}
