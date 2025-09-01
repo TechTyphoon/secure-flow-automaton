@@ -1,0 +1,189 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "secureflow-automaton.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "secureflow-automaton.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "secureflow-automaton.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "secureflow-automaton.selectorLabels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.config.port }}"
+        prometheus.io/path: "/metrics"
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "secureflow-automaton.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.port }}
+              protocol: TCP
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+          env:
+            # Application Configuration
+            - name: NODE_ENV
+              value: {{ .Values.config.nodeEnv | quote }}
+            - name: PORT
+              value: {{ .Values.config.port | quote }}
+            - name: SECURITY_LEVEL
+              value: {{ .Values.config.securityLevel | quote }}
+            - name: SESSION_TIMEOUT
+              value: {{ .Values.config.sessionTimeout | quote }}
+            - name: MAX_LOGIN_ATTEMPTS
+              value: {{ .Values.config.maxLoginAttempts | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.config.logLevel | quote }}
+            - name: METRICS_ENABLED
+              value: {{ .Values.config.metricsEnabled | quote }}
+            - name: TRACING_ENABLED
+              value: {{ .Values.config.tracingEnabled | quote }}
+
+            # Database Configuration
+            {{- if .Values.externalDatabase.enabled }}
+            - name: DB_HOST
+              value: {{ .Values.externalDatabase.host | quote }}
+            - name: DB_PORT
+              value: {{ .Values.externalDatabase.port | quote }}
+            - name: DB_NAME
+              value: {{ .Values.externalDatabase.database | quote }}
+            - name: DB_USER
+              value: {{ .Values.externalDatabase.username | quote }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "secureflow-automaton.fullname" . }}-external-db
+                  key: password
+            {{- else if .Values.postgresql.enabled }}
+            - name: DB_HOST
+              value: {{ include "secureflow-automaton.postgresql.fullname" . }}
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: {{ .Values.postgresql.auth.database | quote }}
+            - name: DB_USER
+              value: {{ .Values.postgresql.auth.username | quote }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "secureflow-automaton.postgresql.secretName" . }}
+                  key: password
+            {{- end }}
+
+            # Redis Configuration
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_HOST
+              value: {{ include "secureflow-automaton.redis.fullname" . }}
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "secureflow-automaton.redis.secretName" . }}
+                  key: redis-password
+            {{- end }}
+
+            # Feature Flags
+            - name: QUANTUM_FEATURES_ENABLED
+              value: {{ .Values.features.quantumEnabled | quote }}
+            - name: AI_ASSISTANT_ENABLED
+              value: {{ .Values.features.aiAssistantEnabled | quote }}
+            - name: AUTOMATION_ENABLED
+              value: {{ .Values.features.automationEnabled | quote }}
+            - name: MONITORING_ENABLED
+              value: {{ .Values.features.monitoringEnabled | quote }}
+
+            # Performance Configuration
+            - name: MAX_WORKERS
+              value: {{ .Values.performance.maxWorkers | quote }}
+            - name: CACHE_TTL
+              value: {{ .Values.performance.cacheTtl | quote }}
+            - name: RATE_LIMIT_WINDOW
+              value: {{ .Values.performance.rateLimitWindow | quote }}
+            - name: RATE_LIMIT_MAX
+              value: {{ .Values.performance.rateLimitMax | quote }}
+
+            # Secrets from external secret
+            - name: SONAR_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "secureflow-automaton.fullname" . }}-secrets
+                  key: sonar-token
+            - name: SNYK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "secureflow-automaton.fullname" . }}-secrets
+                  key: snyk-token
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "secureflow-automaton.fullname" . }}-secrets
+                  key: jwt-secret
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.config.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.config.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: tmp-volume
+              mountPath: /tmp
+            - name: cache-volume
+              mountPath: /app/cache
+            - name: logs-volume
+              mountPath: /app/logs
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}
+        - name: cache-volume
+          emptyDir: {}
+        - name: logs-volume
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

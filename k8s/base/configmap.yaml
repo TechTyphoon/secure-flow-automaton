@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: secureflow-config
+  namespace: secureflow-automaton
+  labels:
+    app.kubernetes.io/name: secureflow-automaton
+    app.kubernetes.io/component: config
+data:
+  # Application Configuration
+  NODE_ENV: "production"
+  PORT: "8080"
+
+  # Security Configuration
+  SECURITY_LEVEL: "high"
+  SESSION_TIMEOUT: "3600"
+  MAX_LOGIN_ATTEMPTS: "5"
+
+  # Database Configuration (will be overridden by secrets)
+  DB_TYPE: "postgresql"
+  DB_HOST: "secureflow-postgres"
+  DB_PORT: "5432"
+  DB_NAME: "secureflow_db"
+
+  # Redis Configuration
+  REDIS_HOST: "secureflow-redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+
+  # Monitoring Configuration
+  METRICS_ENABLED: "true"
+  LOG_LEVEL: "info"
+  TRACING_ENABLED: "true"
+
+  # Security Tools Configuration
+  SONAR_URL: "https://sonarcloud.io"
+  SNYK_ORG_ID: "your-org-id"
+
+  # Feature Flags
+  QUANTUM_FEATURES_ENABLED: "true"
+  AI_ASSISTANT_ENABLED: "true"
+  AUTOMATION_ENABLED: "true"
+  MONITORING_ENABLED: "true"
+
+  # Performance Configuration
+  MAX_WORKERS: "4"
+  CACHE_TTL: "3600"
+  RATE_LIMIT_WINDOW: "900000"
+  RATE_LIMIT_MAX: "100"

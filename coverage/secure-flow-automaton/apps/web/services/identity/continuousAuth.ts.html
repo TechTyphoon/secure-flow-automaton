@@ -693,7 +693,25 @@
 <a name='L628'></a><a href='#L628'>628</a>
 <a name='L629'></a><a href='#L629'>629</a>
 <a name='L630'></a><a href='#L630'>630</a>
-<a name='L631'></a><a href='#L631'>631</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L631'></a><a href='#L631'>631</a>
+<a name='L632'></a><a href='#L632'>632</a>
+<a name='L633'></a><a href='#L633'>633</a>
+<a name='L634'></a><a href='#L634'>634</a>
+<a name='L635'></a><a href='#L635'>635</a>
+<a name='L636'></a><a href='#L636'>636</a>
+<a name='L637'></a><a href='#L637'>637</a>
+<a name='L638'></a><a href='#L638'>638</a>
+<a name='L639'></a><a href='#L639'>639</a>
+<a name='L640'></a><a href='#L640'>640</a>
+<a name='L641'></a><a href='#L641'>641</a>
+<a name='L642'></a><a href='#L642'>642</a>
+<a name='L643'></a><a href='#L643'>643</a>
+<a name='L644'></a><a href='#L644'>644</a>
+<a name='L645'></a><a href='#L645'>645</a>
+<a name='L646'></a><a href='#L646'>646</a>
+<a name='L647'></a><a href='#L647'>647</a>
+<a name='L648'></a><a href='#L648'>648</a>
+<a name='L649'></a><a href='#L649'>649</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1321,6 +1339,24 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
@@ -1569,7 +1605,7 @@ export interface RiskFactors {
 <span class="cstat-no" title="statement not covered" >  async verifyStepUpAuth(</span>
 <span class="cstat-no" title="statement not covered" >    sessionId: string,</span>
 <span class="cstat-no" title="statement not covered" >    challengeId: string,</span>
-<span class="cstat-no" title="statement not covered" >    response: any</span>
+<span class="cstat-no" title="statement not covered" >    response: StepUpResponse</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;boolean&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const session = this.sessions.get(sessionId);</span>
 <span class="cstat-no" title="statement not covered" >    if (!session) {</span>
@@ -1784,7 +1820,7 @@ export interface RiskFactors {
 <span class="cstat-no" title="statement not covered" >    return methodMap[requiredLevel] || 'totp';</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async verifyStepUpResponse(challengeId: string, response: any): Promise&lt;boolean&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async verifyStepUpResponse(challengeId: string, response: StepUpResponse): Promise&lt;boolean&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    // Implement actual step-up verification</span>
 <span class="cstat-no" title="statement not covered" >    return true; // Simplified for demo</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -1802,7 +1838,7 @@ export interface RiskFactors {
 <span class="cstat-no" title="statement not covered" >  private async logSessionEvent(</span>
 <span class="cstat-no" title="statement not covered" >    session: AuthenticationSession,</span>
 <span class="cstat-no" title="statement not covered" >    eventType: string,</span>
-<span class="cstat-no" title="statement not covered" >    details: any</span>
+<span class="cstat-no" title="statement not covered" >    details: EventDetails</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const logEntry = {</span>
 <span class="cstat-no" title="statement not covered" >      timestamp: new Date().toISOString(),</span>
@@ -1827,7 +1863,7 @@ export interface RiskFactors {
 <span class="cstat-no" title="statement not covered" >class BehaviorAnalyzer {</span>
 <span class="cstat-no" title="statement not covered" >  async analyzeBehavior(</span>
 <span class="cstat-no" title="statement not covered" >    userId: string,</span>
-<span class="cstat-no" title="statement not covered" >    activity: any,</span>
+<span class="cstat-no" title="statement not covered" >    activity: UserActivity,</span>
 <span class="cstat-no" title="statement not covered" >    history: VerificationEvent[]</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;{ anomalyScore: number; patterns: string[] }&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    // Implement behavior analysis using ML models</span>
@@ -1952,6 +1988,24 @@ export interface RiskFactors {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
+// Type definitions for continuous authentication
+interface StepUpResponse {
+  method: string;
+  code?: string;
+  biometricData?: string;
+  [key: string]: unknown;
+}
+&nbsp;
+interface EventDetails {
+  [key: string]: unknown;
+}
+&nbsp;
+interface UserActivity {
+  type: string;
+  timestamp: Date;
+  [key: string]: unknown;
+}
+&nbsp;
 <span class="cstat-no" title="statement not covered" >export default ContinuousAuthenticationSystem;</span>
 &nbsp;</pre></td></tr></table></pre>
 
@@ -1960,7 +2014,7 @@ export interface RiskFactors {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

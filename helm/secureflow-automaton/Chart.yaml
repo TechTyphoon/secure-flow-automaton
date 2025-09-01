@@ -1,0 +1,52 @@
+apiVersion: v2
+name: secureflow-automaton
+description: A comprehensive DevSecOps platform with real security API integrations
+type: application
+version: 4.1.0
+appVersion: "4.1.0"
+keywords:
+  - devsecops
+  - security
+  - kubernetes
+  - monitoring
+  - automation
+  - quantum-computing
+home: https://github.com/TechTyphoon/secure-flow-automaton
+sources:
+  - https://github.com/TechTyphoon/secure-flow-automaton
+maintainers:
+  - name: TechTyphoon
+    email: support@techtyphoon.com
+# Dependencies - commented out for standalone deployment
+# To enable, run: helm dependency build
+# dependencies:
+#   - name: postgresql
+#     version: "12.x.x"
+#     repository: "https://charts.bitnami.com/bitnami"
+#     condition: postgresql.enabled
+#   - name: redis
+#     version: "17.x.x"
+#     repository: "https://charts.bitnami.com/bitnami"
+#     condition: redis.enabled
+#   - name: prometheus
+#     version: "15.x.x"
+#     repository: "https://prometheus-community.github.io/helm-charts"
+#     condition: monitoring.enabled
+#   - name: grafana
+#     version: "6.x.x"
+#     repository: "https://grafana.github.io/helm-charts"
+#     condition: monitoring.enabled
+annotations:
+  artifacthub.io/changes: |
+    - kind: added
+      description: Added comprehensive Kubernetes manifests
+    - kind: added
+      description: Implemented Helm chart for easy deployment
+    - kind: added
+      description: Added security hardening and network policies
+    - kind: added
+      description: Implemented auto-scaling and monitoring
+  artifacthub.io/images: |
+    - name: secureflow-automaton
+      image: secureflow-automaton:latest
+  artifacthub.io/license: MIT

@@ -924,7 +924,32 @@
 <a name='L859'></a><a href='#L859'>859</a>
 <a name='L860'></a><a href='#L860'>860</a>
 <a name='L861'></a><a href='#L861'>861</a>
-<a name='L862'></a><a href='#L862'>862</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L862'></a><a href='#L862'>862</a>
+<a name='L863'></a><a href='#L863'>863</a>
+<a name='L864'></a><a href='#L864'>864</a>
+<a name='L865'></a><a href='#L865'>865</a>
+<a name='L866'></a><a href='#L866'>866</a>
+<a name='L867'></a><a href='#L867'>867</a>
+<a name='L868'></a><a href='#L868'>868</a>
+<a name='L869'></a><a href='#L869'>869</a>
+<a name='L870'></a><a href='#L870'>870</a>
+<a name='L871'></a><a href='#L871'>871</a>
+<a name='L872'></a><a href='#L872'>872</a>
+<a name='L873'></a><a href='#L873'>873</a>
+<a name='L874'></a><a href='#L874'>874</a>
+<a name='L875'></a><a href='#L875'>875</a>
+<a name='L876'></a><a href='#L876'>876</a>
+<a name='L877'></a><a href='#L877'>877</a>
+<a name='L878'></a><a href='#L878'>878</a>
+<a name='L879'></a><a href='#L879'>879</a>
+<a name='L880'></a><a href='#L880'>880</a>
+<a name='L881'></a><a href='#L881'>881</a>
+<a name='L882'></a><a href='#L882'>882</a>
+<a name='L883'></a><a href='#L883'>883</a>
+<a name='L884'></a><a href='#L884'>884</a>
+<a name='L885'></a><a href='#L885'>885</a>
+<a name='L886'></a><a href='#L886'>886</a>
+<a name='L887'></a><a href='#L887'>887</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1783,6 +1808,31 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
@@ -1796,7 +1846,7 @@
 interface MultivariateDataPoint {
   features: { [key: string]: number };
   timestamp?: number;
-  metadata?: any;
+  metadata?: DataPointMetadata;
 }
 &nbsp;
 interface CorrelationMatrix {
@@ -2356,7 +2406,7 @@ interface DetectionConfig {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      for (let i = 0; i &lt; dataMatrix.length; i++) {</span>
 <span class="cstat-no" title="statement not covered" >        const point = dataMatrix[i];</span>
-<span class="cstat-no" title="statement not covered" >        const methodResults: { [key: string]: any } = {};</span>
+<span class="cstat-no" title="statement not covered" >        const methodResults: { [key: string]: DetectionMethodResult } = {};</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        // PCA-based detection</span>
 <span class="cstat-no" title="statement not covered" >        if (this.config.methods.includes('pca')) {</span>
@@ -2399,7 +2449,7 @@ interface DetectionConfig {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private pcaAnomalyDetection(point: number[]): any {</span>
+<span class="cstat-no" title="statement not covered" >  private pcaAnomalyDetection(point: number[]): DetectionMethodResult {</span>
 <span class="cstat-no" title="statement not covered" >    const transformed = this.pca.transform([point]);</span>
 <span class="cstat-no" title="statement not covered" >    const reconstructed = this.pca.inverseTransform(transformed)[0];</span>
     
@@ -2419,7 +2469,7 @@ interface DetectionConfig {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private mahalanobisAnomalyDetection(point: number[]): any {</span>
+<span class="cstat-no" title="statement not covered" >  private mahalanobisAnomalyDetection(point: number[]): DetectionMethodResult {</span>
 <span class="cstat-no" title="statement not covered" >    const distance = this.mahalanobis.distance(point);</span>
     
 <span class="cstat-no" title="statement not covered" >    // Convert to probability-like score (assuming chi-square distribution)</span>
@@ -2434,7 +2484,7 @@ interface DetectionConfig {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private icaAnomalyDetection(point: number[]): any {</span>
+<span class="cstat-no" title="statement not covered" >  private icaAnomalyDetection(point: number[]): DetectionMethodResult {</span>
 <span class="cstat-no" title="statement not covered" >    const sources = this.ica.transform([point])[0];</span>
     
 <span class="cstat-no" title="statement not covered" >    // Calculate non-Gaussianity measure</span>
@@ -2453,7 +2503,7 @@ interface DetectionConfig {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private correlationAnomalyDetection(point: number[], originalPoint: MultivariateDataPoint): any {</span>
+<span class="cstat-no" title="statement not covered" >  private correlationAnomalyDetection(point: number[], originalPoint: MultivariateDataPoint): DetectionMethodResult {</span>
 <span class="cstat-no" title="statement not covered" >    // Calculate correlation with historical patterns</span>
 <span class="cstat-no" title="statement not covered" >    const contributingFeatures: { [key: string]: number } = {};</span>
 <span class="cstat-no" title="statement not covered" >    let maxCorrelationAnomaly = 0;</span>
@@ -2480,8 +2530,8 @@ interface DetectionConfig {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private combineMethodResults(methodResults: { [key: string]: any }, originalPoint: MultivariateDataPoint): MultivariateAnomalyResult {</span>
-<span class="cstat-no" title="statement not covered" >    const scores = Object.values(methodResults).map((result: any) =&gt; result.score);</span>
+<span class="cstat-no" title="statement not covered" >  private combineMethodResults(methodResults: { [key: string]: DetectionMethodResult }, originalPoint: MultivariateDataPoint): MultivariateAnomalyResult {</span>
+<span class="cstat-no" title="statement not covered" >    const scores = Object.values(methodResults).map((result: DetectionMethodResult) =&gt; result.score);</span>
 <span class="cstat-no" title="statement not covered" >    const ensembleScore = MathUtils.mean(scores);</span>
 <span class="cstat-no" title="statement not covered" >    const isAnomaly = ensembleScore &gt; this.config.threshold;</span>
 &nbsp;
@@ -2623,7 +2673,7 @@ interface DetectionConfig {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  getDetectionStatistics(): any {</span>
+<span class="cstat-no" title="statement not covered" >  getDetectionStatistics(): DetectionStatistics {</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
 <span class="cstat-no" title="statement not covered" >      config: this.config,</span>
 <span class="cstat-no" title="statement not covered" >      featureNames: this.featureNames,</span>
@@ -2645,6 +2695,31 @@ interface DetectionConfig {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
+// Type definitions for multivariate detection
+interface DataPointMetadata {
+  source: string;
+  timestamp: Date;
+  [key: string]: unknown;
+}
+&nbsp;
+interface DetectionMethodResult {
+  score: number;
+  isAnomaly: boolean;
+  reconstructionError?: number;
+  mahalanobisDistance?: number;
+  sources?: number[];
+  [key: string]: unknown;
+}
+&nbsp;
+interface DetectionStatistics {
+  config: DetectionConfig;
+  featureNames: string[];
+  trainingDataSize: number;
+  isInitialized: boolean;
+  supportedMethods: string[];
+  timestamp: number;
+}
+&nbsp;
 <span class="cstat-no" title="statement not covered" >export default MultivariateDetectionService;</span>
 &nbsp;</pre></td></tr></table></pre>
 
@@ -2653,7 +2728,7 @@ interface DetectionConfig {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

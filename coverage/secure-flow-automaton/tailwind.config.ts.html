@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/122</span>
+                <span class='fraction'>0/132</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/122</span>
+                <span class='fraction'>0/132</span>
             </div>
         
             
@@ -188,7 +188,18 @@
 <a name='L123'></a><a href='#L123'>123</a>
 <a name='L124'></a><a href='#L124'>124</a>
 <a name='L125'></a><a href='#L125'>125</a>
-<a name='L126'></a><a href='#L126'>126</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -311,6 +322,17 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">&nbsp;
@@ -326,6 +348,15 @@ import type { Config } from "tailwindcss";
 <span class="cstat-no" title="statement not covered" >		"./index.html",</span>
 <span class="cstat-no" title="statement not covered" >	],</span>
 <span class="cstat-no" title="statement not covered" >	prefix: "",</span>
+<span class="cstat-no" title="statement not covered" >	// Performance optimizations</span>
+<span class="cstat-no" title="statement not covered" >	safelist: [</span>
+<span class="cstat-no" title="statement not covered" >		// Critical classes that should never be purged</span>
+<span class="cstat-no" title="statement not covered" >		'bg-background',</span>
+<span class="cstat-no" title="statement not covered" >		'text-foreground',</span>
+<span class="cstat-no" title="statement not covered" >		'border-border',</span>
+<span class="cstat-no" title="statement not covered" >		'bg-primary',</span>
+<span class="cstat-no" title="statement not covered" >		'text-primary-foreground',</span>
+<span class="cstat-no" title="statement not covered" >	],</span>
 <span class="cstat-no" title="statement not covered" >	theme: {</span>
 <span class="cstat-no" title="statement not covered" >		container: {</span>
 <span class="cstat-no" title="statement not covered" >			center: true,</span>
@@ -396,36 +427,20 @@ import type { Config } from "tailwindcss";
 <span class="cstat-no" title="statement not covered" >			},</span>
 <span class="cstat-no" title="statement not covered" >			keyframes: {</span>
 <span class="cstat-no" title="statement not covered" >				'accordion-down': {</span>
-<span class="cstat-no" title="statement not covered" >					from: {</span>
-<span class="cstat-no" title="statement not covered" >						height: '0'</span>
-<span class="cstat-no" title="statement not covered" >					},</span>
-<span class="cstat-no" title="statement not covered" >					to: {</span>
-<span class="cstat-no" title="statement not covered" >						height: 'var(--radix-accordion-content-height)'</span>
-<span class="cstat-no" title="statement not covered" >					}</span>
+<span class="cstat-no" title="statement not covered" >					from: { height: '0' },</span>
+<span class="cstat-no" title="statement not covered" >					to: { height: 'var(--radix-accordion-content-height)' }</span>
 <span class="cstat-no" title="statement not covered" >				},</span>
 <span class="cstat-no" title="statement not covered" >				'accordion-up': {</span>
-<span class="cstat-no" title="statement not covered" >					from: {</span>
-<span class="cstat-no" title="statement not covered" >						height: 'var(--radix-accordion-content-height)'</span>
-<span class="cstat-no" title="statement not covered" >					},</span>
-<span class="cstat-no" title="statement not covered" >					to: {</span>
-<span class="cstat-no" title="statement not covered" >						height: '0'</span>
-<span class="cstat-no" title="statement not covered" >					}</span>
+<span class="cstat-no" title="statement not covered" >					from: { height: 'var(--radix-accordion-content-height)' },</span>
+<span class="cstat-no" title="statement not covered" >					to: { height: '0' }</span>
 <span class="cstat-no" title="statement not covered" >				},</span>
 <span class="cstat-no" title="statement not covered" >				'pulse-security': {</span>
-<span class="cstat-no" title="statement not covered" >					'0%, 100%': {</span>
-<span class="cstat-no" title="statement not covered" >						opacity: '1'</span>
-<span class="cstat-no" title="statement not covered" >					},</span>
-<span class="cstat-no" title="statement not covered" >					'50%': {</span>
-<span class="cstat-no" title="statement not covered" >						opacity: '0.5'</span>
-<span class="cstat-no" title="statement not covered" >					}</span>
+<span class="cstat-no" title="statement not covered" >					'0%, 100%': { opacity: '1' },</span>
+<span class="cstat-no" title="statement not covered" >					'50%': { opacity: '0.5' }</span>
 <span class="cstat-no" title="statement not covered" >				},</span>
 <span class="cstat-no" title="statement not covered" >				'scan-line': {</span>
-<span class="cstat-no" title="statement not covered" >					'0%': {</span>
-<span class="cstat-no" title="statement not covered" >						transform: 'translateX(-100%)'</span>
-<span class="cstat-no" title="statement not covered" >					},</span>
-<span class="cstat-no" title="statement not covered" >					'100%': {</span>
-<span class="cstat-no" title="statement not covered" >						transform: 'translateX(100%)'</span>
-<span class="cstat-no" title="statement not covered" >					}</span>
+<span class="cstat-no" title="statement not covered" >					'0%': { transform: 'translateX(-100%)' },</span>
+<span class="cstat-no" title="statement not covered" >					'100%': { transform: 'translateX(100%)' }</span>
 <span class="cstat-no" title="statement not covered" >				}</span>
 <span class="cstat-no" title="statement not covered" >			},</span>
 <span class="cstat-no" title="statement not covered" >			animation: {</span>
@@ -437,6 +452,24 @@ import type { Config } from "tailwindcss";
 <span class="cstat-no" title="statement not covered" >		}</span>
 <span class="cstat-no" title="statement not covered" >	},</span>
 <span class="cstat-no" title="statement not covered" >	plugins: [tailwindcssAnimate],</span>
+<span class="cstat-no" title="statement not covered" >	// Performance optimizations</span>
+<span class="cstat-no" title="statement not covered" >	corePlugins: {</span>
+<span class="cstat-no" title="statement not covered" >		// Disable unused core plugins to reduce bundle size</span>
+<span class="cstat-no" title="statement not covered" >		preflight: true,</span>
+<span class="cstat-no" title="statement not covered" >		container: true,</span>
+<span class="cstat-no" title="statement not covered" >		accessibility: false, // Disable if not needed</span>
+<span class="cstat-no" title="statement not covered" >		appearance: false,</span>
+<span class="cstat-no" title="statement not covered" >		backdropBlur: false,</span>
+<span class="cstat-no" title="statement not covered" >		backdropBrightness: false,</span>
+<span class="cstat-no" title="statement not covered" >		backdropContrast: false,</span>
+<span class="cstat-no" title="statement not covered" >		backdropGrayscale: false,</span>
+<span class="cstat-no" title="statement not covered" >		backdropHueRotate: false,</span>
+<span class="cstat-no" title="statement not covered" >		backdropInvert: false,</span>
+<span class="cstat-no" title="statement not covered" >		backdropOpacity: false,</span>
+<span class="cstat-no" title="statement not covered" >		backdropSaturate: false,</span>
+<span class="cstat-no" title="statement not covered" >		backdropSepia: false,</span>
+		// Keep only essential plugins
+<span class="cstat-no" title="statement not covered" >	},</span>
 <span class="cstat-no" title="statement not covered" >} satisfies Config;</span>
 &nbsp;</pre></td></tr></table></pre>
 
@@ -445,7 +478,7 @@ import type { Config } from "tailwindcss";
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../prettify.js"></script>
         <script>

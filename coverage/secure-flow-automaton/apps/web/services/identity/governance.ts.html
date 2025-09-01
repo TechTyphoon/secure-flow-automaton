@@ -1017,7 +1017,25 @@
 <a name='L952'></a><a href='#L952'>952</a>
 <a name='L953'></a><a href='#L953'>953</a>
 <a name='L954'></a><a href='#L954'>954</a>
-<a name='L955'></a><a href='#L955'>955</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L955'></a><a href='#L955'>955</a>
+<a name='L956'></a><a href='#L956'>956</a>
+<a name='L957'></a><a href='#L957'>957</a>
+<a name='L958'></a><a href='#L958'>958</a>
+<a name='L959'></a><a href='#L959'>959</a>
+<a name='L960'></a><a href='#L960'>960</a>
+<a name='L961'></a><a href='#L961'>961</a>
+<a name='L962'></a><a href='#L962'>962</a>
+<a name='L963'></a><a href='#L963'>963</a>
+<a name='L964'></a><a href='#L964'>964</a>
+<a name='L965'></a><a href='#L965'>965</a>
+<a name='L966'></a><a href='#L966'>966</a>
+<a name='L967'></a><a href='#L967'>967</a>
+<a name='L968'></a><a href='#L968'>968</a>
+<a name='L969'></a><a href='#L969'>969</a>
+<a name='L970'></a><a href='#L970'>970</a>
+<a name='L971'></a><a href='#L971'>971</a>
+<a name='L972'></a><a href='#L972'>972</a>
+<a name='L973'></a><a href='#L973'>973</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1969,6 +1987,24 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
@@ -2023,7 +2059,7 @@ export interface Permission {
 export interface PermissionConstraint {
   type: 'time' | 'location' | 'device' | 'context';
   rule: string;
-  value: any;
+  value: ConstraintValue;
 }
 &nbsp;
 export interface AutoAssignmentRule {
@@ -2038,7 +2074,7 @@ export interface AutoAssignmentRule {
 export interface RuleCondition {
   attribute: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'matches' | 'in' | 'not_in';
-  value: any;
+  value: ConditionValue;
 }
 &nbsp;
 export interface AccessReview {
@@ -2484,11 +2520,11 @@ export interface IgaConfig {
 <span class="cstat-no" title="statement not covered" >    });</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private getAttributeValue(identity: IdentityProfile, attribute: string): any {</span>
+<span class="cstat-no" title="statement not covered" >  private getAttributeValue(identity: IdentityProfile, attribute: string): AttributeValue {</span>
 <span class="cstat-no" title="statement not covered" >    return (identity as any)[attribute] || identity.attributes[attribute];</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private evaluateCondition(value: any, operator: string, expectedValue: any): boolean {</span>
+<span class="cstat-no" title="statement not covered" >  private evaluateCondition(value: ConditionValue, operator: string, expectedValue: ConditionValue): boolean {</span>
 <span class="cstat-no" title="statement not covered" >    switch (operator) {</span>
 <span class="cstat-no" title="statement not covered" >      case 'equals':</span>
 <span class="cstat-no" title="statement not covered" >        return value === expectedValue;</span>
@@ -2803,7 +2839,7 @@ export interface ComplianceReport {
   compliant: boolean;
   violations: ComplianceViolation[];
   recommendations: string[];
-  controlResults: any[];
+  controlResults: ControlResult[];
 }
 &nbsp;
 export interface IdentityAnalytics {
@@ -2865,7 +2901,7 @@ export interface IdentityAnalytics {
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >class IgaAuditLogger {</span>
-<span class="cstat-no" title="statement not covered" >  async logIdentityLifecycle(identity: IdentityProfile, action: string, details: any): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  async logIdentityLifecycle(identity: IdentityProfile, action: string, details: LifecycleDetails): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const logEntry = {</span>
 <span class="cstat-no" title="statement not covered" >      timestamp: new Date().toISOString(),</span>
 <span class="cstat-no" title="statement not covered" >      event: 'identity_lifecycle',</span>
@@ -2924,6 +2960,24 @@ export interface IdentityAnalytics {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
+// Type definitions for identity governance
+type ConstraintValue = string | number | boolean | string[];
+&nbsp;
+type ConditionValue = string | number | boolean | string[];
+&nbsp;
+type AttributeValue = string | number | boolean | string[];
+&nbsp;
+interface ControlResult {
+  controlId: string;
+  status: string;
+  [key: string]: unknown;
+}
+&nbsp;
+interface LifecycleDetails {
+  action: string;
+  [key: string]: unknown;
+}
+&nbsp;
 <span class="cstat-no" title="statement not covered" >export default IdentityGovernanceAdmin;</span>
 &nbsp;</pre></td></tr></table></pre>
 
@@ -2932,7 +2986,7 @@ export interface IdentityAnalytics {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

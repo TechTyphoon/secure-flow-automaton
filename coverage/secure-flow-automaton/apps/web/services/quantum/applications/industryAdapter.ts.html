@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/409</span>
+                <span class='fraction'>0/410</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/409</span>
+                <span class='fraction'>0/410</span>
             </div>
         
             
@@ -668,7 +668,25 @@
 <a name='L603'></a><a href='#L603'>603</a>
 <a name='L604'></a><a href='#L604'>604</a>
 <a name='L605'></a><a href='#L605'>605</a>
-<a name='L606'></a><a href='#L606'>606</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L606'></a><a href='#L606'>606</a>
+<a name='L607'></a><a href='#L607'>607</a>
+<a name='L608'></a><a href='#L608'>608</a>
+<a name='L609'></a><a href='#L609'>609</a>
+<a name='L610'></a><a href='#L610'>610</a>
+<a name='L611'></a><a href='#L611'>611</a>
+<a name='L612'></a><a href='#L612'>612</a>
+<a name='L613'></a><a href='#L613'>613</a>
+<a name='L614'></a><a href='#L614'>614</a>
+<a name='L615'></a><a href='#L615'>615</a>
+<a name='L616'></a><a href='#L616'>616</a>
+<a name='L617'></a><a href='#L617'>617</a>
+<a name='L618'></a><a href='#L618'>618</a>
+<a name='L619'></a><a href='#L619'>619</a>
+<a name='L620'></a><a href='#L620'>620</a>
+<a name='L621'></a><a href='#L621'>621</a>
+<a name='L622'></a><a href='#L622'>622</a>
+<a name='L623'></a><a href='#L623'>623</a>
+<a name='L624'></a><a href='#L624'>624</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1272,6 +1290,24 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
  * Phase 6.1: Advanced Quantum Applications - Core Industry Adapter
@@ -1366,7 +1402,7 @@ export interface IndustryOperation {
 &nbsp;
 export interface OperationResult {
   success: boolean;
-  result: any;
+  result: OperationResultData;
   executionTime: number;
   quantumAdvantage: number;
   complianceStatus: 'compliant' | 'non_compliant' | 'requires_review';
@@ -1810,16 +1846,16 @@ export interface ComplianceReport {
 <span class="cstat-no" title="statement not covered" >    return 100; // placeholder</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async generateOptimizationRecommendations(operation: IndustryOperation, result: any): Promise&lt;string[]&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async generateOptimizationRecommendations(operation: IndustryOperation, result: OperationResultData): Promise&lt;string[]&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    // Implementation for optimization recommendations</span>
 <span class="cstat-no" title="statement not covered" >    return [];</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async applyPerformanceOptimizations(serviceId: string, params: any): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async applyPerformanceOptimizations(serviceId: string, params: OptimizationParams): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    // Implementation for applying optimizations</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private calculateImprovement(old: PerformanceMetrics, new_: PerformanceMetrics): any {</span>
+<span class="cstat-no" title="statement not covered" >  private calculateImprovement(old: PerformanceMetrics, new_: PerformanceMetrics): ImprovementMetrics {</span>
 <span class="cstat-no" title="statement not covered" >    // Implementation for improvement calculation</span>
 <span class="cstat-no" title="statement not covered" >    return { performance: 0, resources: 0, cost: 0, recommendations: [] };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -1878,6 +1914,24 @@ export interface ComplianceReport {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
+&nbsp;
+// Type definitions for industry adapter
+interface OperationResultData {
+  [key: string]: unknown;
+}
+&nbsp;
+interface OptimizationParams {
+  [key: string]: unknown;
+}
+&nbsp;
+interface ImprovementMetrics {
+  performance: number;
+  resources: number;
+  cost: number;
+  recommendations: string[];
+}
+&nbsp;
+<span class="cstat-no" title="statement not covered" >export default IndustryAdapter;</span>
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -1885,7 +1939,7 @@ export interface ComplianceReport {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>

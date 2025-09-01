@@ -1,0 +1,62 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: secureflow-automaton-base
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: secureflow-automaton
+  app.kubernetes.io/component: backend
+  app.kubernetes.io/part-of: secureflow-platform
+  app.kubernetes.io/managed-by: kustomize
+
+# Namespace for all resources
+namespace: secureflow-automaton
+
+# Resources to include in base
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - service-account.yaml
+  - pvc.yaml
+  - istio-configmap.yaml
+  - prometheus-config.yaml
+  - grafana-dashboards.yaml
+  - backup-jobs.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - network-policy.yaml
+
+# ConfigMap generator for environment-specific configs
+configMapGenerator:
+  - name: secureflow-automaton-config
+    literals:
+      - ENVIRONMENT=base
+      - BUILD_INFO=manual-kustomize
+
+# Secret generator for base secrets (will be overridden by environments)
+secretGenerator:
+  - name: secureflow-automaton-secrets
+    literals:
+      - placeholder=true
+    type: Opaque
+
+# Image transformations
+images:
+  - name: secureflow-automaton
+    newTag: latest
+
+# Replica count for base
+replicas:
+  - name: secureflow-automaton
+    count: 3
+
+# Resource patches
+patchesStrategicMerge: []
+
+# JSON patches
+patches: []

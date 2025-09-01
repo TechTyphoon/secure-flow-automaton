@@ -1,0 +1,220 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-config
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/name: istio-config
+    app.kubernetes.io/component: service-mesh
+data:
+  mesh: |
+    # Istio mesh configuration for SecureFlow Automaton
+    accessLogFile: "/dev/stdout"
+    accessLogEncoding: JSON
+    accessLogFormat: |
+      {
+        "timestamp": "%START_TIME%",
+        "severity": "%REQ(X-ENVOY-DOWNSTREAM-SERVICE-CLUSTER)%",
+        "method": "%REQ(:METHOD)%",
+        "path": "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%",
+        "protocol": "%PROTOCOL%",
+        "response_code": "%RESPONSE_CODE%",
+        "response_flags": "%RESPONSE_FLAGS%",
+        "response_size": "%RESPONSE_SIZE%",
+        "remote_address": "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%",
+        "user_agent": "%REQ(USER-AGENT)%",
+        "request_id": "%REQ(X-REQUEST-ID)%",
+        "authority": "%REQ(:AUTHORITY)%",
+        "upstream_service_time": "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%",
+        "upstream_cluster": "%UPSTREAM_CLUSTER%",
+        "downstream_local_address": "%DOWNSTREAM_LOCAL_ADDRESS%",
+        "downstream_remote_address": "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%",
+        "requested_server_name": "%REQUESTED_SERVER_NAME%",
+        "route_name": "%ROUTE_NAME%",
+        "connection_termination_details": "%CONNECTION_TERMINATION_DETAILS%",
+        "upstream_transport_failure_reason": "%UPSTREAM_TRANSPORT_FAILURE_REASON%"
+      }
+    defaultConfig:
+      discoveryRefreshDelay: 1s
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
+        ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+      tracing:
+        zipkin:
+          address: "zipkin.istio-system:9411"
+      gatewayTopology:
+        numTrustedProxies: 1
+    enablePrometheusMerge: true
+    rootNamespace: istio-system
+    trustDomain: cluster.local
+    defaultServiceExportTo:
+      - "*"
+    defaultVirtualServiceExportTo:
+      - "*"
+    defaultDestinationRuleExportTo:
+      - "*"
+    extensionProviders:
+      - name: "envoyOtelAls"
+        envoyOtelAls:
+          service: "opentelemetry-collector.observability.svc.cluster.local"
+          port: 4317
+    outboundTrafficPolicy:
+      mode: ALLOW_ANY
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: secureflow-istio-config
+  namespace: secureflow-automaton
+  labels:
+    app.kubernetes.io/name: secureflow-automaton
+    app.kubernetes.io/component: service-mesh
+data:
+  # Service mesh configuration for SecureFlow services
+  service-mesh-config.yaml: |
+    apiVersion: networking.istio.io/v1beta1
+    kind: VirtualService
+    metadata:
+      name: secureflow-automaton
+    spec:
+      hosts:
+        - secureflow.yourdomain.com
+      gateways:
+        - secureflow-gateway
+      http:
+        - match:
+            - uri:
+                prefix: "/api"
+          route:
+            - destination:
+                host: secureflow-automaton
+                port:
+                  number: 80
+          timeout: 30s
+          retries:
+            attempts: 3
+            perTryTimeout: 10s
+        - match:
+            - uri:
+                prefix: "/"
+          route:
+            - destination:
+                host: secureflow-automaton
+                port:
+                  number: 80
+          timeout: 30s
+
+    ---
+    apiVersion: networking.istio.io/v1beta1
+    kind: DestinationRule
+    metadata:
+      name: secureflow-automaton
+    spec:
+      host: secureflow-automaton
+      trafficPolicy:
+        tls:
+          mode: ISTIO_MUTUAL
+        loadBalancer:
+          simple: ROUND_ROBIN
+        connectionPool:
+          tcp:
+            maxConnections: 100
+          http:
+            http1MaxPendingRequests: 10
+            http2MaxRequests: 100
+            maxRequestsPerConnection: 10
+            maxRetries: 3
+        outlierDetection:
+          consecutive5xxErrors: 3
+          interval: 10s
+          baseEjectionTime: 30s
+          maxEjectionPercent: 50
+
+    ---
+    apiVersion: networking.istio.io/v1beta1
+    kind: Gateway
+    metadata:
+      name: secureflow-gateway
+    spec:
+      selector:
+        istio: ingressgateway
+      servers:
+        - port:
+            number: 80
+            name: http
+            protocol: HTTP
+          hosts:
+            - secureflow.yourdomain.com
+        - port:
+            number: 443
+            name: https
+            protocol: HTTPS
+          tls:
+            mode: SIMPLE
+            credentialName: secureflow-tls
+          hosts:
+            - secureflow.yourdomain.com
+
+    ---
+    apiVersion: security.istio.io/v1beta1
+    kind: PeerAuthentication
+    metadata:
+      name: default
+    spec:
+      mtls:
+        mode: PERMISSIVE
+
+    ---
+    apiVersion: security.istio.io/v1beta1
+    kind: AuthorizationPolicy
+    metadata:
+      name: secureflow-auth-policy
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: secureflow-automaton
+      action: ALLOW
+      rules:
+        - from:
+            - source:
+                namespaces: ["istio-system", "kube-system"]
+        - to:
+            - operation:
+                methods: ["GET"]
+                paths: ["/health", "/ready", "/metrics"]
+        - from:
+            - source:
+                principals: ["cluster.local/ns/secureflow-automaton/sa/secureflow-service-account"]
+
+    ---
+    apiVersion: telemetry.istio.io/v1alpha1
+    kind: Telemetry
+    metadata:
+      name: secureflow-telemetry
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: secureflow-automaton
+      metrics:
+        - providers:
+            - name: prometheus
+          overrides:
+            - match:
+                metric: REQUEST_COUNT
+                mode: CLIENT_AND_SERVER
+              tagOverrides:
+                request_method:
+                  value: "request.method | \"unknown\""
+                response_code:
+                  value: "response.code | 0"
+        - providers:
+            - name: prometheus
+          overrides:
+            - match:
+                metric: REQUEST_DURATION
+                mode: CLIENT_AND_SERVER
+              tagOverrides:
+                request_method:
+                  value: "request.method | \"unknown\""
+                response_code:
+                  value: "response.code | 0"

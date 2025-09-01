@@ -145,7 +145,7 @@ export class ZeroTrustIdentityService {
   private governance: IdentityGovernanceAdmin;
   private sessions: Map<string, ZeroTrustSession> = new Map();
   private config: ZeroTrustIdentityConfig;
-
+  
   constructor(config: ZeroTrustIdentityConfig) {
     this.config = config;
     this.identityProvider = new ZeroTrustIdentityProvider(config.identityProvider);

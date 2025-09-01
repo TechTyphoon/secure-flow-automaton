@@ -1111,7 +1111,36 @@
 <a name='L1046'></a><a href='#L1046'>1046</a>
 <a name='L1047'></a><a href='#L1047'>1047</a>
 <a name='L1048'></a><a href='#L1048'>1048</a>
-<a name='L1049'></a><a href='#L1049'>1049</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L1049'></a><a href='#L1049'>1049</a>
+<a name='L1050'></a><a href='#L1050'>1050</a>
+<a name='L1051'></a><a href='#L1051'>1051</a>
+<a name='L1052'></a><a href='#L1052'>1052</a>
+<a name='L1053'></a><a href='#L1053'>1053</a>
+<a name='L1054'></a><a href='#L1054'>1054</a>
+<a name='L1055'></a><a href='#L1055'>1055</a>
+<a name='L1056'></a><a href='#L1056'>1056</a>
+<a name='L1057'></a><a href='#L1057'>1057</a>
+<a name='L1058'></a><a href='#L1058'>1058</a>
+<a name='L1059'></a><a href='#L1059'>1059</a>
+<a name='L1060'></a><a href='#L1060'>1060</a>
+<a name='L1061'></a><a href='#L1061'>1061</a>
+<a name='L1062'></a><a href='#L1062'>1062</a>
+<a name='L1063'></a><a href='#L1063'>1063</a>
+<a name='L1064'></a><a href='#L1064'>1064</a>
+<a name='L1065'></a><a href='#L1065'>1065</a>
+<a name='L1066'></a><a href='#L1066'>1066</a>
+<a name='L1067'></a><a href='#L1067'>1067</a>
+<a name='L1068'></a><a href='#L1068'>1068</a>
+<a name='L1069'></a><a href='#L1069'>1069</a>
+<a name='L1070'></a><a href='#L1070'>1070</a>
+<a name='L1071'></a><a href='#L1071'>1071</a>
+<a name='L1072'></a><a href='#L1072'>1072</a>
+<a name='L1073'></a><a href='#L1073'>1073</a>
+<a name='L1074'></a><a href='#L1074'>1074</a>
+<a name='L1075'></a><a href='#L1075'>1075</a>
+<a name='L1076'></a><a href='#L1076'>1076</a>
+<a name='L1077'></a><a href='#L1077'>1077</a>
+<a name='L1078'></a><a href='#L1078'>1078</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2023,6 +2052,35 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2191,7 +2249,7 @@ interface SecurityPolicy {
 interface PolicyCondition {
     field: string;
     operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'in_range' | 'matches_pattern';
-    value: any;
+    value: ConditionValue;
     confidence: number;
     source: 'static' | 'ml_prediction' | 'threat_intel' | 'behavioral_analysis';
 }
@@ -2775,7 +2833,7 @@ interface ComplianceContext {
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    private analyzePerformanceMetrics(performance: PolicyPerformance): any {</span>
+<span class="cstat-no" title="statement not covered" >    private analyzePerformanceMetrics(performance: PolicyPerformance): PerformanceAnalysis {</span>
 <span class="cstat-no" title="statement not covered" >        return {</span>
 <span class="cstat-no" title="statement not covered" >            overallScore: (performance.accuracy + (1 - performance.falsePositiveRate) + (1 - performance.falseNegativeRate)) / 3,</span>
 <span class="cstat-no" title="statement not covered" >            issues: [</span>
@@ -3031,12 +3089,12 @@ interface ComplianceContext {
 <span class="cstat-no" title="statement not covered" >class AIModelRegistry {</span>
 <span class="cstat-no" title="statement not covered" >    private models: Map&lt;string, any&gt; = new Map();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    async loadModel(name: string, config: any): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    async loadModel(name: string, config: ModelConfig): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        // Simulate model loading</span>
 <span class="cstat-no" title="statement not covered" >        this.models.set(name, { ...config, loaded: true });</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    async predict(modelName: string, features: any): Promise&lt;any&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    async predict(modelName: string, features: ModelFeatures): Promise&lt;ModelPrediction&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        const model = this.models.get(modelName);</span>
 <span class="cstat-no" title="statement not covered" >        if (!model) {</span>
 <span class="cstat-no" title="statement not covered" >            throw new Error(`Model ${modelName} not found`);</span>
@@ -3046,7 +3104,7 @@ interface ComplianceContext {
 <span class="cstat-no" title="statement not covered" >        return this.simulatePrediction(modelName, features);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    private simulatePrediction(modelName: string, features: any): any {</span>
+<span class="cstat-no" title="statement not covered" >    private simulatePrediction(modelName: string, features: ModelFeatures): ModelPrediction {</span>
 <span class="cstat-no" title="statement not covered" >        // Simulate different model predictions</span>
 <span class="cstat-no" title="statement not covered" >        switch (modelName) {</span>
 <span class="cstat-no" title="statement not covered" >            case 'policy_optimizer':</span>
@@ -3206,6 +3264,35 @@ interface ComplianceViolation {
     deadline: Date;
 }
 &nbsp;
+// Type definitions for intelligent policy optimizer
+type ConditionValue = string | number | boolean | string[] | Record&lt;string, unknown&gt;;
+&nbsp;
+interface PerformanceAnalysis {
+  overallScore: number;
+  issues: string[];
+  strengths: string[];
+}
+&nbsp;
+interface ModelConfig {
+  [key: string]: unknown;
+}
+&nbsp;
+interface ModelFeatures {
+  [key: string]: unknown;
+}
+&nbsp;
+interface ModelPrediction {
+  shouldOptimizeConditions?: boolean;
+  shouldOptimizeActions?: boolean;
+  conditionOptimizationConfidence?: number;
+  actionOptimizationConfidence?: number;
+  expectedConditionImprovement?: number;
+  expectedActionImprovement?: number;
+  effectiveness?: number;
+  riskScore?: number;
+  [key: string]: unknown;
+}
+&nbsp;
 export type { SecurityPolicy, OptimizationContext, OptimizationResult };
 &nbsp;</pre></td></tr></table></pre>
 
@@ -3214,7 +3301,7 @@ export type { SecurityPolicy, OptimizationContext, OptimizationResult };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

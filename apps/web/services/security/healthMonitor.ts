@@ -135,10 +135,13 @@ export class SecurityHealthMonitor {
 
   private async checkSonarQubeHealth(config: ServiceConfig): Promise<boolean> {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
       const response = await fetch(`${config.url}/api/system/ping`, {
         headers: { 'Authorization': `Bearer ${config.token}` },
-        signal: AbortSignal.timeout(10000)
+        signal: controller.signal
       });
+      clearTimeout(timeout);
       return response.ok && (await response.text()).includes('pong');
     } catch {
       return false;
@@ -147,10 +150,13 @@ export class SecurityHealthMonitor {
 
   private async checkSnykHealth(config: ServiceConfig): Promise<boolean> {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
       const response = await fetch('https://snyk.io/api/v1/user/me', {
         headers: { 'Authorization': `token ${config.token}` },
-        signal: AbortSignal.timeout(10000)
+        signal: controller.signal
       });
+      clearTimeout(timeout);
       return response.ok;
     } catch {
       return false;
@@ -159,10 +165,13 @@ export class SecurityHealthMonitor {
 
   private async checkGitHubHealth(config: ServiceConfig): Promise<boolean> {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
       const response = await fetch('https://api.github.com/user', {
         headers: { 'Authorization': `token ${config.token}` },
-        signal: AbortSignal.timeout(10000)
+        signal: controller.signal
       });
+      clearTimeout(timeout);
       return response.ok;
     } catch {
       return false;

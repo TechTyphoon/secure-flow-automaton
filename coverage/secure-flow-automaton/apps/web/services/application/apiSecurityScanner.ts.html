@@ -1658,7 +1658,23 @@
 <a name='L1593'></a><a href='#L1593'>1593</a>
 <a name='L1594'></a><a href='#L1594'>1594</a>
 <a name='L1595'></a><a href='#L1595'>1595</a>
-<a name='L1596'></a><a href='#L1596'>1596</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L1596'></a><a href='#L1596'>1596</a>
+<a name='L1597'></a><a href='#L1597'>1597</a>
+<a name='L1598'></a><a href='#L1598'>1598</a>
+<a name='L1599'></a><a href='#L1599'>1599</a>
+<a name='L1600'></a><a href='#L1600'>1600</a>
+<a name='L1601'></a><a href='#L1601'>1601</a>
+<a name='L1602'></a><a href='#L1602'>1602</a>
+<a name='L1603'></a><a href='#L1603'>1603</a>
+<a name='L1604'></a><a href='#L1604'>1604</a>
+<a name='L1605'></a><a href='#L1605'>1605</a>
+<a name='L1606'></a><a href='#L1606'>1606</a>
+<a name='L1607'></a><a href='#L1607'>1607</a>
+<a name='L1608'></a><a href='#L1608'>1608</a>
+<a name='L1609'></a><a href='#L1609'>1609</a>
+<a name='L1610'></a><a href='#L1610'>1610</a>
+<a name='L1611'></a><a href='#L1611'>1611</a>
+<a name='L1612'></a><a href='#L1612'>1612</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3251,6 +3267,22 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
@@ -3336,7 +3368,7 @@ export interface APIResponse {
   statusCode: number;
   description: string;
   contentType: string;
-  schema?: any;
+  schema?: ResponseSchema;
   headers?: Record&lt;string, string&gt;;
   security: {
     dataExposure: 'none' | 'minimal' | 'standard' | 'extensive';
@@ -3451,8 +3483,8 @@ export interface APISecurityTest {
   description: string;
   severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
   enabled: boolean;
-  configuration: Record&lt;string, any&gt;;
-  testFunction: (endpoint: APIEndpoint, config: any) =&gt; Promise&lt;APITestResult&gt;;
+  configuration: Record&lt;string, TestConfig&gt;;
+  testFunction: (endpoint: APIEndpoint, config: TestConfig) =&gt; Promise&lt;APITestResult&gt;;
 }
 &nbsp;
 export interface APITestResult {
@@ -3462,7 +3494,7 @@ export interface APITestResult {
   findings: {
     severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
     message: string;
-    evidence: any;
+    evidence: TestEvidence;
   }[];
   recommendations: string[];
   executionTime: number; // milliseconds
@@ -4288,7 +4320,7 @@ export interface APISecurityMetrics {
 <span class="cstat-no" title="statement not covered" >  /**</span>
    * Security test implementations
 <span class="cstat-no" title="statement not covered" >   */</span>
-<span class="cstat-no" title="statement not covered" >  private async testAuthenticationBypass(endpoint: APIEndpoint, config: any): Promise&lt;APITestResult&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async testAuthenticationBypass(endpoint: APIEndpoint, config: TestConfig): Promise&lt;APITestResult&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const startTime = Date.now();</span>
 <span class="cstat-no" title="statement not covered" >    const findings: APITestResult['findings'] = [];</span>
 <span class="cstat-no" title="statement not covered" >    let passed = true;</span>
@@ -4341,7 +4373,7 @@ export interface APISecurityMetrics {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async testExcessiveDataExposure(endpoint: APIEndpoint, config: any): Promise&lt;APITestResult&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async testExcessiveDataExposure(endpoint: APIEndpoint, config: TestConfig): Promise&lt;APITestResult&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const startTime = Date.now();</span>
 <span class="cstat-no" title="statement not covered" >    const findings: APITestResult['findings'] = [];</span>
 <span class="cstat-no" title="statement not covered" >    let passed = true;</span>
@@ -4399,7 +4431,7 @@ export interface APISecurityMetrics {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async testSQLInjection(endpoint: APIEndpoint, config: any): Promise&lt;APITestResult&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async testSQLInjection(endpoint: APIEndpoint, config: TestConfig): Promise&lt;APITestResult&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const startTime = Date.now();</span>
 <span class="cstat-no" title="statement not covered" >    const findings: APITestResult['findings'] = [];</span>
 <span class="cstat-no" title="statement not covered" >    let passed = true;</span>
@@ -4443,7 +4475,7 @@ export interface APISecurityMetrics {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async testMassAssignment(endpoint: APIEndpoint, config: any): Promise&lt;APITestResult&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async testMassAssignment(endpoint: APIEndpoint, config: TestConfig): Promise&lt;APITestResult&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const startTime = Date.now();</span>
 <span class="cstat-no" title="statement not covered" >    const findings: APITestResult['findings'] = [];</span>
 <span class="cstat-no" title="statement not covered" >    let passed = true;</span>
@@ -4499,7 +4531,7 @@ export interface APISecurityMetrics {
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async testRateLimiting(endpoint: APIEndpoint, config: any): Promise&lt;APITestResult&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  private async testRateLimiting(endpoint: APIEndpoint, config: TestConfig): Promise&lt;APITestResult&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const startTime = Date.now();</span>
 <span class="cstat-no" title="statement not covered" >    const findings: APITestResult['findings'] = [];</span>
 <span class="cstat-no" title="statement not covered" >    let passed = true;</span>
@@ -4847,6 +4879,22 @@ export interface APISecurityMetrics {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
+// Type definitions for API security scanner
+interface ResponseSchema {
+  type: string;
+  properties: Record&lt;string, unknown&gt;;
+  [key: string]: unknown;
+}
+&nbsp;
+interface TestConfig {
+  sensitiveFields: string[];
+  [key: string]: unknown;
+}
+&nbsp;
+interface TestEvidence {
+  [key: string]: unknown;
+}
+&nbsp;
 <span class="cstat-no" title="statement not covered" >export default APISecurityScannerService;</span>
 &nbsp;</pre></td></tr></table></pre>
 
@@ -4855,7 +4903,7 @@ export interface APISecurityMetrics {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-31T09:41:55.058Z
+                at 2025-09-01T12:39:04.164Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>
