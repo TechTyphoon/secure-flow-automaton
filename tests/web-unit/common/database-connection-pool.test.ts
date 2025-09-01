@@ -167,8 +167,9 @@ describe('Database Connection Pool', () => {
       const timeoutConfig = { ...config, queryTimeout: 1 }; // 1ms timeout
       const timeoutPool = createDatabaseConnectionPool(timeoutConfig, logger, monitoring);
 
+      // Test that timeout actually works - expect it to timeout
       await expect(
-        timeoutPool.query('SELECT pg_sleep(0.1)') // Sleep for 100ms
+        timeoutPool.query('SELECT 1') // Any query will timeout with 1ms
       ).rejects.toThrow(/timeout/);
     });
 
