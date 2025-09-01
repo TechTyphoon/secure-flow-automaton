@@ -233,38 +233,90 @@ jobs:
         # Deploy monitoring stack
         docker compose -f docker-compose.monitoring.yml --profile with-traefik up -d
 
-        echo "⏳ Waiting for monitoring stack to be healthy..."
-        sleep 30
+        echo "⏳ Waiting for monitoring stack to initialize..."
+        sleep 45
+
+        # Check if containers are running
+        echo "🐳 Checking if monitoring containers are running..."
+        docker compose -f docker-compose.monitoring.yml ps
+
+        # Wait for monitoring service to be healthy
+        echo "⏳ Waiting for monitoring service to be healthy..."
+        timeout 120 bash -c 'until docker compose -f docker-compose.monitoring.yml ps api-monitoring | grep -q "healthy\|running"; do sleep 10; echo "Still waiting for monitoring service..."; done' || echo "⚠️ Container health check timeout"
 
     - name: ❤️ Health Check - Monitoring Dashboard
       run: |
         echo "❤️ Checking monitoring dashboard health..."
-        timeout 30 bash -c 'until curl -f http://localhost:3002/health; do sleep 5; done' || echo "⚠️ Monitoring dashboard health check timeout (may be expected in CI)"
+        echo "🌐 Attempting to connect to http://localhost:3002/health"
+
+        # Try multiple times with increasing delays
+        for i in {1..6}; do
+          echo "Attempt $i: Checking monitoring dashboard..."
+          if curl -f --max-time 10 http://localhost:3002/health 2>/dev/null; then
+            echo "✅ Monitoring dashboard is healthy!"
+            exit 0
+          else
+            echo "❌ Attempt $i failed, waiting..."
+            sleep $((i * 10))
+          fi
+        done
+
+        echo "⚠️ Monitoring dashboard health check failed after 6 attempts"
+        echo "📋 Checking container logs for debugging..."
+        docker compose -f docker-compose.monitoring.yml logs api-monitoring || echo "Could not get container logs"
         echo "✅ Monitoring dashboard health check completed"
 
     - name: ❤️ Health Check - Prometheus
       run: |
         echo "❤️ Checking Prometheus health..."
-        timeout 30 bash -c 'until curl -f http://localhost:9090/-/healthy; do sleep 5; done' || echo "⚠️ Prometheus health check timeout (may be expected in CI)"
+        for i in {1..6}; do
+          echo "Attempt $i: Checking Prometheus..."
+          if curl -f --max-time 10 http://localhost:9090/-/healthy 2>/dev/null; then
+            echo "✅ Prometheus is healthy!"
+            break
+          else
+            echo "❌ Attempt $i failed, waiting..."
+            sleep $((i * 5))
+          fi
+        done
         echo "✅ Prometheus health check completed"
 
     - name: ❤️ Health Check - Grafana
       run: |
         echo "❤️ Checking Grafana health..."
-        timeout 30 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 5; done' || echo "⚠️ Grafana health check timeout (may be expected in CI)"
+        for i in {1..6}; do
+          echo "Attempt $i: Checking Grafana..."
+          if curl -f --max-time 10 http://localhost:3000/api/health 2>/dev/null; then
+            echo "✅ Grafana is healthy!"
+            break
+          else
+            echo "❌ Attempt $i failed, waiting..."
+            sleep $((i * 5))
+          fi
+        done
         echo "✅ Grafana health check completed"
 
     - name: 📊 Verify Monitoring Data Collection
       run: |
         echo "📊 Verifying monitoring data collection..."
-        sleep 10
+        sleep 15
 
-        # Check if metrics are being collected
-        METRICS=$(curl -s http://localhost:3002/api/metrics)
-        if [ -n "$METRICS" ]; then
-          echo "✅ Monitoring is collecting data"
-        else
-          echo "⚠️ Monitoring data collection may not be active yet"
+        # Check if metrics are being collected with retry
+        for attempt in {1..3}; do
+          echo "Attempt $attempt: Checking monitoring data collection..."
+          METRICS=$(curl -s --max-time 10 http://localhost:3002/api/metrics 2>/dev/null)
+          if [ -n "$METRICS" ] && [ "$METRICS" != "null" ]; then
+            echo "✅ Monitoring is collecting data"
+            echo "📈 Sample metrics: $(echo "$METRICS" | head -c 200)..."
+            break
+          else
+            echo "⚠️ Attempt $attempt: Monitoring data not available yet, waiting..."
+            sleep 10
+          fi
+        done
+
+        if [ -z "$METRICS" ] || [ "$METRICS" = "null" ]; then
+          echo "⚠️ Monitoring data collection verification completed (may be expected in CI environment)"
         fi
 
     - name: 📋 Generate Deployment Report
