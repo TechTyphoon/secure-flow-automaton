@@ -54,3 +54,8 @@ ENV METRICS_RETENTION=3600000
 
 # Start monitoring dashboard
 CMD ["npm", "run", "monitoring:start"]
+
+# Production stage (inherits from base)
+FROM base AS production
+# Production-specific optimizations can be added here if needed
+# For now, this stage is identical to base but allows docker-compose to use --target production
