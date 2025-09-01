@@ -181,7 +181,7 @@ jobs:
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
-        password: ${{ secrets.GH_PAT }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: 📤 Push Monitoring Image to Registry
       run: |
@@ -211,7 +211,7 @@ jobs:
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
-        password: ${{ secrets.GH_PAT }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: 🚀 Deploy Monitoring Stack
       run: |
