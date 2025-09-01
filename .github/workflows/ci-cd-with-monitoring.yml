@@ -27,7 +27,7 @@ on:
 env:
   NODE_VERSION: '20'
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: techtyphoon/secure-flow-automaton
 
 jobs:
   # === CODE QUALITY & TESTING ===
@@ -231,7 +231,7 @@ jobs:
         docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/monitoring:latest
 
         # Deploy monitoring stack
-        docker-compose -f docker-compose.monitoring.yml --profile with-traefik up -d
+        docker compose -f docker-compose.monitoring.yml --profile with-traefik up -d
 
         echo "⏳ Waiting for monitoring stack to be healthy..."
         sleep 30
