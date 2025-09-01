@@ -352,7 +352,7 @@ export class CommonValidators {
       ValidationRules.minLength(3),
       ValidationRules.maxLength(1000),
       ValidationRules.pattern(
-      /^[a-zA-Z0-9\s.,!?(){}:;"'\-]+$/,
+        /^[a-zA-Z0-9\s.,!?(){}:;"'-]+$/,
       'Query contains invalid characters'
       )
     ];
