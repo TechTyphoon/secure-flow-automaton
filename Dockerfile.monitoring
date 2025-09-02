@@ -24,7 +24,7 @@ ENV DOCKER_BUILD=true
 RUN npm ci --omit=dev --no-audit --no-fund
 
 # Copy monitoring source code
-COPY docs/monitoring/ ./monitoring/
+COPY docs/monitoring/ ./docs/monitoring/
 COPY docs/api/ ./docs/api/
 
 # Create non-root user for security
