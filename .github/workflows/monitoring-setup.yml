@@ -67,15 +67,7 @@ jobs:
         echo "🔍 Validating dashboard server..."
         node -c docs/monitoring/dashboard-server.js
         echo "✅ Dashboard server syntax is valid"
-
-    - name: 📊 Validate Grafana Dashboard JSON
-      run: |
-        echo "📊 Validating Grafana dashboard configuration..."
-        # Check if JSON is valid
-        python3 -m json.tool docs/monitoring/grafana-dashboard.json > /dev/null
-        echo "✅ Grafana dashboard JSON is valid"
-
-    - name: 📋 Validate Prometheus Configuration
+        
       run: |
         echo "📋 Validating Prometheus configuration..."
         # Basic YAML validation

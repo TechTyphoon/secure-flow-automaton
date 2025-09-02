@@ -309,4 +309,33 @@ class APIMonitoringDashboard {
   }
 }
 
+// Create and start the monitoring dashboard
+const dashboard = new APIMonitoringDashboard({
+  port: process.env.MONITORING_PORT || 3002,
+  apiBaseURL: process.env.API_BASE_URL || 'http://localhost:8080/api/v1'
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('🛑 Shutting down API Monitoring Dashboard...');
+  if (dashboard && dashboard.metricsCollector) {
+    dashboard.metricsCollector.stopCollection();
+  }
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('🛑 Shutting down API Monitoring Dashboard...');
+  if (dashboard && dashboard.metricsCollector) {
+    dashboard.metricsCollector.stopCollection();
+  }
+  process.exit(0);
+});
+
+// Start the server
+dashboard.start().catch((error) => {
+  console.error('❌ Failed to start API Monitoring Dashboard:', error);
+  process.exit(1);
+});
+
 export default APIMonitoringDashboard;

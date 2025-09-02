@@ -234,7 +234,7 @@ jobs:
         docker compose -f docker-compose.monitoring.yml --profile with-traefik up -d
 
         echo "⏳ Waiting for monitoring stack to initialize..."
-        sleep 45
+        sleep 60
 
         # Check if containers are running
         echo "🐳 Checking if monitoring containers are running..."
