@@ -35,3 +35,34 @@ config/environment/.env*
 !config/environment/.env.example
 !config/environment/.env.*.template
 infrastructure/.env*
+
+# Build artifacts and reports - DO NOT COMMIT
+# Security and audit reports
+*-audit*.json
+*-results*.json
+*-report*.json
+eslint-*.json
+npm-audit-*.json
+security-*.json
+critical-*.json
+audit-*.json
+
+# Test and monitoring reports
+monitoring-test-report.json
+security-results/
+
+# Temporary and backup files
+*.backup
+*.bak
+*.tmp
+*.old
+*.disabled*
+
+# Coverage reports
+coverage/
+*.lcov
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini

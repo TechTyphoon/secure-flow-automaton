@@ -1,78 +1,69 @@
 # 🔐 Secure Flow Automaton
 
-> Enterprise-grade security orchestration platform with AI-powered threat detection, zero-trust identity management, and comprehensive monitoring capabilities.
+> Enterprise-grade DevSecOps pipeline automation platform with comprehensive multi-tool security integration, monitoring, and deployment automation.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](#license)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Test Coverage](https://img.shields.io/badge/Coverage-68%25-yellow.svg)](#testing)
 
 ## 📋 Table of Contents
 
-- [Features](#features)
+- [Overview](#overview)
 - [Architecture](#architecture)
 - [Quick Start](#quick-start)
-- [API Documentation](#api-documentation)
-- [Configuration](#configuration)
-- [Security](#security)
-- [Monitoring](#monitoring)
-- [Performance](#performance)
+- [Development](#development)
 - [Testing](#testing)
 - [Deployment](#deployment)
+- [API Documentation](#api-documentation)
 - [Contributing](#contributing)
 - [License](#license)
 
-## ✨ Features
+## 🎯 Overview
 
-### 🔐 **Zero-Trust Security Architecture**
-- Continuous authentication and authorization
-- Risk-based access control with real-time assessment
-- Multi-factor authentication (TOTP, SMS, Email, Hardware)
-- Device fingerprinting and behavioral analysis
-- Session management with automatic risk monitoring
+Secure Flow Automaton is a comprehensive DevSecOps automation platform that integrates security scanning, monitoring, and deployment automation into a unified pipeline. Built with TypeScript and modern web technologies, it provides:
 
-### 🧠 **Cognitive Security Analysis**
-- AI-powered threat detection and analysis
-- Natural language processing for security queries
-- Automated anomaly detection and classification
-- Intelligent threat intelligence integration
-- Real-time security event correlation
-
-### 📊 **Comprehensive Monitoring**
-- Real-time system health monitoring
-- Performance metrics and bottleneck detection
-- Security event logging and alerting
-- Automated incident response workflows
-- Interactive monitoring dashboards
-
-### ⚡ **Performance Optimization**
-- Automated performance profiling and analysis
-- Memory leak detection and optimization
-- CPU usage optimization and parallel processing
-- Database query optimization and caching
-- Real-time performance benchmarking
+- **Security Integration**: SonarQube, Snyk, and container security scanning
+- **CI/CD Automation**: Streamlined workflows for testing, building, and deployment
+- **Monitoring & Observability**: Real-time system health and performance monitoring
+- **Multi-Environment Support**: Development, staging, and production deployments
+- **Security Compliance**: Automated security checks and vulnerability reporting
 
 ## 🏗️ Architecture
 
+The platform follows a modular, microservices-based architecture:
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Client Applications                       │
+│                    Web Application Layer                    │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │                 API Gateway Layer                    │    │
-│  └─────────────────┬───────────────────────────────────┘    │
+│  │              React + TypeScript Frontend            │    │
+│  └─────────────────────────────────────────────────────┘    │
+└───────────────────┬─────────────────────────────────────┘
+                    │
+┌───────────────────┼─────────────────────────────────────┐
+│  ┌────────────────▼─────────────────────────────────┐   │
+│  │              API Gateway Layer                   │   │
+│  │  ┌─────────────────────────────────────────┐    │   │
+│  │  │         REST API Endpoints              │    │   │
+│  │  └─────────────────────────────────────────┘    │   │
+│  │  ┌─────────────────────────────────────────┐    │   │
+│  │  │        GraphQL API (Optional)           │    │   │
+│  │  └─────────────────────────────────────────┘    │   │
+│  └─────────────────┬─────────────────────────────────┘   │
 └───────────────────┼─────────────────────────────────────┘
                     │
 ┌───────────────────┼─────────────────────────────────────┐
 │  ┌────────────────▼─────────────────────────────────┐   │
-│  │            Security Services Layer              │   │
+│  │            Service Layer                         │   │
 │  │  ┌─────────────────────────────────────────┐    │   │
-│  │  │      Cognitive Security Assistant       │    │   │
+│  │  │         Security Services               │    │   │
 │  │  └─────────────────────────────────────────┘    │   │
 │  │  ┌─────────────────────────────────────────┐    │   │
-│  │  │       Zero-Trust Identity Provider      │    │   │
+│  │  │        Monitoring Services              │    │   │
 │  │  └─────────────────────────────────────────┘    │   │
 │  │  ┌─────────────────────────────────────────┐    │   │
-│  │  │        Real-time Security Monitor       │    │   │
+│  │  │        Deployment Services              │    │   │
 │  │  └─────────────────────────────────────────┘    │   │
 │  └─────────────────┬─────────────────────────────────┘   │
 └───────────────────┼─────────────────────────────────────┘
@@ -81,10 +72,13 @@
 │  ┌────────────────▼─────────────────────────────────┐   │
 │  │           Infrastructure Layer                  │   │
 │  │  ┌─────────────────────────────────────────┐    │   │
-│  │  │         Monitoring & Logging            │    │   │
+│  │  │         PostgreSQL Database             │    │   │
 │  │  └─────────────────────────────────────────┘    │   │
 │  │  ┌─────────────────────────────────────────┐    │   │
-│  │  │       Performance Optimization         │    │   │
+│  │  │         Redis Cache                     │    │   │
+│  │  └─────────────────────────────────────────┘    │   │
+│  │  ┌─────────────────────────────────────────┐    │   │
+│  │  │         Monitoring Stack                │    │   │
 │  │  └─────────────────────────────────────────┘    │   │
 │  └─────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────┘
@@ -95,123 +89,248 @@
 ### Prerequisites
 
 - **Node.js**: 18.0 or higher
-- **TypeScript**: 5.0 or higher
+- **npm**: 9.0 or higher
 - **PostgreSQL**: 13.0 or higher
 - **Redis**: 6.0 or higher
+- **Docker**: 20.10 or higher (optional)
 
 ### Installation
 
-1. **Clone and setup**
+1. **Clone the repository**
    ```bash
-   git clone https://github.com/company/secure-flow-automaton.git
+   git clone https://github.com/TechTyphoon/secure-flow-automaton.git
    cd secure-flow-automaton
-   npm install
    ```
 
-2. **Configuration**
+2. **Install dependencies**
    ```bash
-   cp .env.example .env
-   # Edit .env with your settings
+   make install
+   # or
+   npm ci
    ```
 
-3. **Database setup**
+3. **Environment setup**
+   ```bash
+   cp config/environment/.env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. **Database setup**
    ```bash
    npm run db:migrate
    npm run db:seed
    ```
 
-4. **Start development server**
+5. **Start development server**
    ```bash
+   make dev
+   # or
    npm run dev
    ```
 
-## 📚 API Documentation
+The application will be available at `http://localhost:8080`
 
-### Service APIs
-- **[Security Assistant API](./docs/services/security-assistant-api.md)**
-- **[Identity Provider API](./docs/services/identity-provider-api.md)**
-- **[Monitoring Service API](./docs/services/monitoring-api.md)**
+## 🛠️ Development
 
-### Type Definitions
-- **[Complete TypeScript Types](./docs/typescript-types.md)**
+### Available Commands
 
-## ⚙️ Configuration
+We provide a consistent interface through both Makefile and npm scripts:
 
-### Environment Variables
 ```bash
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/secure_flow
-DATABASE_POOL_SIZE=10
+# Using Makefile (recommended)
+make help              # Show all available commands
+make install           # Install dependencies
+make test              # Run tests
+make build             # Build the application
+make lint              # Run linting
+make type-check        # Run TypeScript type checking
+make security-check    # Run security scans
+make health-check      # Run project health checks
+make clean             # Clean build artifacts
 
-# Security
-JWT_SECRET=your-secret-key
-ENCRYPTION_KEY=your-encryption-key
-MFA_ENABLED=true
-
-# Monitoring
-MONITORING_INTERVAL=30000
-ALERT_EMAIL=alerts@company.com
-
-# Performance
-PERFORMANCE_MONITORING_ENABLED=true
-MEMORY_THRESHOLD_MB=512
+# Using npm scripts
+npm run dev            # Start development server
+npm run build          # Build for production
+npm run test           # Run tests
+npm run test:coverage  # Run tests with coverage
+npm run lint           # Run linting
+npm run type-check     # Run TypeScript type checking
+npm run security:scan  # Run security scans
+npm run health-check   # Run project health checks
 ```
 
-## 🔒 Security Features
+### Project Structure
 
-- **Zero-Trust Authentication**: Continuous identity verification
-- **Multi-Factor Authentication**: TOTP, SMS, Email, Hardware tokens
-- **Risk-Based Access Control**: Dynamic access decisions
-- **End-to-End Encryption**: TLS 1.3 + AES-256 encryption
-- **Comprehensive Audit Logging**: Security event tracking
+```
+secure-flow-automaton/
+├── apps/                          # Application modules
+│   ├── web/                      # Main web application
+│   │   ├── components/           # React components
+│   │   ├── services/             # Business logic services
+│   │   ├── pages/                # Page components
+│   │   └── utils/                # Utility functions
+│   └── quantum-edge/             # Quantum computing module
+├── docs/                          # Documentation
+│   ├── api/                      # API documentation
+│   ├── architecture/             # Architecture documentation
+│   ├── deployment/               # Deployment guides
+│   └── user-guides/              # User guides
+├── tools/                         # Development tools
+│   └── scripts/                  # Utility scripts
+├── tests/                         # Test files
+├── config/                        # Configuration files
+├── .github/workflows/             # CI/CD workflows
+└── infrastructure/                # Infrastructure as code
+```
 
-## 📊 Monitoring & Performance
+### Code Quality
 
-- **Real-time Health Monitoring**: Service availability tracking
-- **Performance Profiling**: CPU/memory usage analysis
-- **Automated Optimization**: AI-powered performance improvements
-- **Security Event Correlation**: Threat detection and alerting
-- **Interactive Dashboards**: Real-time system visualization
+- **TypeScript**: Strict type checking enabled
+- **ESLint**: Code quality and security linting
+- **Prettier**: Code formatting
+- **Vitest**: Fast unit testing framework
+- **Coverage**: Test coverage reporting
 
 ## 🧪 Testing
 
-### Current Coverage: 68%
+### Test Structure
+
+```bash
+tests/
+├── web-unit/                     # Unit tests for web components
+├── web-integration/              # Integration tests
+├── quantum-edge/                 # Quantum module tests
+└── integration/                  # End-to-end tests
+```
+
+### Running Tests
+
 ```bash
 # Run all tests
-npm test
+make test
 
-# Run with coverage
+# Run tests with coverage
 npm run test:coverage
 
-# Run specific tests
-npm test -- --run tests/web-unit/services/cognitive/securityAssistant.test.ts
+# Run specific test suites
+npm test -- tests/web-unit/
+npm test -- tests/integration/
+
+# Watch mode for development
+npm run test:watch
 ```
+
+### Current Coverage: 68%
+
+We're actively working to improve test coverage. See [TEST_COVERAGE_STRATEGY.md](TEST_COVERAGE_STRATEGY.md) for our testing approach.
 
 ## 🚀 Deployment
 
-### Docker
+### Environment Configuration
+
 ```bash
-docker build -t secure-flow-automaton .
-docker run -p 3000:3000 secure-flow-automaton
+# Required environment variables
+DATABASE_URL=postgresql://user:password@localhost:5432/secure_flow
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your-secret-key
+ENCRYPTION_KEY=your-encryption-key
+
+# Optional configurations
+NODE_ENV=production
+PORT=3000
+LOG_LEVEL=info
+```
+
+### Docker Deployment
+
+```bash
+# Build the image
+docker build -f Dockerfile.monitoring -t secureflow-automaton .
+
+# Run with docker-compose
+docker-compose -f docker-compose.monitoring.yml up -d
 ```
 
 ### Production Checklist
+
 - [ ] Environment variables configured
 - [ ] Database migrations completed
 - [ ] SSL/TLS certificates installed
 - [ ] Monitoring and alerting configured
 - [ ] Security policies applied
+- [ ] Backup procedures tested
+
+## 📚 API Documentation
+
+- **[OpenAPI Specification](openapi.yaml)** - Complete API schema
+- **[API Documentation](API_DOCUMENTATION.md)** - Detailed API reference
+- **[Type Definitions](docs/typescript-types.md)** - TypeScript type definitions
+
+## 🔒 Security
+
+### Security Features
+
+- **Dependency Scanning**: Automated vulnerability detection
+- **Code Quality Analysis**: SonarQube integration
+- **Container Security**: Image vulnerability scanning
+- **Access Control**: Role-based access management
+- **Audit Logging**: Comprehensive security event tracking
+
+### Security Workflows
+
+- **Automated Security Scans**: Daily security checks
+- **Vulnerability Reporting**: Automated issue creation
+- **Compliance Monitoring**: Security policy enforcement
+- **Incident Response**: Automated security workflows
+
+## 📊 Monitoring
+
+### Monitoring Stack
+
+- **Prometheus**: Metrics collection
+- **Grafana**: Visualization and dashboards
+- **AlertManager**: Alert routing and notification
+- **Custom Dashboards**: Application-specific monitoring
+
+### Key Metrics
+
+- Application performance and availability
+- Security scan results and vulnerabilities
+- Deployment success rates and rollbacks
+- Resource utilization and scaling metrics
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for details.
+
+### Development Workflow
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+### Code Standards
+
+- Follow TypeScript best practices
+- Write comprehensive tests
+- Update documentation as needed
+- Follow our commit message conventions
 
 ## 📄 License
 
-**Proprietary Software** - All rights reserved.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 
-- **Security Issues**: security@company.com
-- **Technical Support**: support@company.com
-- **Documentation**: [API Docs](./API_DOCUMENTATION.md)
+- **Documentation**: [docs/](docs/) directory
+- **Issues**: [GitHub Issues](https://github.com/TechTyphoon/secure-flow-automaton/issues)
+- **Security Issues**: Please report security vulnerabilities privately
 
 ---
 
-**Secure Flow Automaton v4.1.0** - Enterprise Security Orchestration Platform
+**Secure Flow Automaton v4.1.0** - Enterprise DevSecOps Automation Platform
+
+Built with ❤️ by the TechTyphoon team
