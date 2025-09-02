@@ -414,6 +414,14 @@ jobs:
         # Simple deployment using git
         echo "🔄 Using git-based deployment method..."
 
+        # Preserve build artifacts to a temporary location so untracked files
+        # (e.g. system-report.txt) generated during install/build don't block
+        # branch checkouts or get removed by git clean.
+        echo "📦 Preserving build artifacts to temporary location..."
+        TMP_DIST=/tmp/dist-${GITHUB_RUN_ID:-$$}
+        mkdir -p "$TMP_DIST"
+        cp -r dist/* "$TMP_DIST/" || true
+
         # Fetch all branches
         git fetch origin
 
@@ -432,10 +440,12 @@ jobs:
         echo "📦 Copying build artifacts..."
         git rm -rf . || true
         git clean -fd
-        
-        # Copy dist files BEFORE cleaning git state
-        echo "📋 Copying files from dist/ to current directory..."
-        cp -r dist/* .
+
+        # Restore preserved build artifacts into the working tree and copy them
+        # into the branch root for publishing.
+        echo "📋 Restoring preserved build artifacts and copying files into branch..."
+        cp -r "$TMP_DIST"/* . || true
+        rm -rf "$TMP_DIST" || true
         
         # Ensure .nojekyll exists
         touch .nojekyll
@@ -698,6 +708,14 @@ jobs:
         # Fallback deployment method (works without GH_PAT)
         echo "🔄 Using fallback deployment method..."
 
+        # Preserve build artifacts to a temporary location so untracked files
+        # (e.g. system-report.txt) generated during install/build don't block
+        # branch checkouts or get removed by git clean.
+        echo "📦 Preserving build artifacts to temporary location..."
+        TMP_DIST=/tmp/dist-${GITHUB_RUN_ID:-$$}
+        mkdir -p "$TMP_DIST"
+        cp -r dist/* "$TMP_DIST/" || true
+
         # Fetch all branches
         git fetch origin
 
@@ -712,11 +730,13 @@ jobs:
           git reset --hard
         fi
 
-        # Clean branch and copy dist files
+        # Clean branch and copy dist files (restore from preserved temp)
         echo "📦 Copying build artifacts..."
         git rm -rf . || true
         git clean -fd
-        cp -r dist/* .
+        echo "📋 Restoring preserved build artifacts into branch root..."
+        cp -r "$TMP_DIST"/* . || true
+        rm -rf "$TMP_DIST" || true
 
         # Ensure .nojekyll exists
         touch .nojekyll
