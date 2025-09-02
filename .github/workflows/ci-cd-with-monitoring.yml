@@ -179,12 +179,12 @@ jobs:
           docker-compose.monitoring.yml
         retention-days: 7
 
-    - name: � Upload Pages Artifact (for GitHub Pages deploy)
+    - name: 📤 Upload Pages Artifact (for GitHub Pages deploy)
       uses: actions/upload-pages-artifact@v1
       with:
         path: ./dist
 
-    - name: �🔐 Login to Container Registry
+    - name: 🔐 Login to Container Registry
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
