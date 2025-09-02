@@ -176,7 +176,12 @@ jobs:
           docker-compose.monitoring.yml
         retention-days: 7
 
-    - name: 🔐 Login to Container Registry
+    - name: � Upload Pages Artifact (for GitHub Pages deploy)
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: ./dist
+
+    - name: �🔐 Login to Container Registry
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
@@ -375,113 +380,12 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 📥 Download Build Artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: build-artifacts
+      uses: actions/deploy-pages@v1
 
-    - name: 🚀 Deploy Application with Monitoring
+    - name: ✅ Deployment Note
       run: |
-        echo "🚀 Deploying application with monitoring integration..."
-
-        # Check if dist directory exists and has content
-        echo "📁 Checking build artifacts..."
-        if [ ! -d "dist" ]; then
-          echo "❌ Error: dist directory not found"
-          ls -la
-          exit 1
-        fi
-
-        if [ ! -f "dist/index.html" ]; then
-          echo "❌ Error: dist/index.html not found"
-          ls -la dist/
-          exit 1
-        fi
-
-        echo "✅ Build artifacts verified"
-
-        # Deploy application (GitHub Pages example - replace with your deployment method)
-        echo "📦 Deploying application to GitHub Pages..."
-
-        # Configure git for deployment
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-        # Create .nojekyll file to prevent Jekyll processing
-        touch dist/.nojekyll
-
-        echo "📦 Deploying to GitHub Pages..."
-
-        # Simple deployment using git
-        echo "🔄 Using git-based deployment method..."
-
-        # Preserve build artifacts to a temporary location so untracked files
-        # (e.g. system-report.txt) generated during install/build don't block
-        # branch checkouts or get removed by git clean.
-        echo "📦 Preserving build artifacts to temporary location..."
-        TMP_DIST=/tmp/dist-${GITHUB_RUN_ID:-$$}
-        mkdir -p "$TMP_DIST"
-        cp -r dist/* "$TMP_DIST/" || true
-
-        # Fetch all branches
-        git fetch origin
-
-        # Create or switch to gh-pages branch
-        if git ls-remote --heads origin gh-pages | grep gh-pages >/dev/null 2>&1; then
-          echo "📝 Switching to existing gh-pages branch..."
-          git checkout gh-pages
-          git reset --hard origin/gh-pages
-        else
-          echo "📝 Creating new gh-pages branch..."
-          git checkout --orphan gh-pages
-          git reset --hard
-        fi
-
-        # Clean branch and copy dist files
-        echo "📦 Copying build artifacts..."
-        git rm -rf . || true
-        git clean -fd
-
-        # Restore preserved build artifacts into the working tree and copy them
-        # into the branch root for publishing.
-        echo "📋 Restoring preserved build artifacts and copying files into branch..."
-        cp -r "$TMP_DIST"/* . || true
-        rm -rf "$TMP_DIST" || true
-        
-        # Ensure .nojekyll exists
-        touch .nojekyll
-
-        # Commit and push changes
-        echo "📤 Committing and pushing changes..."
-        git add .
-        if git diff --staged --quiet; then
-          echo "ℹ️ No changes to commit - deployment already up to date"
-        else
-          git commit -m "🚀 Deploy to GitHub Pages - $(date '+%Y-%m-%d %H:%M:%S')"
-        fi
-
-        # Push to gh-pages branch
-        if git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git gh-pages --force; then
-          echo "✅ Application deployed successfully!"
-          echo "🌐 Check your GitHub Pages site at: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
-          echo ""
-          echo "🔧 If the site doesn't load, ensure GitHub Pages is configured:"
-          echo "   1. Go to repository Settings > Pages"
-          echo "   2. Set Source to 'Deploy from a branch'"
-          echo "   3. Select 'gh-pages' branch"
-          echo "   4. Click Save"
-        else
-          echo "❌ Deployment failed"
-          echo "🔍 Troubleshooting steps:"
-          echo "  1. Check if GitHub Pages is enabled in repository settings"
-          echo "  2. Ensure source is set to 'Deploy from a branch'"
-          echo "  3. Verify 'gh-pages' branch is selected"
-          echo "  4. Wait a few minutes for GitHub Pages to build"
-          echo "  5. Check repository permissions for GitHub Actions"
-          echo ""
-          echo "💡 Alternative: Consider using a Personal Access Token (GH_PAT) secret for better reliability"
-          echo "   Create a PAT with 'repo' scope and add it as GH_PAT secret in repository settings"
-          exit 1
-        fi
+        echo "Deployment performed with actions/deploy-pages@v1."
+        echo "If this job fails, ensure GitHub Pages is enabled in repository Settings -> Pages and the Actions permissions allow Pages deployments."
 
   deploy-monitoring-stack:
     name: 🚀 Deploy Monitoring Stack
