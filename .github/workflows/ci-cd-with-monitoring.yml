@@ -410,27 +410,91 @@ jobs:
         echo "📦 Installing gh-pages..."
         npm install -g gh-pages
 
-        # Verify GH_PAT is available
-        if [ -z "${{ secrets.GH_PAT }}" ]; then
-          echo "❌ Error: GH_PAT secret is not configured"
-          echo "Please add GH_PAT secret to repository settings with repo scope"
-          exit 1
+        # Check if GH_PAT is available and use appropriate deployment method
+        if [ -n "${{ secrets.GH_PAT }}" ]; then
+          echo "✅ GH_PAT secret found - using enhanced deployment method"
+
+          # Deploy to GitHub Pages using PAT
+          echo "🚀 Deploying to GitHub Pages with GH_PAT..."
+          if npx gh-pages -d dist -t true -u "github-actions[bot] <github-actions[bot]@users.noreply.github.com>" -r https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git; then
+            echo "✅ Application deployed successfully using GH_PAT!"
+            echo "🌐 Check your GitHub Pages site at: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+            exit 0
+          else
+            echo "⚠️ GH_PAT deployment failed, trying fallback method..."
+          fi
+        else
+          echo "⚠️ GH_PAT secret not configured - using fallback deployment method"
         fi
 
-        # Deploy to GitHub Pages using PAT
-        echo "🚀 Deploying to GitHub Pages..."
-        npx gh-pages -d dist -t true -u "github-actions[bot] <github-actions[bot]@users.noreply.github.com>" -r https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
+        # Fallback deployment method (works without GH_PAT)
+        echo "🔄 Using fallback deployment method..."
 
-        # Check deployment result
-        if [ $? -eq 0 ]; then
-          echo "✅ Application deployed successfully!"
-          echo "🌐 Check your GitHub Pages site at: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+        # Create .nojekyll file to prevent Jekyll processing
+        touch dist/.nojekyll
+
+        # Configure git for deployment
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        # Create deployment script
+        cat > deploy-fallback.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "🚀 Starting GitHub Pages fallback deployment..."
+
+# Fetch all branches
+git fetch origin
+
+# Create or switch to gh-pages branch
+if git ls-remote --heads origin gh-pages | grep gh-pages >/dev/null 2>&1; then
+  echo "📝 Switching to existing gh-pages branch..."
+  git checkout gh-pages
+  git reset --hard origin/gh-pages
+else
+  echo "📝 Creating new gh-pages branch..."
+  git checkout --orphan gh-pages
+  git reset --hard
+fi
+
+# Clean branch and copy dist files
+echo "📦 Copying build artifacts..."
+git rm -rf . || true
+git clean -fd
+cp -r dist/* .
+
+# Ensure .nojekyll exists
+touch .nojekyll
+
+# Commit and push changes
+echo "📤 Committing and pushing changes..."
+git add .
+if git diff --staged --quiet; then
+  echo "ℹ️ No changes to commit - deployment already up to date"
+else
+  git commit -m "🚀 Deploy to GitHub Pages - $(date '+%Y-%m-%d %H:%M:%S')"
+fi
+
+# Force push to gh-pages branch
+git push origin gh-pages --force
+
+echo "✅ Fallback deployment completed successfully!"
+echo "🌐 Check your GitHub Pages site at: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+EOF
+
+        # Make script executable and run it
+        chmod +x deploy-fallback.sh
+        if ./deploy-fallback.sh; then
+          echo "✅ Application deployed successfully using fallback method!"
+          exit 0
         else
-          echo "❌ GitHub Pages deployment failed"
-          echo "🔍 Please ensure:"
-          echo "  - GitHub Pages is enabled in repository settings"
-          echo "  - GH_PAT has 'repo' scope permissions"
-          echo "  - The repository allows GitHub Actions to create deployments"
+          echo "❌ Fallback deployment also failed"
+          echo "🔍 Troubleshooting steps:"
+          echo "  1. Enable GitHub Pages in repository settings"
+          echo "  2. Set source to 'Deploy from a branch'"
+          echo "  3. Select 'gh-pages' branch"
+          echo "  4. Optionally configure GH_PAT secret for better reliability"
           exit 1
         fi
 
