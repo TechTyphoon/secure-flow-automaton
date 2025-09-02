@@ -56,18 +56,13 @@ jobs:
         echo "📦 Installing dependencies..."
         npm ci --prefer-offline
 
-    - name: 🔍 Validate Metrics Collector
+    - name: 🔍 Validate Monitoring Components
       run: |
-        echo "🔍 Validating metrics collector..."
-        node -c docs/monitoring/metrics-collector.js
-        echo "✅ Metrics collector syntax is valid"
+        echo "🔍 Validating monitoring components..."
+        npm run monitoring:validate
+        echo "✅ Monitoring components syntax is valid"
 
-    - name: 🔍 Validate Dashboard Server
-      run: |
-        echo "🔍 Validating dashboard server..."
-        node -c docs/monitoring/dashboard-server.js
-        echo "✅ Dashboard server syntax is valid"
-        
+    - name: 📋 Validate Prometheus Configuration
       run: |
         echo "📋 Validating Prometheus configuration..."
         # Basic YAML validation

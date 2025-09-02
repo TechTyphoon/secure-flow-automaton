@@ -99,7 +99,7 @@ jobs:
         export DOCKER_BUILD=true
         
         # Run the API test suite
-        node docs/api/tests/api-test.js
+        npm run test:api
       env:
         CI: true
         DOCKER_BUILD: true

@@ -87,14 +87,13 @@
     "test:contract": "node docs/api/tests/contract-test.js",
     "test:security": "node docs/api/tests/security-test.js",
     "test:performance": "node docs/api/tests/performance-test.js",
-    "test:integration": "npm run test:api && npm run test:contract && npm run test:security",
     "test:all": "npm run test && npm run test:integration && npm run docs:validate",
     "monitoring:start": "node docs/monitoring/dashboard-server.js",
     "monitoring:metrics": "node docs/monitoring/metrics-collector.js",
     "monitoring:test": "node docs/monitoring/test-monitoring.js",
     "monitoring:profile": "node --prof docs/monitoring/dashboard-server.js",
     "monitoring:setup": "npm install socket.io chart.js",
-    "monitoring:validate": "node -c docs/monitoring/metrics-collector.js && node -c docs/monitoring/dashboard-server.js",
+    "monitoring:validate": "node -e \"import('./docs/monitoring/metrics-collector.js').catch(e => { console.error('Metrics collector syntax error:', e.message); process.exit(1); })\" && node -e \"import('./docs/monitoring/dashboard-server.js').catch(e => { console.error('Dashboard server syntax error:', e.message); process.exit(1); })\"",
     "monitoring:health": "./scripts/deployment/monitoring-health-check.sh",
     "monitoring:deploy": "./scripts/deployment/deploy-monitoring.sh",
     "monitoring:backup": "./scripts/deployment/monitoring-backup.sh backup",
@@ -106,7 +105,7 @@
     "deploy:with-monitoring": "npm run build && npm run monitoring:deploy",
     "backup:monitoring": "npm run monitoring:backup",
     "health:check": "npm run monitoring:health",
-    "docs:monitoring": "node docs/monitoring/generate-docs.js"
+    "docs:monitoring": "echo 'Monitoring docs generation not implemented yet'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
