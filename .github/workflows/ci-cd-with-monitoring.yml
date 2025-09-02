@@ -190,7 +190,7 @@ jobs:
         docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/monitoring:${{ github.sha }}
 
   # === DEPLOY MONITORING INFRASTRUCTURE ===
-  deploy-monitoring:
+  deploy-monitoring-infrastructure:
     name: 🚀 Deploy Monitoring Infrastructure
     runs-on: ubuntu-latest
     needs: build-application
@@ -364,8 +364,8 @@ jobs:
         retention-days: 30
 
   # === DEPLOY APPLICATION ===
-  deploy-application:
-    name: 🚀 Deploy Application
+  deploy-application-pages:
+    name: 🚀 Deploy Application to Pages
     runs-on: ubuntu-latest
     needs: [build-application]
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
@@ -447,7 +447,7 @@ jobs:
         fi
 
         # Push to gh-pages branch
-        if git push origin gh-pages --force; then
+        if git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages --force; then
           echo "✅ Application deployed successfully!"
           echo "🌐 Check your GitHub Pages site at: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
           echo ""
@@ -463,10 +463,15 @@ jobs:
           echo "  2. Ensure source is set to 'Deploy from a branch'"
           echo "  3. Verify 'gh-pages' branch is selected"
           echo "  4. Wait a few minutes for GitHub Pages to build"
+          echo "  5. Check repository permissions for GitHub Actions"
+          echo ""
+          echo "💡 Alternative: Consider using a Personal Access Token (GH_PAT) secret for better reliability"
+          echo "   Create a PAT with 'repo' scope and add it as GH_PAT secret in repository settings"
           exit 1
         fi
 
   deploy-monitoring-stack:
+    name: 🚀 Deploy Monitoring Stack
     runs-on: ubuntu-latest
     needs: [build-application]
     if: success()
@@ -721,7 +726,7 @@ jobs:
         fi
 
         # Force push to gh-pages branch
-        if git push origin gh-pages --force; then
+        if git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages --force; then
           echo "✅ Application deployed successfully using fallback method!"
           exit 0
         else
@@ -731,6 +736,10 @@ jobs:
           echo "  2. Set source to 'Deploy from a branch'"
           echo "  3. Select 'gh-pages' branch"
           echo "  4. Optionally configure GH_PAT secret for better reliability"
+          echo "  5. Check repository permissions for GitHub Actions"
+          echo ""
+          echo "💡 Alternative: Consider using a Personal Access Token (GH_PAT) secret for better reliability"
+          echo "   Create a PAT with 'repo' scope and add it as GH_PAT secret in repository settings"
           exit 1
         fi
 
@@ -756,7 +765,7 @@ jobs:
   post-deployment-validation:
     name: ✅ Post-Deployment Validation
     runs-on: ubuntu-latest
-    needs: [deploy-application, deploy-monitoring]
+    needs: [deploy-application-pages, deploy-monitoring-infrastructure]
     if: always()
 
     steps:
@@ -857,7 +866,7 @@ jobs:
   deployment-summary:
     name: 📊 Deployment Summary
     runs-on: ubuntu-latest
-    needs: [quality-gate, security-scan, monitoring-validation, build-application, deploy-monitoring, deploy-application, post-deployment-validation]
+    needs: [quality-gate, security-scan, monitoring-validation, build-application, deploy-monitoring-infrastructure, deploy-application-pages, post-deployment-validation]
     if: always()
 
     steps:
