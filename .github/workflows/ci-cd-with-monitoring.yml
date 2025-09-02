@@ -383,6 +383,22 @@ jobs:
       run: |
         echo "🚀 Deploying application with monitoring integration..."
 
+        # Check if dist directory exists and has content
+        echo "📁 Checking build artifacts..."
+        if [ ! -d "dist" ]; then
+          echo "❌ Error: dist directory not found"
+          ls -la
+          exit 1
+        fi
+
+        if [ ! -f "dist/index.html" ]; then
+          echo "❌ Error: dist/index.html not found"
+          ls -la dist/
+          exit 1
+        fi
+
+        echo "✅ Build artifacts verified"
+
         # Deploy application (GitHub Pages example - replace with your deployment method)
         echo "📦 Deploying application to GitHub Pages..."
 
@@ -391,12 +407,32 @@ jobs:
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
         # Install gh-pages globally
+        echo "📦 Installing gh-pages..."
         npm install -g gh-pages
 
+        # Verify GH_PAT is available
+        if [ -z "${{ secrets.GH_PAT }}" ]; then
+          echo "❌ Error: GH_PAT secret is not configured"
+          echo "Please add GH_PAT secret to repository settings with repo scope"
+          exit 1
+        fi
+
         # Deploy to GitHub Pages using PAT
+        echo "🚀 Deploying to GitHub Pages..."
         npx gh-pages -d dist -t true -u "github-actions[bot] <github-actions[bot]@users.noreply.github.com>" -r https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
 
-        echo "✅ Application deployed successfully (check if GitHub Pages is enabled in repository settings)"
+        # Check deployment result
+        if [ $? -eq 0 ]; then
+          echo "✅ Application deployed successfully!"
+          echo "🌐 Check your GitHub Pages site at: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+        else
+          echo "❌ GitHub Pages deployment failed"
+          echo "🔍 Please ensure:"
+          echo "  - GitHub Pages is enabled in repository settings"
+          echo "  - GH_PAT has 'repo' scope permissions"
+          echo "  - The repository allows GitHub Actions to create deployments"
+          exit 1
+        fi
 
     - name: 🔗 Verify Application-Monitoring Integration
       run: |
