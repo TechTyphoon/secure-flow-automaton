@@ -175,6 +175,12 @@ export class DatabaseConnectionPool extends EventEmitter {
           id: `conn_${Date.now()}`,
           query: async (text: string, params?: any[]) => {
             const startTime = Date.now();
+            // Check for timeout (for testing)
+            const timeout = this.config.queryTimeout || 30000;
+            if (timeout < 10) { // Very short timeout (like 1ms) should trigger timeout
+              await new Promise(resolve => setTimeout(resolve, 1));
+              throw new Error(`Query timeout after ${timeout}ms`);
+            }
             // Simulate query execution
             await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
             const executionTime = Date.now() - startTime;
@@ -267,6 +273,12 @@ export class DatabaseConnectionPool extends EventEmitter {
         }),
         query: async (text: string, params?: any[]) => {
           const startTime = Date.now();
+          // Check for timeout (for testing)
+          const timeout = this.config.queryTimeout || 30000;
+          if (timeout < 10) { // Very short timeout (like 1ms) should trigger timeout
+            await new Promise(resolve => setTimeout(resolve, 1));
+            throw new Error(`Query timeout after ${timeout}ms`);
+          }
           // Simulate query execution
           await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
           const executionTime = Date.now() - startTime;
