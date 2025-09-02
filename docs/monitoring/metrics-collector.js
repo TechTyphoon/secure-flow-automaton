@@ -22,6 +22,8 @@ class APIMetricsCollector extends EventEmitter {
   this.systemMetricsFailureCount = 0;
   this.lastSystemMetricsWarnAt = 0;
   this.systemMetricsWarnCooldown = options.systemMetricsWarnCooldown || 60 * 1000; // 1 minute
+  this.systemMetricsCircuitOpen = false;
+  this.systemMetricsMaxFailures = options.systemMetricsMaxFailures || 3;
 
     // Initialize metrics storage
     this.initializeMetricsStorage();
@@ -130,6 +132,11 @@ class APIMetricsCollector extends EventEmitter {
    * Collect system health metrics
    */
   async collectSystemMetrics(timestamp) {
+    // Circuit breaker: skip if too many consecutive failures
+    if (this.systemMetricsCircuitOpen) {
+      return;
+    }
+
     try {
       const healthResponse = await axios.get(`${this.baseURL.replace('/api/v1', '')}/health`, {
         timeout: 5000
@@ -146,6 +153,10 @@ class APIMetricsCollector extends EventEmitter {
       };
 
       systemMetrics.health.push(healthData);
+
+      // Reset failure count on success
+      this.systemMetricsFailureCount = 0;
+      this.systemMetricsCircuitOpen = false;
 
       // Keep only recent metrics
       if (systemMetrics.health.length > 100) {
@@ -174,10 +185,17 @@ class APIMetricsCollector extends EventEmitter {
       // Increment failure count
       this.systemMetricsFailureCount = (this.systemMetricsFailureCount || 0) + 1;
 
+      // Open circuit breaker after max failures
+      if (this.systemMetricsFailureCount >= this.systemMetricsMaxFailures) {
+        this.systemMetricsCircuitOpen = true;
+        console.warn(`⚠️ System metrics circuit breaker opened after ${this.systemMetricsFailureCount} failures. Stopping health checks.`);
+        return;
+      }
+
       const now = Date.now();
       // Only warn if cooldown elapsed to prevent log spamming
       if (!this.lastSystemMetricsWarnAt || (now - this.lastSystemMetricsWarnAt) > this.systemMetricsWarnCooldown) {
-        console.warn('⚠️ Failed to collect system metrics:', error.message, `(occurrences: ${this.systemMetricsFailureCount})`);
+        console.warn('⚠️ Failed to collect system metrics:', error.message, `(failures: ${this.systemMetricsFailureCount}/${this.systemMetricsMaxFailures})`);
         this.lastSystemMetricsWarnAt = now;
       }
 
