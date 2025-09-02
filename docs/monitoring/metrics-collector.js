@@ -18,6 +18,11 @@ class APIMetricsCollector extends EventEmitter {
     this.isCollecting = false;
     this.collectionTimer = null;
 
+  // Track repeated system metrics failures to avoid log spam
+  this.systemMetricsFailureCount = 0;
+  this.lastSystemMetricsWarnAt = 0;
+  this.systemMetricsWarnCooldown = options.systemMetricsWarnCooldown || 60 * 1000; // 1 minute
+
     // Initialize metrics storage
     this.initializeMetricsStorage();
   }
@@ -166,7 +171,22 @@ class APIMetricsCollector extends EventEmitter {
       systemMetrics.timestamp = timestamp;
 
     } catch (error) {
-      console.warn('⚠️ Failed to collect system metrics:', error.message);
+      // Increment failure count
+      this.systemMetricsFailureCount = (this.systemMetricsFailureCount || 0) + 1;
+
+      const now = Date.now();
+      // Only warn if cooldown elapsed to prevent log spamming
+      if (!this.lastSystemMetricsWarnAt || (now - this.lastSystemMetricsWarnAt) > this.systemMetricsWarnCooldown) {
+        console.warn('⚠️ Failed to collect system metrics:', error.message, `(occurrences: ${this.systemMetricsFailureCount})`);
+        this.lastSystemMetricsWarnAt = now;
+      }
+
+      // Optionally emit an event for monitoring systems (only first few occurrences)
+      if (this.systemMetricsFailureCount <= 3) {
+        this.emit('system-metrics-failure', { message: error.message, count: this.systemMetricsFailureCount });
+      }
+      
+      // Do not rethrow; collection continues on next interval
     }
   }
 
