@@ -18,12 +18,12 @@ class APIMetricsCollector extends EventEmitter {
     this.isCollecting = false;
     this.collectionTimer = null;
 
-  // Track repeated system metrics failures to avoid log spam
-  this.systemMetricsFailureCount = 0;
-  this.lastSystemMetricsWarnAt = 0;
-  this.systemMetricsWarnCooldown = options.systemMetricsWarnCooldown || 60 * 1000; // 1 minute
-  this.systemMetricsCircuitOpen = false;
-  this.systemMetricsMaxFailures = options.systemMetricsMaxFailures || 3;
+    // Track repeated system metrics failures to avoid log spam
+    this.systemMetricsFailureCount = 0;
+    this.lastSystemMetricsWarnAt = 0;
+    this.systemMetricsWarnCooldown = options.systemMetricsWarnCooldown || 60 * 1000; // 1 minute
+    this.systemMetricsCircuitOpen = false;
+    this.systemMetricsMaxFailures = options.systemMetricsMaxFailures || 3;
 
     // Initialize metrics storage
     this.initializeMetricsStorage();
@@ -203,7 +203,7 @@ class APIMetricsCollector extends EventEmitter {
       if (this.systemMetricsFailureCount <= 3) {
         this.emit('system-metrics-failure', { message: error.message, count: this.systemMetricsFailureCount });
       }
-      
+
       // Do not rethrow; collection continues on next interval
     }
   }
