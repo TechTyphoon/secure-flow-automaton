@@ -121,6 +121,7 @@ jobs:
       run: |
         echo "✅ Skipping monitoring validation in CI (no health endpoints available)"
         echo "Monitoring validation would be done in production environment"
+        echo "Force refresh - all upload-artifact actions use @v4"
 
     - name: 🧪 Test Monitoring Infrastructure
       run: |
