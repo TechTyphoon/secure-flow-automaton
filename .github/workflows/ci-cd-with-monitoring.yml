@@ -432,8 +432,11 @@ jobs:
         echo "📦 Copying build artifacts..."
         git rm -rf . || true
         git clean -fd
+        
+        # Copy dist files BEFORE cleaning git state
+        echo "📋 Copying files from dist/ to current directory..."
         cp -r dist/* .
-
+        
         # Ensure .nojekyll exists
         touch .nojekyll
 
