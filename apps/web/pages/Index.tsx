@@ -1,21 +1,21 @@
 import React, { useState, Suspense, lazy } from 'react';
-import Header from '@/components/Header';
+import Header from '@/components/layout/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Shield, Users, Calendar, BarChart3, HelpCircle } from 'lucide-react';
 import { Link } from "react-router-dom";
-import { useAuth } from "@/components/AuthContext";
+import { useAuth } from "@/components/auth/AuthContext";
 
 // Lazy load heavy components for better performance
-const SecurityMetrics = lazy(() => import('@/components/SecurityMetrics'));
-const PipelineFlow = lazy(() => import('@/components/PipelineFlow'));
-const VulnerabilityDashboard = lazy(() => import('@/components/VulnerabilityDashboard'));
-const ComplianceOverview = lazy(() => import('@/components/ComplianceOverview'));
-const ToolSelection = lazy(() => import('@/components/ToolSelection'));
-const UserPersonas = lazy(() => import('@/components/UserPersonas'));
-const ProjectTimeline = lazy(() => import('@/components/ProjectTimeline'));
-const HowItWorksModal = lazy(() => import('@/components/HowItWorksModal'));
-const SecurityServiceDashboard = lazy(() => import('@/components/SecurityServiceDashboard'));
+const SecurityMonitor = lazy(() => import('@/components/security/SecurityMonitor'));
+const PipelineFlow = lazy(() => import('@/components/features/PipelineFlow'));
+const VulnerabilityDashboard = lazy(() => import('@/components/features/VulnerabilityDashboard'));
+const ComplianceOverview = lazy(() => import('@/components/features/ComplianceOverview'));
+const ToolSelection = lazy(() => import('@/components/features/ToolSelection'));
+const UserPersonas = lazy(() => import('@/components/features/UserPersonas'));
+const ProjectTimeline = lazy(() => import('@/components/features/ProjectTimeline'));
+const HowItWorksModal = lazy(() => import('@/components/modals/HowItWorksModal'));
+const SecurityServiceDashboard = lazy(() => import('@/components/security/SecurityServiceDashboard'));
 
 // Loading component for better UX
 const ComponentLoader = () => (
@@ -86,7 +86,7 @@ const Index = () => {
 
             <TabsContent value="dashboard" className="space-y-8 mt-6">
               <Suspense fallback={<ComponentLoader />}>
-                <SecurityMetrics />
+                <SecurityMonitor />
               </Suspense>
               <div className="space-y-8">
                 <Suspense fallback={<ComponentLoader />}>

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useAuth } from "@/components/AuthContext";
+import { useAuth } from "@/components/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";

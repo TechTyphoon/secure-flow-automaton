@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import Header from "@/components/Header";
-import HealthDashboard from "@/components/HealthDashboard";
-import SecurityMonitor from "@/components/SecurityMonitor";
-import PerformanceMonitor from "@/components/PerformanceMonitor";
-import ThreatDetection from "@/components/ThreatDetection";
-import SecurityAnalytics from "@/components/SecurityAnalytics";
-import AutomatedSecurityResponse from "@/components/AutomatedSecurityResponse";
-import RealUserMonitoring from "@/components/RealUserMonitoring";
-import EnhancedRUMDashboard from "@/components/EnhancedRUMDashboard";
-import IntelligentPerformanceOptimizer from "@/components/IntelligentPerformanceOptimizer";
-import AdvancedPerformanceAnalytics from "@/components/AdvancedPerformanceAnalytics";
+import Header from "@/components/layout/Header";
+import HealthDashboard from "@/components/features/HealthDashboard";
+import SecurityMonitor from "@/components/security/SecurityMonitor";
+import PerformanceMonitor from "@/components/dashboard/PerformanceMonitor";
+import ThreatDetection from "@/components/features/ThreatDetection";
+import SecurityAnalytics from "@/components/security/SecurityAnalytics";
+import SecurityResponse from "@/components/security/SecurityResponse";
+import RealUserMonitoring from "@/components/features/RealUserMonitoring";
+import RUMDashboard from "@/components/dashboard/RUMDashboard";
+import PerformanceOptimizer from "@/components/dashboard/PerformanceOptimizer";
+import PerformanceAnalytics from "@/components/dashboard/PerformanceAnalytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -156,13 +156,13 @@ const Monitoring = () => {
           <TabsContent value="enhanced-rum" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Enhanced Production Monitoring</CardTitle>
+                <CardTitle>Production Monitoring</CardTitle>
                 <CardDescription>
-                  AI-powered real user monitoring with predictive analytics, anomaly detection, and comprehensive performance insights
+Real user monitoring with predictive analytics, anomaly detection, and comprehensive performance insights
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <EnhancedRUMDashboard />
+                <RUMDashboard />
               </CardContent>
             </Card>
           </TabsContent>
@@ -196,7 +196,7 @@ const Monitoring = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">
-            <AdvancedPerformanceAnalytics />
+            <PerformanceAnalytics />
           </TabsContent>
 
           <TabsContent value="rum" className="space-y-4">
@@ -216,13 +216,13 @@ const Monitoring = () => {
           <TabsContent value="optimization" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Intelligent Performance Optimizer</CardTitle>
+                <CardTitle>Performance Optimizer</CardTitle>
                 <CardDescription>
-                  AI-powered performance optimization with automated improvements
+  Performance optimization with automated improvements
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <IntelligentPerformanceOptimizer />
+                <PerformanceOptimizer />
               </CardContent>
             </Card>
           </TabsContent>
@@ -268,7 +268,7 @@ const Monitoring = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <AutomatedSecurityResponse />
+                <SecurityResponse />
               </CardContent>
             </Card>
           </TabsContent>

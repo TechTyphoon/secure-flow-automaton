@@ -50,7 +50,7 @@ export default defineConfig(({ mode }) => ({
     // Optimize for different platforms
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html'),
+        main: path.resolve(__dirname, 'apps/web/index.html'),
       },
       output: {
         // Enhanced chunk splitting for better caching and loading

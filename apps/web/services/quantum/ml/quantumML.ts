@@ -1,11 +1,6 @@
 /**
- * Phase 6.1: Quantum Machine Learning Engine
- * 
- * Advanced quantum machine learning capabilities for financial services
- * and other industry applications.
- * 
- * @version 6.1.0
- * @since July 30, 2025
+ * Quantum ML engine
+ * Machine learning capabilities for various applications
  */
 
 export interface MLModel {

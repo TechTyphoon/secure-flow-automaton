@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/components/AuthContext";
+import { useAuth } from "@/components/auth/AuthContext";
 import { Link } from "react-router-dom";
 
 const NOT_FOUND_FN_URL =

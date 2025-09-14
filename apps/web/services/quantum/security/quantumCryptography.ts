@@ -1,11 +1,6 @@
 /**
- * Phase 6.1: Quantum Cryptography Service
- * 
- * Advanced quantum cryptography and quantum-safe security protocols
- * for financial services and other sensitive applications.
- * 
- * @version 6.1.0
- * @since July 30, 2025
+ * Quantum cryptography service
+ * Quantum-safe security protocols
  */
 
 export interface QuantumKey {

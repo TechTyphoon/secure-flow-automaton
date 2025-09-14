@@ -1,12 +1,12 @@
 
 import React from "react";
-import { useAuth } from "@/components/AuthContext";
+import { useAuth } from "@/components/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import PWAStatus from "@/components/PWAStatus";
+import PWAStatus from "@/components/common/PWAStatus";
 
 const Settings = () => {
   const { user } = useAuth();

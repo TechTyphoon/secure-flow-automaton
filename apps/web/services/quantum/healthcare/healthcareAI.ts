@@ -1,13 +1,6 @@
 /**
- * Quantum Healthcare AI Platform
- * Advanced quantum-enhanced healthcare artificial intelligence and analytics
- * 
- * Features:
- * - Quantum-enhanced medical decision support systems
- * - Real-time patient monitoring with quantum sensor integration
- * - Quantum-powered predictive analytics for epidemic modeling
- * - Advanced quantum natural language processing for medical records
- * - HIPAA and FDA-compliant quantum healthcare AI processing
+ * Healthcare AI service
+ * Quantum-enhanced healthcare analytics
  */
 
 import { QuantumCoreEngine } from '../core/quantumCore';
